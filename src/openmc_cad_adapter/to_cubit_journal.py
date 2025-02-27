@@ -342,8 +342,8 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         if isinstance( node, Universe ): #Universes only contain cells, they are not added to cubit
             # if bb is not None:
             #     bb = node.bounding_box
-            if hasattr( node.cell, "__iter__" ):
-                for c in node.cell:
+            if hasattr( node.cells, "__iter__" ):
+                for c in node.cells:
                     process_node( c, w )
             else:
                 process_node( node.cell, w )
