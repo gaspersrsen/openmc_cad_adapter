@@ -340,13 +340,13 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         start = len(surf_coms)
         
         if isinstance( node, Universe ): #Universes only contain cells, they are not added to cubit
-            if bb is not None:
-                bb = node.bounding_box
-            if hasattr( node.fill, "__iter__" ):
-                for c in node.fill:
+            # if bb is not None:
+            #     bb = node.bounding_box
+            if hasattr( node.cell, "__iter__" ):
+                for c in node.cell:
                     process_node( c, w )
             else:
-                process_node( node.fill, bb )
+                process_node( node.cell, w )
         
         elif isinstance( node, Cell ):
             #TODO add bb, handle single cell conversions
@@ -375,8 +375,8 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             else:
                 raise NotImplementedError(f"{node} not implemented")
 
-        if cell.id in cell_ids:
-            write_journal_file(f"{filename[:-4]}{cell,id}.jou", surf_coms[start:])
+            if cell.id in cell_ids:
+                write_journal_file(f"{filename[:-4]}{cell,id}.jou", surf_coms[start:])
             
     
     def process_node_or_fill( node, w, indent = 0, offset = [0, 0], inner_world = None, outer_ll = None, ent_type = "body", hex = False ):
