@@ -105,7 +105,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 surface = node.surface
                 if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                     cad_surface = cad_surface.from_openmc_surface(surface)
-                    print(surface,type(surface))
+                    #print(surface,type(surface))
                     return cad_surface.to_cubit_surface(ent_type, node, w, inner_world, hex)
                 #TODO quadric
                 elif surface._type == "quadric":
@@ -306,7 +306,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 inter_id = lastid()
                 for subnode in node:
                     s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world, ent_type = ent_type ,)
-                    surf_coms.append( f"intersect {ent_type} {{ {s} }} {{ {inter_id} }} keep" )
+                    surf_coms.append( f"intersect {ent_type} {{ {inter_id} }} {{ {s} }} keep" )
                     #surf_coms.append( f"delete {ent_type} {{ {inter_id} }}" )
                     inter_id = lastid()
             return inter_id
