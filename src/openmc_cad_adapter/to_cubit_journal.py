@@ -25,7 +25,7 @@ from .cubit_util import *
 #from .cubit_util import lastid, reset_cubit_ids, new_variable
 from .geom_util import rotate, move
 
-from .surfaces import _CAD_SURFACE_DICTIONARY
+from .surfaces import _CAD_SURFACE_DICTIONARY, surf_map, surf_coms, surf_id
 
 def flatten(S):
     if S == []:
