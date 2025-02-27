@@ -23,20 +23,22 @@ def vector_to_euler_xyz(v):
     return phi * oe, theta * oe, 0.0
 
 
-def rotate(id, x, y, z, cmds):
+def rotate(id, x, y, z):
     if nonzero(x, y, z):
+        cmds = []
         phi, theta, psi = vector_to_euler_xyz((x, y, z))
         cmds.append(f"body {{ {id} }} rotate {theta} about Y")
         cmds.append(f"body {{ {id} }} rotate {phi} about Z")
         # cmds.append(f"body {{ {id} }} rotate {phi} about Z")
         # cmds.append(f"body {{ {id} }} rotate {theta} about Y")
         # cmds.append(f"body {{ {id} }} rotate {psi} about X")
+        return cmds
 
 
 def nonzero(*args):
     return any(arg != 0 for arg in args)
 
 
-def move( id, x, y, z, cmds):
+def move( id, x, y, z):
     if nonzero( x, y, z ):
-        cmds.append(f"body {{ {id} }} move {x} {y} {z}")
+        return f"body {{ {id} }} move {x} {y} {z}"

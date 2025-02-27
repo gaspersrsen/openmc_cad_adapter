@@ -15,14 +15,13 @@ except ImportError as e:
 
 from openmc.region import Region, Complement, Intersection, Union
 from openmc.surface import Halfspace, Quadric
-from openmc.lattice import Lattice, HexLattice
+from openmc.lattice import Lattice, HexLattice, RectLattice
+from openmc import Universe, Cell, Material
+from openmc import Plane, XPlane, YPlane, ZPlane, XCylinder, YCylinder, ZCylinder, Sphere, Cone
+from openmc import XCone, YCone, ZCone, XTorus, YTorus, Ztorus
 
 from .gqs import *
-from .cubit_util import emit_get_last_id, reset_cubit_ids, new_variable
-from .geom_util import rotate, move
-from .cubit_util import emit_get_last_id, reset_cubit_ids, new_variable
-from .geom_util import rotate, move
-from .cubit_util import emit_get_last_id, reset_cubit_ids, new_variable
+from .cubit_util import lastid, reset_cubit_ids, new_variable
 from .geom_util import rotate, move
 
 from .surfaces import _CAD_SURFACE_DICTIONARY
@@ -85,8 +84,9 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             raise RuntimeError('Model bounds were not provided and the bounding box determined by OpenMC is not finite.'
                                ' Please provide a world size argument to proceed')
         # to ensure that the box
-        box_max = np.max(np.abs(bbox[0], bbox[1]).T)
-        world = (2 * box_max, 2 * box_max, 2 * box_max)
+        # box_max = np.max(np.abs(bbox[0], bbox[1]).T)
+        # world = (2 * box_max, 2 * box_max, 2 * box_max)
+        world = np.abs(bbox[1]-bbox[0])
 
     if world is None:
         raise RuntimeError("Model extents could not be determined automatically and must be provided manually")
@@ -108,19 +108,11 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         def ind():
             return ' ' * (2*indent)
         if isinstance(node, Halfspace):
-                seen.add( node.surface )
                 surface = node.surface
-
-                nonlocal cmds
-
-                def reverse():
-                    return "reverse" if node.side == '-' else ""
-
                 if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                     cad_surface = cad_surface.from_openmc_surface(surface)
-                    ids, cad_cmds = cad_surface.to_cubit_surface(ent_type, node, w, inner_world, hex)
-                    cmds += cad_cmds
-                    return ids
+                    return cad_surface.to_cubit_surface(ent_type, node, w, inner_world, hex)
+                #TODO quadric
                 elif surface._type == "quadric":
                     (gq_type, A_, B_, C_, K_, translation, rotation_matrix) = characterize_general_quadratic(surface)
 
@@ -160,7 +152,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                             r2 = math.sqrt( abs( -K_/B_ ) )
                             r3 = math.sqrt( abs( -K_/C_ ) )
                             cmds.append( f"sphere radius 1")
-                            ids = emit_get_last_id( ent_type , cmds)
+                            ids = lastid()
                             cmds.append( f"body {{ { ids } }} scale x { r1 } y { r2 } z { r3 }")
                             move( ids, translation[0,0], translation[1,0], translation[2,0], cmds)
                     elif gq_type == ELLIPTIC_CYLINDER : #7
@@ -170,22 +162,22 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                             r1 = math.sqrt( abs( K_/C_ ) )
                             r2 = math.sqrt( abs( K_/B_ ) )
                             cmds.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
-                            ids = emit_get_last_id( ent_type , cmds)
+                            ids = lastid()
                             cmds.append( f"rotate body {{ { ids } }} about y angle 90")
                             if node.side != '-':
                                 wid = 0
                                 if inner_world:
                                     if hex:
                                         cmds.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
-                                        wid = emit_get_last_id( ent_type , cmds)
+                                        wid = lastid()
                                         cmds.append( f"rotate body {{ {wid} }} about z angle 30" )
                                         cmds.append( f"rotate body {{ {wid} }} about y angle 90")
                                     else:
                                         cmds.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-                                        wid = emit_get_last_id( ent_type , cmds)
+                                        wid = lastid()
                                 else:
                                     cmds.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-                                    wid = emit_get_last_id( ent_type , cmds)
+                                    wid = lastid()
                                 cmds.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
                                 cmds.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
                                 move( wid, translation[0,0], translation[1,0], translation[2,0], cmds)
@@ -199,22 +191,22 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                             r1 = math.sqrt( abs( K_/A_ ) )
                             r2 = math.sqrt( abs( K_/C_ ) )
                             cmds.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
-                            ids = emit_get_last_id( ent_type , cmds)
+                            ids = lastid()
                             cmds.append( f"rotate body {{ { ids } }} about x angle 90")
                             if node.side != '-':
                                 wid = 0
                                 if inner_world:
                                     if hex:
                                         cmds.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
-                                        wid = emit_get_last_id( ent_type , cmds)
+                                        wid = lastid()
                                         cmds.append( f"rotate body {{ {wid} }} about z angle 30" )
                                         cmds.append( f"rotate body {{ {wid} }} about y angle 90")
                                     else:
                                         cmds.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-                                        wid = emit_get_last_id( ent_type , cmds)
+                                        wid = lastid()
                                 else:
                                     cmds.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-                                    wid = emit_get_last_id( ent_type , cmds)
+                                    wid = lastid()
                                 cmds.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
                                 cmds.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
                                 move( wid, translation[0,0], translation[1,0], translation[2,0], cmds)
@@ -228,21 +220,21 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                             r1 = math.sqrt( abs( K_/A_ ) )
                             r2 = math.sqrt( abs( K_/B_ ) )
                             cmds.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
-                            ids = emit_get_last_id( ent_type , cmds)
+                            ids = lastid()
                             if node.side != '-':
                                 wid = 0
                                 if inner_world:
                                     if hex:
                                         cmds.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
-                                        wid = emit_get_last_id( ent_type , cmds)
+                                        wid = lastid()
                                         cmds.append( f"rotate body {{ {wid} }} about z angle 30" )
                                         cmds.append( f"rotate body {{ {wid} }} about y angle 90")
                                     else:
                                         cmds.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-                                        wid = emit_get_last_id( ent_type , cmds)
+                                        wid = lastid()
                                 else:
                                     cmds.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-                                    wid = emit_get_last_id( ent_type , cmds)
+                                    wid = lastid()
                                 cmds.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
                                 cmds.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
                                 move( wid, translation[0,0], translation[1,0], translation[2,0], cmds)
@@ -258,10 +250,10 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                             rot_angle = - 90
                             rot_axis = 1
                             cmds.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
-                            ids = emit_get_last_id( ent_type , cmds)
+                            ids = lastid()
                             cmds.append( f"rotate body {{ { ids } }} about y angle -90")
                             cmds.append( f"copy body {{ { ids } }}")
-                            mirror = emit_get_last_id( ent_type , cmds)
+                            mirror = lastid()
                             cmds.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
                             cmds.append( f"unit body {{ { ids } }} {{ { mirror } }}")
                             cmds.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
@@ -274,10 +266,10 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                             rot_angle = 90
                             rot_axis = 0
                             cmds.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
-                            ids = emit_get_last_id( ent_type , cmds)
+                            ids = lastid()
                             cmds.append( f"rotate body {{ { ids } }} about x angle 90")
                             cmds.append( f"copy body {{ { ids } }}")
-                            mirror = emit_get_last_id( ent_type , cmds)
+                            mirror = lastid()
                             cmds.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
                             cmds.append( f"unit body {{ { ids } }} {{ { mirror } }}")
                             cmds.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
@@ -290,9 +282,9 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                             rot_angle = 180
                             rot_axis = 0
                             cmds.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
-                            ids = emit_get_last_id( ent_type , cmds)
+                            ids = lastid()
                             cmds.append( f"copy body {{ { ids } }}")
-                            mirror = emit_get_last_id( ent_type , cmds)
+                            mirror = lastid()
                             cmds.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
                             cmds.append( f"unit body {{ { ids } }} {{ { mirror } }}")
                             cmds.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
@@ -306,44 +298,101 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             print( "Complement:" )
             id = surface_to_cubit_journal(node.node, w, indent + 1, inner_world, ent_type = ent_type )
             cmds.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-            wid = emit_get_last_id( ent_type , cmds)
-            cmds.append( f"subtract body {{ {id} }} from body {{ {wid} }}" )
-            return emit_get_last_id( ent_type , cmds)
+            wid = lastid()
+            cmds.append( f"subtract body {{ {id} }} from body {{ {wid} }} keep_tool" )
+            return lastid()
         elif isinstance(node, Intersection):
             last = 0
             if len( node ) > 0:
-                last = surface_to_cubit_journal( node[0], w, indent + 1, inner_world, ent_type = ent_type ,)
-                for subnode in node[1:]:
-                    s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world, ent_type = ent_type ,)
-                    before = emit_get_last_id(cmds=cmds)
-                    cmds.append( f"intersect {ent_type} {{ {last} }} {{ {s} }}" )
-                    after = emit_get_last_id(cmds=cmds)
-                    last = new_variable()
-                    cmds.append( f"#{{{last} = ( {before} == {after} ) ? {s} : {after}}}" )
                 if inner_world:
                     cmds.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-                    iwid = emit_get_last_id( ent_type , cmds)
-                    cmds.append( f"intersect {ent_type} {{ {last} }} {{ {iwid} }}" )
-                    return emit_get_last_id( ent_type , cmds)
-            return last
+                else:
+                    cmds.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+                inter_id = lastid()
+                for subnode in node:
+                    s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world, ent_type = ent_type ,)
+                    cmds.append( f"intersect {ent_type} {{ {inter_id} }} {{ {s} }}" )
+                    after = lastid()
+            return inter_id
         elif isinstance(node, Union):
             if len( node ) > 0:
-                local_ent_type = "body"
-                first = surface_to_cubit_journal( node[0], w, indent + 1, inner_world, ent_type = local_ent_type )
-                for subnode in node[1:]:
-                    s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world, ent_type = local_ent_type )
-                    cmds.append( f"unite {local_ent_type} {{ {first} }} {{ {s} }}" )
                 if inner_world:
                     cmds.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-                    iwid = emit_get_last_id( local_ent_type , cmds)
-                    cmds.append( f"intersect {ent_type} {{ {last} }} {{ {iwid} }}" )
-                    return first
-            return first
+                else:
+                    cmds.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+                union_id = lastid()
+                first = surface_to_cubit_journal( node[0], w, indent + 1, inner_world)
+                cmds.append( f"intersect body {{ {inter_id} }} {{ {first} }}" )
+                for subnode in node[1:]:
+                    s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world)
+                    cmds.append( f"unite body {{ {first} }} {{ {s} }}" )
+            return union_id
         elif isinstance(node, Quadric):
             pass
         else:
             raise NotImplementedError(f"{node} not implemented")
+    
+    latt_map = []
+    unis_map = []
+    
+    def process_lattice():
+        pass
 
+
+    def process_node( node, bb, surfs=None, lat_pos=None ):
+        results = []
+        
+        if isinstance( node, Universe ): #Universes only contain cells, they are not added to cubit
+            if bb is not None:
+                bb = node.bounding_box
+            for cs in node._cells.values():
+                for c in cs:
+                    r = process_node( c, bb )
+                    results.append( r )
+            return results
+        
+        elif isinstance( node, Cell ):
+            #TODO add bb
+            if hasattr( node.fill, "__iter__" ):
+                for uni in node.fill:
+                    r = process_node( uni, node.bb)
+                    results.append( r )
+                return results
+            
+            elif isinstance( node.fill, Universe ):
+                return process_node( node, bb )
+            
+            elif isinstance( node.fill, Material ):
+                r = []
+                for surf in node.region:
+                    process_surface(surf)
+                mat_identifier = f"mat:{node.fill.id}"
+                # use material names when possible
+                if node.fill.name is not None and node.fill.name:
+                    mat_identifier = f"mat:{node.fill.name}"
+                if len(mat_identifier) > 32:
+                    mat_identifier = mat_identifier[:32]
+                    warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
+                r.append( f'group \"{mat_identifier}\" add body {{ { cub_id } }} ' )
+                return r
+            
+            elif cell.fill is None:
+                return f'group "mat:void" add body {{ { cub_id } }} '
+            
+            else:
+                raise NotImplementedError(f"{node} not implemented")
+
+            
+
+            
+            
+                
+                
+        
+        
+        
+        
+    
     def process_node_or_fill( node, w, indent = 0, offset = [0, 0], inner_world = None, outer_ll = None, ent_type = "body", hex = False ):
         def ind():
             return ' ' * (2*indent)
@@ -355,159 +404,161 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 results.append( id )
             elif hex:
                 cmds.append( f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2) }" )
-                wid = emit_get_last_id( ent_type , cmds)
+                wid = lastid()
                 cmds.append( f"rotate body {{ {wid} }} about z angle 30" )
                 results.append( wid )
 
         if hasattr( node, "fill" ) and isinstance(node.fill, Lattice):
             id = process_node_or_fill( node.fill, w, indent + 1, offset, inner_world )
             results.append( id )
-        if hasattr( node, "universes" ):
+            
+        if isinstance( node, HexLattice ):
             pitch = node._pitch
-            if isinstance( node, HexLattice ) :
-                three_d_hex_lattice = len( node._pitch ) > 1
-                #three_d_hex_lattice = len( node.center ) > 2
-                #3d hex lattice
-                if three_d_hex_lattice:
-                    center = [ node.center[0], node.center[1], node.center[1] ]
-                    ii = 0
-                    for uss in node.universes:
-                        z = ii * pitch[1]
-                        j = 0
-                        for us in uss:
-                            k = 0
-                            ring_id = ( len( uss ) - j -1 )
-                            #print( "RING_ID", ring_id )
-                            def draw_hex_cell( n, cell, x, y ):
-                                #print( i, j, k, len( node.universes ), len( uss), len( us ), x, y )
-                                id = process_node_or_fill( cell, [ w[0], w[1], w[2] ], indent + 1, offset = [x,y,z], inner_world=[ pitch[0], pitch[0], pitch[1] ], outer_ll=outer_ll if outer_ll else [ node.center[0], node.center[1] ], hex = True )
-                                ids = str( id )
-                                if isinstance( id, list ):
-                                    ids = ' '.join( map(str, id) )
-                                else:
-                                    pass
-                                if ids != '':
-                                    cmds.append( f"move body {{ {ids} }} midpoint location {x} {y} {z}" )
-                            side_to_side_diameter =  pitch[0]/2 * math.sqrt( 3 )
-                            center_to_mid_side_diameter = ( ( pitch[0] / 2 ) * math.sin( math.pi / 6 ) ) + pitch[0] / 2
-                            if ring_id < 2:
-                                for u in us:
-                                    for n, cell in u._cells.items():
-                                        #print( n, cell )
-                                        theta = 2 * math.pi * -k / len( us ) + math.pi / 2
-                                        r = ( len( uss ) - j -1 ) * side_to_side_diameter
-                                        x = r * math.cos( theta )
-                                        y = r * math.sin( theta )
-                                        draw_hex_cell( n, cell, x, y )
-                                    k = k + 1
+            three_d_hex_lattice = len( node._pitch ) > 1
+            #three_d_hex_lattice = len( node.center ) > 2
+            #3d hex lattice
+            if three_d_hex_lattice:
+                center = [ node.center[0], node.center[1], node.center[1] ]
+                ii = 0
+                for uss in node.universes:
+                    z = ii * pitch[1]
+                    j = 0
+                    for us in uss:
+                        k = 0
+                        ring_id = ( len( uss ) - j -1 )
+                        #print( "RING_ID", ring_id )
+                        def draw_hex_cell( n, cell, x, y ):
+                            #print( i, j, k, len( node.universes ), len( uss), len( us ), x, y )
+                            id = process_node_or_fill( cell, [ w[0], w[1], w[2] ], indent + 1, offset = [x,y,z], inner_world=[ pitch[0], pitch[0], pitch[1] ], outer_ll=outer_ll if outer_ll else [ node.center[0], node.center[1] ], hex = True )
+                            ids = str( id )
+                            if isinstance( id, list ):
+                                ids = ' '.join( map(str, id) )
                             else:
-                                x = 0
-                                x_pos = 0
-                                y_pos = 0
-                                r = ring_id
-                                for i in range( r, 0, -1 ):
-                                    x_pos = x * center_to_mid_side_diameter
-                                    y_pos = ring_id * side_to_side_diameter - ( x ) * 0.5 * side_to_side_diameter
-                                    for n, cell in us[k]._cells.items():
-                                        draw_hex_cell( n, cell, x_pos, y_pos )
-                                    #print( r, k, x, x_pos, y_pos )
-                                    k = k + 1
-                                    x = x + 1
-                                y_pos = ring_id * side_to_side_diameter - ( x ) * 0.5 * side_to_side_diameter
-                                for i in range( r, 0, -1 ):
-                                    x_pos = x * center_to_mid_side_diameter
-                                    for n, cell in us[k]._cells.items():
-                                        draw_hex_cell( n, cell, x_pos, y_pos )
-                                    #print( r, k, x, x_pos, y_pos )
-                                    y_pos = y_pos - side_to_side_diameter
-                                    k = k + 1
-                                for i in range( r, 0, -1 ):
-                                    x_pos = x * center_to_mid_side_diameter
-                                    y_pos = - ring_id * side_to_side_diameter + ( x ) * 0.5 * side_to_side_diameter
-                                    for n, cell in us[k]._cells.items():
-                                        draw_hex_cell( n, cell, x_pos, y_pos )
-                                    #print( r, k, x, x_pos, y_pos )
-                                    k = k + 1
-                                    x = x - 1
-                                for i in range( r, 0, -1 ):
-                                    x_pos = x * center_to_mid_side_diameter
-                                    y_pos = - ring_id * side_to_side_diameter - ( x ) * 0.5 * side_to_side_diameter
-                                    for n, cell in us[k]._cells.items():
-                                        draw_hex_cell( n, cell, x_pos, y_pos )
-                                    #print( r, k, x, x_pos, y_pos )
-                                    k = k + 1
-                                    x = x - 1
-                                y_pos = - ring_id * side_to_side_diameter - ( x ) * 0.5 * side_to_side_diameter
-                                for i in range( r, 0, -1 ):
-                                    x_pos = x * center_to_mid_side_diameter
-                                    for n, cell in us[k]._cells.items():
-                                        draw_hex_cell( n, cell, x_pos, y_pos )
-                                    #print( r, k, x, x_pos, y_pos )
-                                    y_pos = y_pos + side_to_side_diameter
-                                    k = k + 1
-                                for i in range( r, 0, -1 ):
-                                    x_pos = x * center_to_mid_side_diameter
-                                    y_pos = ring_id * side_to_side_diameter + ( x ) * 0.5 * side_to_side_diameter
-                                    for n, cell in us[k]._cells.items():
-                                        draw_hex_cell( n, cell, x_pos, y_pos )
-                                    #print( r, k, x, x_pos, y_pos )
-                                    k = k + 1
-                                    x = x + 1
-                            j = j + 1
-                        ii = ii + 1
-                #2d hex lattice
-                else:
-                    center = [ node.center[0], node.center[1] ]
-                    i = 0
-                    for us in node.universes:
-                        j = 0
-                        for u in us:
-                            for n, cell in u._cells.items():
+                                pass
+                            if ids != '':
+                                cmds.append( f"move body {{ {ids} }} midpoint location {x} {y} {z}" )
+                        side_to_side_diameter =  pitch[0]/2 * math.sqrt( 3 )
+                        center_to_mid_side_diameter = ( ( pitch[0] / 2 ) * math.sin( math.pi / 6 ) ) + pitch[0] / 2
+                        if ring_id < 2:
+                            for u in us:
+                                for n, cell in u._cells.items():
                                     #print( n, cell )
-                                    theta = 2 * math.pi * -j / len( us ) + math.pi / 2
-                                    r = ( len( uss ) - i -1 ) * pitch[0]
+                                    theta = 2 * math.pi * -k / len( us ) + math.pi / 2
+                                    r = ( len( uss ) - j -1 ) * side_to_side_diameter
                                     x = r * math.cos( theta )
                                     y = r * math.sin( theta )
-                                    #print( n, i, j, k, len( node.universes ), len( uss), len( us ), x, y, theta )
-                                    id = process_node_or_fill( cell, [ w[0], w[1], w[2] ], indent + 1, offset = [x,y], inner_world=[ pitch[0], pitch[0], pitch[1] ], outer_ll=outer_ll if outer_ll else [ node.center[0], node.center[1] ], hex = True )
-                                    ids = str( id )
-                                    if isinstance( id, list ):
-                                        ids = ' '.join( map(str, id) )
-                                        #results.extend( id )
-                                    else:
-                                        #results.append( id )
-                                        pass
-                                    if ids != '':
-                                        cmds.append( f"move body {{ {ids} }} midpoint location {x} {y} {z}" )
-                            j = j + 1
-                        i = i + 1
-
-            elif isinstance( node, Lattice ):
-                ll = [ node.lower_left[0], node.lower_left[1] ]
-                if outer_ll:
-                    ll = outer_ll
-                ll[0] = ll[0] + pitch[0] / 2
-                ll[1] = ll[1] + pitch[1] / 2
+                                    draw_hex_cell( n, cell, x, y )
+                                k = k + 1
+                        else:
+                            x = 0
+                            x_pos = 0
+                            y_pos = 0
+                            r = ring_id
+                            for i in range( r, 0, -1 ):
+                                x_pos = x * center_to_mid_side_diameter
+                                y_pos = ring_id * side_to_side_diameter - ( x ) * 0.5 * side_to_side_diameter
+                                for n, cell in us[k]._cells.items():
+                                    draw_hex_cell( n, cell, x_pos, y_pos )
+                                #print( r, k, x, x_pos, y_pos )
+                                k = k + 1
+                                x = x + 1
+                            y_pos = ring_id * side_to_side_diameter - ( x ) * 0.5 * side_to_side_diameter
+                            for i in range( r, 0, -1 ):
+                                x_pos = x * center_to_mid_side_diameter
+                                for n, cell in us[k]._cells.items():
+                                    draw_hex_cell( n, cell, x_pos, y_pos )
+                                #print( r, k, x, x_pos, y_pos )
+                                y_pos = y_pos - side_to_side_diameter
+                                k = k + 1
+                            for i in range( r, 0, -1 ):
+                                x_pos = x * center_to_mid_side_diameter
+                                y_pos = - ring_id * side_to_side_diameter + ( x ) * 0.5 * side_to_side_diameter
+                                for n, cell in us[k]._cells.items():
+                                    draw_hex_cell( n, cell, x_pos, y_pos )
+                                #print( r, k, x, x_pos, y_pos )
+                                k = k + 1
+                                x = x - 1
+                            for i in range( r, 0, -1 ):
+                                x_pos = x * center_to_mid_side_diameter
+                                y_pos = - ring_id * side_to_side_diameter - ( x ) * 0.5 * side_to_side_diameter
+                                for n, cell in us[k]._cells.items():
+                                    draw_hex_cell( n, cell, x_pos, y_pos )
+                                #print( r, k, x, x_pos, y_pos )
+                                k = k + 1
+                                x = x - 1
+                            y_pos = - ring_id * side_to_side_diameter - ( x ) * 0.5 * side_to_side_diameter
+                            for i in range( r, 0, -1 ):
+                                x_pos = x * center_to_mid_side_diameter
+                                for n, cell in us[k]._cells.items():
+                                    draw_hex_cell( n, cell, x_pos, y_pos )
+                                #print( r, k, x, x_pos, y_pos )
+                                y_pos = y_pos + side_to_side_diameter
+                                k = k + 1
+                            for i in range( r, 0, -1 ):
+                                x_pos = x * center_to_mid_side_diameter
+                                y_pos = ring_id * side_to_side_diameter + ( x ) * 0.5 * side_to_side_diameter
+                                for n, cell in us[k]._cells.items():
+                                    draw_hex_cell( n, cell, x_pos, y_pos )
+                                #print( r, k, x, x_pos, y_pos )
+                                k = k + 1
+                                x = x + 1
+                        j = j + 1
+                    ii = ii + 1
+            #2d hex lattice
+            else:
+                center = [ node.center[0], node.center[1] ]
                 i = 0
                 for us in node.universes:
                     j = 0
                     for u in us:
                         for n, cell in u._cells.items():
-                            x = ll[0] + j * pitch[0] + offset[0]
-                            y = ll[1] + i * pitch[1] + offset[1]
-                            #print(  ind(), "UCell:", n, cell )
-                            id = process_node_or_fill( cell, [ w[0], w[1], w[2] ], indent + 1, offset = [x,y], inner_world=[ pitch[0], pitch[1], w[2] ], outer_ll=outer_ll if outer_ll else [ node.lower_left[0], node.lower_left[1] ] )
-                            ids = str( id )
-                            if isinstance( id, list ):
-                                ids = ' '.join( map(str, id) )
-                                #results.extend( id )
-                            else:
-                                #results.append( id )
-                                pass
-                            if ids != '':
-                                cmds.append( f"move body {{ {ids} }} midpoint location {x} {y} 0 except z" )
+                                #print( n, cell )
+                                theta = 2 * math.pi * -j / len( us ) + math.pi / 2
+                                r = ( len( uss ) - i -1 ) * pitch[0]
+                                x = r * math.cos( theta )
+                                y = r * math.sin( theta )
+                                #print( n, i, j, k, len( node.universes ), len( uss), len( us ), x, y, theta )
+                                id = process_node_or_fill( cell, [ w[0], w[1], w[2] ], indent + 1, offset = [x,y], inner_world=[ pitch[0], pitch[0], pitch[1] ], outer_ll=outer_ll if outer_ll else [ node.center[0], node.center[1] ], hex = True )
+                                ids = str( id )
+                                if isinstance( id, list ):
+                                    ids = ' '.join( map(str, id) )
+                                    #results.extend( id )
+                                else:
+                                    #results.append( id )
+                                    pass
+                                if ids != '':
+                                    cmds.append( f"move body {{ {ids} }} midpoint location {x} {y} {z}" )
                         j = j + 1
                     i = i + 1
+
+        elif isinstance( node, Lattice ):
+            pitch = node._pitch
+            ll = [ node.lower_left[0], node.lower_left[1] ]
+            if outer_ll:
+                ll = outer_ll
+            ll[0] = ll[0] + pitch[0] / 2
+            ll[1] = ll[1] + pitch[1] / 2
+            i = 0
+            for us in node.universes:
+                j = 0
+                for u in us:
+                    for n, cell in u._cells.items():
+                        x = ll[0] + j * pitch[0] + offset[0]
+                        y = ll[1] + i * pitch[1] + offset[1]
+                        #print(  ind(), "UCell:", n, cell )
+                        id = process_node_or_fill( cell, [ w[0], w[1], w[2] ], indent + 1, offset = [x,y], inner_world=[ pitch[0], pitch[1], w[2] ], outer_ll=outer_ll if outer_ll else [ node.lower_left[0], node.lower_left[1] ] )
+                        ids = str( id )
+                        if isinstance( id, list ):
+                            ids = ' '.join( map(str, id) )
+                            #results.extend( id )
+                        else:
+                            #results.append( id )
+                            pass
+                        if ids != '':
+                            cmds.append( f"move body {{ {ids} }} midpoint location {x} {y} 0 except z" )
+                    j = j + 1
+                i = i + 1
+                
         #FIXME rotate and tranlate
         r = flatten( results )
         if len( r ) > 0:
