@@ -22,7 +22,6 @@ def surf_id(node):
 class CADSurface(ABC):
 
     def to_cubit_surface(self, ent_type, node, extents, inner_world=None, hex=False):
-        global surf_map, surf_coms
         ids, cmds = self.to_cubit_surface_inner(ent_type, node, extents, inner_world, hex)
         # TODO: Add boundary condition to the correct surface(s)
         # cmds += self.boundary_condition(ids)
@@ -258,6 +257,7 @@ class CADYCylinder(CADSurface, openmc.YCylinder):
 class CADZCylinder(CADSurface, openmc.ZCylinder):
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+        global surf_map, surf_coms
         if surf_id(node) not in surf_map:
             cad_cmds = []
             h = inner_world[2] if inner_world else extents[2]
