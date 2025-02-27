@@ -343,7 +343,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         if isinstance( node, Universe ): #Universes only contain cells, they are not added to cubit
             # if bb is not None:
             #     bb = node.bounding_box
-            for c in node.cells:
+            for c in node._cells.values():
                 process_node( c, w )
         
         elif isinstance( node, Cell ):
