@@ -106,8 +106,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
 
     def surface_to_cubit_journal(node, w, indent = 0, inner_world = None, hex = False, ent_type = "body", materials='group'):
-        global _CUBIT_ID
-        print(_CUBIT_ID)
         def ind():
             return ' ' * (2*indent)
         if isinstance(node, Halfspace):

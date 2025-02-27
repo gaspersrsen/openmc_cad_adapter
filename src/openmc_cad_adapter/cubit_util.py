@@ -10,6 +10,7 @@ def lastid():
     global _CUBIT_ID
     id_out = _CUBIT_ID
     _CUBIT_ID += 1
+    print(id_out)
     return id_out
 
 
