@@ -58,6 +58,7 @@ class CADPlane(CADSurface, openmc.Plane):
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         cmds = []
+        global surf_map, surf_coms
         if surf_id(node) not in surf_map:
             n = np.array([self.coefficients[k] for k in ('a', 'b', 'c')])
             distance = self.coefficients['d'] / np.linalg.norm(n)
@@ -103,6 +104,7 @@ class CADXPlane(CADSurface, openmc.XPlane):
         return "reverse" if node.side == '-' else ""
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+        global surf_map, surf_coms
         if surf_id(node) not in surf_map:
             surf_coms.append(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
             ids = lastid()
@@ -122,6 +124,7 @@ class CADYPlane(CADSurface, openmc.YPlane):
         return "reverse" if node.side == '-' else ""
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+        global surf_map, surf_coms
         if surf_id(node) not in surf_map:
             surf_coms.append(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
             ids = lastid()
@@ -141,6 +144,7 @@ class CADZPlane(CADSurface, openmc.ZPlane):
         return "reverse" if node.side == '-' else ""
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+        global surf_map, surf_coms
         if surf_id(node) not in surf_map:
             surf_coms.append(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
             ids = lastid()
@@ -189,6 +193,7 @@ class CADCylinder(CADSurface, openmc.Cylinder):
 class CADXCylinder(CADSurface, openmc.XCylinder):
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+        global surf_map, surf_coms
         if surf_id(node) not in surf_map:
             cad_cmds = []
             h = inner_world[0] if inner_world else extents[0]
@@ -223,6 +228,7 @@ class CADXCylinder(CADSurface, openmc.XCylinder):
 class CADYCylinder(CADSurface, openmc.YCylinder):
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+        global surf_map, surf_coms
         if surf_id(node) not in surf_map:
             cad_cmds = []
             h = inner_world[1] if inner_world else extents[1]

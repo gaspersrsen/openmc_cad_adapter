@@ -585,6 +585,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
 
 def write_journal_file(filename, cmds, verbose_journal=False):
+    global surf_map, surf_coms
     with open(filename, "w") as f:
         if not verbose_journal:
             f.write("set echo off\n")
