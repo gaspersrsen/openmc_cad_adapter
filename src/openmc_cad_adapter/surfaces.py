@@ -255,7 +255,7 @@ class CADYCylinder(CADSurface, openmc.YCylinder):
 class CADZCylinder(CADSurface, openmc.ZCylinder):
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
-        if node.id not in surf_map:
+        if (node.surface*(-1 if node.side == "-" else 1)) not in surf_map:
             cad_cmds = []
             h = inner_world[2] if inner_world else extents[2]
             cad_cmds.append( f"cylinder height {h} radius {self.r}")
@@ -276,7 +276,7 @@ class CADZCylinder(CADSurface, openmc.ZCylinder):
                 cad_cmds.append(f"subtract body {{ { ids } }} from body {{ { wid } }}")
             cad_cmds.append( move(wid, self.x0, self.y0, 0) )
             surf_coms += [cad_cmds]
-            surf_map[node.id] = ids
+            surf_map[node.surface*(-1 if node.side == "-" else 1)] = ids
         return surf_map[node]
 
     @classmethod
