@@ -557,7 +557,8 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     def do_cell(cell, cell_ids: Iterable[int] = None):
         before = len( cmds )
         cmds.append( f"#CELL {cell.id}" )
-        vol_or_body = process_node_or_fill( cell, w )
+        vol_or_body = process_node( cell, w )
+        #vol_or_body = process_node_or_fill( cell, w )
         if cell.fill is None:
             cmds.append(f'group "mat:void" add body {{ { vol_or_body[0] } }} ')
         elif cell.fill_type == "material":
