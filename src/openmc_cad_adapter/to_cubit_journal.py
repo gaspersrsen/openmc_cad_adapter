@@ -595,7 +595,8 @@ def write_journal_file(filename, cmds, verbose_journal=False):
             f.write("set journal off\n")
             f.write("set default autosize off\n")
         for x in surf_coms:
-            f.write(x + "\n")
+            print(x)
+            #f.write(x + "\n")
         for x in cmds:
             f.write(x + "\n")
         if not verbose_journal:
