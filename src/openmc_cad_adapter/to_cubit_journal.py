@@ -370,6 +370,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     mat_identifier = mat_identifier[:32]
                     warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
                 r.append( f'group \"{mat_identifier}\" add body {{ { s_id } }} ' )
+                print("ended")
                 return r
             
             elif node.fill is None:
