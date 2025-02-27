@@ -267,7 +267,7 @@ class CADZCylinder(CADSurface, openmc.ZCylinder):
         if surf_id(node) not in surf_map:
             cad_cmds = []
             h = inner_world[2] if inner_world else extents[2]
-            cad_cmds.append( f"cylinder height {h} radius {self.r}")
+            cad_cmds.append(f"cylinder height {h} radius {self.r}")
             ids = lastid()
             if node.side != '-':
                 if inner_world:
@@ -286,7 +286,7 @@ class CADZCylinder(CADSurface, openmc.ZCylinder):
             move_cmd = move(ids, self.x0, self.y0, 0)
             if move_cmd is not None:
                 cad_cmds.append( move_cmd )
-            surf_coms.append(cad_cmds)
+            surf_coms.extend(cad_cmds)
             surf_map[surf_id(node)] = ids
         return surf_map[surf_id(node)]
 
