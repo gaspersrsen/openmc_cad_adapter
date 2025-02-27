@@ -355,7 +355,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 return results
             
             elif isinstance( node.fill, Universe ):
-                return process_node( node, bb )
+                return process_node( node.fill, bb )
             
             elif isinstance( node.fill, Material ):
                 r = []
@@ -555,29 +555,15 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         return r
 
     def do_cell(cell, cell_ids: Iterable[int] = None):
-        before = len( cmds )
-        cmds.append( f"#CELL {cell.id}" )
-        vol_or_body = process_node( cell, w )
-        #vol_or_body = process_node_or_fill( cell, w )
-        if cell.fill is None:
-            cmds.append(f'group "mat:void" add body {{ { vol_or_body[0] } }} ')
-        elif cell.fill_type == "material":
-            mat_identifier = f"mat:{cell.fill.id}"
-            # use material names when possible
-            if cell.fill.name is not None and cell.fill.name:
-                mat_identifier = f"mat:{cell.fill.name}"
-            if len(mat_identifier) > 32:
-                mat_identifier = mat_identifier[:32]
-                warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
-            cmds.append( f'group \"{mat_identifier}\" add body {{ { vol_or_body[0] } }} ' )
-        after = len( cmds )
+        #before = len( cmds )
+        ids = process_node( cell, w )
 
-        if cell_ids is not None and cell.id in cell_ids:
-            if filename.endswith(".jou"):
-                cell_filename = filename[:-4] + f"_cell{cell.id}.jou"
-            else:
-                cell_filename = filename + f"_cell{cell.id}"
-            write_journal_file(cell_filename, cmds[before:after])
+        # if cell_ids is not None and cell.id in cell_ids:
+        #     if filename.endswith(".jou"):
+        #         cell_filename = filename[:-4] + f"_cell{cell.id}.jou"
+        #     else:
+        #         cell_filename = filename + f"_cell{cell.id}"
+        #     write_journal_file(cell_filename, cmds[before:after])
 
     for cell in geom.root_universe._cells.values():
         if cells is not None and cell.id in cells:
