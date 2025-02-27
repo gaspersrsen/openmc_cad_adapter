@@ -281,7 +281,7 @@ class CADZCylinder(CADSurface, openmc.ZCylinder):
                 else:
                     cad_cmds.append( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
                     wid = lastid()
-                cad_cmds.append(f"subtract body {{ { wid } }} from body {{ { ids } }} keep_tool")
+                cad_cmds.append(f"subtract body {{ { ids } }} from body {{ { wid } }} keep_tool")
                 ids = wid
             move_cmd = move(ids, self.x0, self.y0, 0)
             if move_cmd is not None:
