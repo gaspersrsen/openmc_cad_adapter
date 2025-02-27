@@ -334,7 +334,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
 
     def process_node( node, bb, surfs=None, lat_pos=None ):
-        results = []
         
         if isinstance( node, Universe ): #Universes only contain cells, they are not added to cubit
             if bb is not None:
@@ -342,23 +341,21 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             for cs in node._cells.values():
                 for c in cs:
                     r = process_node( c, bb )
-                    results.append( r )
-            return results
+            return
         
         elif isinstance( node, Cell ):
-            #TODO add bb
+            #TODO add bb, handle single cell conversions
             if hasattr( node.fill, "__iter__" ):
                 for uni in node.fill:
                     r = process_node( uni, node.bb)
-                    results.append( r )
-                return results
+                return
             
             elif isinstance( node.fill, Universe ):
                 return process_node( node.fill, bb )
             
             elif isinstance( node.fill, Material ):
                 r = []
-                s_id = surface_to_cubit_journal(node.region, w)
+                ids = surface_to_cubit_journal(node.region, w)
                 mat_identifier = f"mat:{node.fill.id}"
                 # use material names when possible
                 if node.fill.name is not None and node.fill.name:
@@ -366,17 +363,18 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 if len(mat_identifier) > 32:
                     mat_identifier = mat_identifier[:32]
                     warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
-                r.append( f'group \"{mat_identifier}\" add body {{ { s_id } }} ' )
-                return r
+                surf_coms.append( f'group \"{mat_identifier}\" add body {{ { ids } }} ' )
+                return
             
             elif node.fill is None:
                 ids = surface_to_cubit_journal(node, w)
-                return f'group "mat:void" add body {{ { ids } }} '
+                surf_coms.append( f'group "mat:void" add body {{ { ids } }} ' )
+                return 
             
             else:
                 raise NotImplementedError(f"{node} not implemented")
 
-        return results
+        return
     
     def process_node_or_fill( node, w, indent = 0, offset = [0, 0], inner_world = None, outer_ll = None, ent_type = "body", hex = False ):
         def ind():
