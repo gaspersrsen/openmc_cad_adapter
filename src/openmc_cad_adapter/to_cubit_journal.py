@@ -323,7 +323,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 union_id = lastid()
                 for subnode in node[1:]:
                     s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world)
-                    surf_coms.append( f"unite body {{ {first} }} {{ {s} }}" )
+                    surf_coms.append( f"unite body {{ {union_id} }} {{ {s} }}" )
                     #surf_coms.append( f"delete {ent_type} {{ {union_id} }}" )
                     union_id = lastid()
             return union_id
