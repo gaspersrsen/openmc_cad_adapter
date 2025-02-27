@@ -279,7 +279,7 @@ class CADZCylinder(CADSurface, openmc.ZCylinder):
             cad_cmds.append( move(ids, self.x0, self.y0, 0) )
             surf_coms += [cad_cmds]
             surf_map[surf_id(node)] = ids
-        return surf_map[node]
+        return surf_map[surf_id(node)]
 
     @classmethod
     def from_openmc_surface_inner(cls, cyl):
