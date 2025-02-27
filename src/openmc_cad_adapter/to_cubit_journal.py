@@ -21,7 +21,8 @@ from openmc import Plane, XPlane, YPlane, ZPlane, XCylinder, YCylinder, ZCylinde
 from openmc import XCone, YCone, ZCone, XTorus, YTorus, Ztorus
 
 from .gqs import *
-from .cubit_util import lastid, reset_cubit_ids, new_variable
+from .cubit_util import *
+#from .cubit_util import lastid, reset_cubit_ids, new_variable
 from .geom_util import rotate, move
 
 from .surfaces import _CAD_SURFACE_DICTIONARY
@@ -331,12 +332,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             pass
         else:
             raise NotImplementedError(f"{node} not implemented")
-    
-    latt_map = []
-    unis_map = []
-    
-    def process_lattice():
-        pass
 
 
     def process_node( node, bb, surfs=None, lat_pos=None ):
@@ -364,8 +359,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             
             elif isinstance( node.fill, Material ):
                 r = []
-                for surf in node.region:
-                    process_surface(surf)
+                s_id = surface_to_cubit_journal(node, w)
                 mat_identifier = f"mat:{node.fill.id}"
                 # use material names when possible
                 if node.fill.name is not None and node.fill.name:
@@ -373,25 +367,17 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 if len(mat_identifier) > 32:
                     mat_identifier = mat_identifier[:32]
                     warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
-                r.append( f'group \"{mat_identifier}\" add body {{ { cub_id } }} ' )
+                r.append( f'group \"{mat_identifier}\" add body {{ { s_id } }} ' )
                 return r
             
-            elif cell.fill is None:
-                return f'group "mat:void" add body {{ { cub_id } }} '
+            elif node.fill is None:
+                ids = surface_to_cubit_journal(node, w)
+                return f'group "mat:void" add body {{ { ids } }} '
             
             else:
                 raise NotImplementedError(f"{node} not implemented")
 
-            
-
-            
-            
-                
-                
-        
-        
-        
-        
+        return results
     
     def process_node_or_fill( node, w, indent = 0, offset = [0, 0], inner_world = None, outer_ll = None, ent_type = "body", hex = False ):
         def ind():
@@ -617,6 +603,8 @@ def write_journal_file(filename, cmds, verbose_journal=False):
             f.write("graphics pause\n")
             f.write("set journal off\n")
             f.write("set default autosize off\n")
+        for x in surf_coms:
+            f.write(x + "\n")
         for x in cmds:
             f.write(x + "\n")
         if not verbose_journal:
