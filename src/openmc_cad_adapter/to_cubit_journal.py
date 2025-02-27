@@ -335,7 +335,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
 
     def process_node( node, bb, surfs=None, lat_pos=None ):
-        print(type(node))
         results = []
         
         if isinstance( node, Universe ): #Universes only contain cells, they are not added to cubit
@@ -348,7 +347,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             return results
         
         elif isinstance( node, Cell ):
-            print(type(node.fill) == Material)
             #TODO add bb
             if hasattr( node.fill, "__iter__" ):
                 for uni in node.fill:
@@ -360,6 +358,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 return process_node( node.fill, bb )
             
             elif isinstance( node.fill, Material ):
+                print("IN")
                 r = []
                 s_id = surface_to_cubit_journal(node, w)
                 mat_identifier = f"mat:{node.fill.id}"
