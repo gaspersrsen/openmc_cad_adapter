@@ -16,6 +16,9 @@ def indent(indent_size):
 surf_map = {}
 surf_coms = [] # First create all surfaces
 
+def surf_id(node):
+    return node.surface.id * (-1 if node.side == "-" else 1)
+
 class CADSurface(ABC):
     global surf_map, surf_coms
 
@@ -255,28 +258,27 @@ class CADYCylinder(CADSurface, openmc.YCylinder):
 class CADZCylinder(CADSurface, openmc.ZCylinder):
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
-        if (node.surface.id*(-1 if node.side == "-" else 1)) not in surf_map:
+        if surf_id(node) not in surf_map:
             cad_cmds = []
             h = inner_world[2] if inner_world else extents[2]
             cad_cmds.append( f"cylinder height {h} radius {self.r}")
             ids = lastid()
             if node.side != '-':
-                wid = 0
                 if inner_world:
                     if hex:
                         cad_cmds.append(f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2 ) }")
-                        wid = lastid()
-                        cad_cmds.append(f"rotate body {{ {wid} }} about z angle 30")
+                        ids = lastid()
+                        cad_cmds.append(f"rotate body {{ {ids} }} about z angle 30")
                     else:
                         cad_cmds.append(f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}")
-                        wid = lastid()
+                        ids = lastid()
                 else:
                     cad_cmds.append( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
-                    wid = lastid()
-                cad_cmds.append(f"subtract body {{ { ids } }} from body {{ { wid } }}")
-            cad_cmds.append( move(wid, self.x0, self.y0, 0) )
+                    ids = lastid()
+                cad_cmds.append(f"subtract body {{ { ids } }} from body {{ { ids } }}")
+            cad_cmds.append( move(ids, self.x0, self.y0, 0) )
             surf_coms += [cad_cmds]
-            surf_map[node.surface.id*(-1 if node.side == "-" else 1)] = ids
+            surf_map[surf_id(node)] = ids
         return surf_map[node]
 
     @classmethod
