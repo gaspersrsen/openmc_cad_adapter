@@ -599,6 +599,7 @@ def write_journal_file(filename, surf_coms, verbose_journal=False):
             f.write("set info on\n")
             f.write("set warning on\n")
             f.write("set journal on\n")
+    print(surf_map)
 
 
 def material_assignment(cell, geom_id, assignment_type='group'):
