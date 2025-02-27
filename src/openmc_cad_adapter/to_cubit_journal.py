@@ -326,12 +326,12 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 union_id = lastid()
                 first = surface_to_cubit_journal( node[0], w, indent + 1, inner_world)
                 cmds.append( f"intersect body {{ {union_id} }} {{ {first} }} keep" )
-                cmds.append( f"delete {ent_type} {{ {union_id} }}" )
+                #cmds.append( f"delete {ent_type} {{ {union_id} }}" )
                 union_id = lastid()
                 for subnode in node[1:]:
                     s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world)
                     cmds.append( f"unite body {{ {first} }} {{ {s} }}" )
-                    cmds.append( f"delete {ent_type} {{ {union_id} }}" )
+                    #cmds.append( f"delete {ent_type} {{ {union_id} }}" )
                     union_id = lastid()
             return union_id
         elif isinstance(node, Quadric):
