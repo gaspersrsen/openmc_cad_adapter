@@ -360,7 +360,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             elif isinstance( node.fill, Material ):
                 print("IN")
                 r = []
-                s_id = surface_to_cubit_journal(node, w)
+                s_id = surface_to_cubit_journal(node.region, w)
                 mat_identifier = f"mat:{node.fill.id}"
                 # use material names when possible
                 if node.fill.name is not None and node.fill.name:
