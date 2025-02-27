@@ -106,6 +106,8 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
 
     def surface_to_cubit_journal(node, w, indent = 0, inner_world = None, hex = False, ent_type = "body", materials='group'):
+        global _CUBIT_ID
+        print(_CUBIT_ID)
         def ind():
             return ' ' * (2*indent)
         if isinstance(node, Halfspace):
@@ -364,7 +366,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 return process_node( node.fill, bb )
             
             elif isinstance( node.fill, Material ):
-                print("IN")
                 r = []
                 s_id = surface_to_cubit_journal(node.region, w)
                 mat_identifier = f"mat:{node.fill.id}"
@@ -375,7 +376,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     mat_identifier = mat_identifier[:32]
                     warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
                 r.append( f'group \"{mat_identifier}\" add body {{ { s_id } }} ' )
-                print("ended")
                 return r
             
             elif node.fill is None:
