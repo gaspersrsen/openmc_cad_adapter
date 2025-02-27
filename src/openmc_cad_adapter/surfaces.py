@@ -216,7 +216,7 @@ class CADXCylinder(CADSurface, openmc.XCylinder):
                     wid = lastid()
                 cad_cmds.append(f"subtract body {{ { ids } }} from body {{ { wid } }}")
             cad_cmds.append( move(wid, 0, self.y0, self.z0, cad_cmds) )
-            surf_coms += [cad_cmds]
+            surf_coms += cad_cmds
             surf_map[surf_id(node)] = ids
         return surf_map[surf_id(node)]
 
