@@ -42,3 +42,5 @@ def nonzero(*args):
 def move( id, x, y, z):
     if nonzero( x, y, z ):
         return f"body {{ {id} }} move {x} {y} {z}"
+    else:
+        return None
