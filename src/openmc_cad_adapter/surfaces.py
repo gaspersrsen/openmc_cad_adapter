@@ -22,10 +22,10 @@ def surf_id(node):
 class CADSurface(ABC):
 
     def to_cubit_surface(self, ent_type, node, extents, inner_world=None, hex=False):
-        ids, cmds = self.to_cubit_surface_inner(ent_type, node, extents, inner_world, hex)
+        ids = self.to_cubit_surface_inner(ent_type, node, extents, inner_world, hex)
         # TODO: Add boundary condition to the correct surface(s)
         # cmds += self.boundary_condition(ids)
-        return ids, cmds
+        return ids
 
     @abstractmethod
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
