@@ -61,6 +61,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
     """
     reset_cubit_ids()
+    global surf_coms
 
     if not filename.endswith('.jou'):
         filename += '.jou'
@@ -94,18 +95,10 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
     w = world
 
-    cmds = []
-    cmds.extend( [
-        #"set undo off",
-        #"set default autosizing off",   # especially when the CAD is complex (contains many spline surfaces) this can have a massive effect
-        #"set info off",
-        #"set warning off",
-        ])
-    def cubit_cmd(s):
-        cmds.append(s)
 
-
-    def surface_to_cubit_journal(node, w, indent = 0, inner_world = None, hex = False, ent_type = "body", materials='group'):
+    def surface_to_cubit_journal(node, w, indent = 0, inner_world = None,
+                                 hex = False, ent_type = "body", materials='group'):
+        global surf_coms
         def ind():
             return ' ' * (2*indent)
         if isinstance(node, Halfspace):
@@ -153,96 +146,96 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                             r1 = math.sqrt( abs( -K_/A_ ) )
                             r2 = math.sqrt( abs( -K_/B_ ) )
                             r3 = math.sqrt( abs( -K_/C_ ) )
-                            cmds.append( f"sphere radius 1")
+                            surf_coms.append( f"sphere radius 1")
                             ids = lastid()
-                            cmds.append( f"body {{ { ids } }} scale x { r1 } y { r2 } z { r3 }")
-                            move( ids, translation[0,0], translation[1,0], translation[2,0], cmds)
+                            surf_coms.append( f"body {{ { ids } }} scale x { r1 } y { r2 } z { r3 }")
+                            move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
                     elif gq_type == ELLIPTIC_CYLINDER : #7
                         if A_ == 0:
                             print( "X", gq_type, A_, B_, C_, K_, r_axis, r_degs )
                             h = inner_world[0] if inner_world else w[0]
                             r1 = math.sqrt( abs( K_/C_ ) )
                             r2 = math.sqrt( abs( K_/B_ ) )
-                            cmds.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
+                            surf_coms.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
                             ids = lastid()
-                            cmds.append( f"rotate body {{ { ids } }} about y angle 90")
+                            surf_coms.append( f"rotate body {{ { ids } }} about y angle 90")
                             if node.side != '-':
                                 wid = 0
                                 if inner_world:
                                     if hex:
-                                        cmds.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
+                                        surf_coms.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
                                         wid = lastid()
-                                        cmds.append( f"rotate body {{ {wid} }} about z angle 30" )
-                                        cmds.append( f"rotate body {{ {wid} }} about y angle 90")
+                                        surf_coms.append( f"rotate body {{ {wid} }} about z angle 30" )
+                                        surf_coms.append( f"rotate body {{ {wid} }} about y angle 90")
                                     else:
-                                        cmds.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
+                                        surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
                                         wid = lastid()
                                 else:
-                                    cmds.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+                                    surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                                     wid = lastid()
-                                cmds.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
-                                cmds.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                                move( wid, translation[0,0], translation[1,0], translation[2,0], cmds)
+                                surf_coms.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
+                                surf_coms.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                                move( wid, translation[0,0], translation[1,0], translation[2,0], surf_coms)
                                 return wid
-                            cmds.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                            move( ids, translation[0,0], translation[1,0], translation[2,0], cmds)
+                            surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                            move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
                             return ids
                         if B_ == 0:
                             print( "Y", gq_type, A_, B_, C_, K_ )
                             h = inner_world[1] if inner_world else w[1]
                             r1 = math.sqrt( abs( K_/A_ ) )
                             r2 = math.sqrt( abs( K_/C_ ) )
-                            cmds.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
+                            surf_coms.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
                             ids = lastid()
-                            cmds.append( f"rotate body {{ { ids } }} about x angle 90")
+                            surf_coms.append( f"rotate body {{ { ids } }} about x angle 90")
                             if node.side != '-':
                                 wid = 0
                                 if inner_world:
                                     if hex:
-                                        cmds.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
+                                        surf_coms.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
                                         wid = lastid()
-                                        cmds.append( f"rotate body {{ {wid} }} about z angle 30" )
-                                        cmds.append( f"rotate body {{ {wid} }} about y angle 90")
+                                        surf_coms.append( f"rotate body {{ {wid} }} about z angle 30" )
+                                        surf_coms.append( f"rotate body {{ {wid} }} about y angle 90")
                                     else:
-                                        cmds.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
+                                        surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
                                         wid = lastid()
                                 else:
-                                    cmds.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+                                    surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                                     wid = lastid()
-                                cmds.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
-                                cmds.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                                move( wid, translation[0,0], translation[1,0], translation[2,0], cmds)
+                                surf_coms.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
+                                surf_coms.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                                move( wid, translation[0,0], translation[1,0], translation[2,0], surf_coms)
                                 return wid
-                            cmds.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                            move( ids, translation[0,0], translation[1,0], translation[2,0], cmds)
+                            surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                            move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
                             return ids
                         if C_ == 0:
                             print( "Z", gq_type, A_, B_, C_, K_ )
                             h = inner_world[2] if inner_world else w[2]
                             r1 = math.sqrt( abs( K_/A_ ) )
                             r2 = math.sqrt( abs( K_/B_ ) )
-                            cmds.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
+                            surf_coms.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
                             ids = lastid()
                             if node.side != '-':
                                 wid = 0
                                 if inner_world:
                                     if hex:
-                                        cmds.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
+                                        surf_coms.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
                                         wid = lastid()
-                                        cmds.append( f"rotate body {{ {wid} }} about z angle 30" )
-                                        cmds.append( f"rotate body {{ {wid} }} about y angle 90")
+                                        surf_coms.append( f"rotate body {{ {wid} }} about z angle 30" )
+                                        surf_coms.append( f"rotate body {{ {wid} }} about y angle 90")
                                     else:
-                                        cmds.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
+                                        surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
                                         wid = lastid()
                                 else:
-                                    cmds.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+                                    surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                                     wid = lastid()
-                                cmds.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
-                                cmds.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                                move( wid, translation[0,0], translation[1,0], translation[2,0], cmds)
+                                surf_coms.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
+                                surf_coms.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                                move( wid, translation[0,0], translation[1,0], translation[2,0], surf_coms)
                                 return wid
-                            cmds.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                            move( ids, translation[0,0], translation[1,0], translation[2,0], cmds)
+                            surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                            move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
                             return ids
                     elif gq_type == ELLIPTIC_CONE : #3
                         if A_ == 0:
@@ -251,15 +244,15 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                             major = math.sqrt( abs( -A_/B_ ) )
                             rot_angle = - 90
                             rot_axis = 1
-                            cmds.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
+                            surf_coms.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
                             ids = lastid()
-                            cmds.append( f"rotate body {{ { ids } }} about y angle -90")
-                            cmds.append( f"copy body {{ { ids } }}")
+                            surf_coms.append( f"rotate body {{ { ids } }} about y angle -90")
+                            surf_coms.append( f"copy body {{ { ids } }}")
                             mirror = lastid()
-                            cmds.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
-                            cmds.append( f"unit body {{ { ids } }} {{ { mirror } }}")
-                            cmds.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                            move( ids, translation[0,0], translation[1,0], translation[2,0], cmds)
+                            surf_coms.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
+                            surf_coms.append( f"unit body {{ { ids } }} {{ { mirror } }}")
+                            surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                            move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
                             return ids
                         if B_ == 0:
                             h = inner_world[1] if inner_world else w[1]
@@ -267,15 +260,15 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                             major = math.sqrt( abs( -B_/C_ ) )
                             rot_angle = 90
                             rot_axis = 0
-                            cmds.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
+                            surf_coms.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
                             ids = lastid()
-                            cmds.append( f"rotate body {{ { ids } }} about x angle 90")
-                            cmds.append( f"copy body {{ { ids } }}")
+                            surf_coms.append( f"rotate body {{ { ids } }} about x angle 90")
+                            surf_coms.append( f"copy body {{ { ids } }}")
                             mirror = lastid()
-                            cmds.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
-                            cmds.append( f"unit body {{ { ids } }} {{ { mirror } }}")
-                            cmds.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                            move( ids, translation[0,0], translation[1,0], translation[2,0], cmds)
+                            surf_coms.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
+                            surf_coms.append( f"unit body {{ { ids } }} {{ { mirror } }}")
+                            surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                            move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
                             return ids
                         if C_ == 0:
                             h = inner_world[2] if inner_world else w[2]
@@ -283,14 +276,14 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                             major = math.sqrt( abs( -C_/B_ ) )
                             rot_angle = 180
                             rot_axis = 0
-                            cmds.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
+                            surf_coms.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
                             ids = lastid()
-                            cmds.append( f"copy body {{ { ids } }}")
+                            surf_coms.append( f"copy body {{ { ids } }}")
                             mirror = lastid()
-                            cmds.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
-                            cmds.append( f"unit body {{ { ids } }} {{ { mirror } }}")
-                            cmds.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                            move( ids, translation[0,0], translation[1,0], translation[2,0], cmds)
+                            surf_coms.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
+                            surf_coms.append( f"unit body {{ { ids } }} {{ { mirror } }}")
+                            surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                            move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
                             return ids
                     else:
                         raise NotImplementedError(f"{surface.type} not implemented")
@@ -299,39 +292,39 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         elif isinstance(node, Complement):
             print( "Complement:" )
             id = surface_to_cubit_journal(node.node, w, indent + 1, inner_world, ent_type = ent_type )
-            cmds.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+            surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             wid = lastid()
-            cmds.append( f"subtract body {{ {id} }} from body {{ {wid} }} keep_tool" )
+            surf_coms.append( f"subtract body {{ {id} }} from body {{ {wid} }} keep_tool" )
             return wid
         elif isinstance(node, Intersection):
             last = 0
             if len( node ) > 0:
                 if inner_world:
-                    cmds.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
+                    surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
                 else:
-                    cmds.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+                    surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                 inter_id = lastid()
                 for subnode in node:
                     s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world, ent_type = ent_type ,)
-                    cmds.append( f"intersect {ent_type} {{ {inter_id} }} {{ {s} }} keep" )
-                    cmds.append( f"delete {ent_type} {{ {inter_id} }}" )
+                    surf_coms.append( f"intersect {ent_type} {{ {inter_id} }} {{ {s} }} keep" )
+                    #surf_coms.append( f"delete {ent_type} {{ {inter_id} }}" )
                     inter_id = lastid()
             return inter_id
         elif isinstance(node, Union):
             if len( node ) > 0:
                 if inner_world:
-                    cmds.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
+                    surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
                 else:
-                    cmds.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+                    surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                 union_id = lastid()
                 first = surface_to_cubit_journal( node[0], w, indent + 1, inner_world)
-                cmds.append( f"intersect body {{ {union_id} }} {{ {first} }} keep" )
-                #cmds.append( f"delete {ent_type} {{ {union_id} }}" )
+                surf_coms.append( f"intersect body {{ {union_id} }} {{ {first} }} keep" )
+                #surf_coms.append( f"delete {ent_type} {{ {union_id} }}" )
                 union_id = lastid()
                 for subnode in node[1:]:
                     s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world)
-                    cmds.append( f"unite body {{ {first} }} {{ {s} }}" )
-                    #cmds.append( f"delete {ent_type} {{ {union_id} }}" )
+                    surf_coms.append( f"unite body {{ {first} }} {{ {s} }}" )
+                    #surf_coms.append( f"delete {ent_type} {{ {union_id} }}" )
                     union_id = lastid()
             return union_id
         elif isinstance(node, Quadric):
@@ -395,9 +388,9 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 id = surface_to_cubit_journal( node.region, w, indent, inner_world, hex = hex )
                 results.append( id )
             elif hex:
-                cmds.append( f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2) }" )
+                surf_coms.append( f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2) }" )
                 wid = lastid()
-                cmds.append( f"rotate body {{ {wid} }} about z angle 30" )
+                surf_coms.append( f"rotate body {{ {wid} }} about z angle 30" )
                 results.append( wid )
 
         if hasattr( node, "fill" ) and isinstance(node.fill, Lattice):
@@ -428,7 +421,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                             else:
                                 pass
                             if ids != '':
-                                cmds.append( f"move body {{ {ids} }} midpoint location {x} {y} {z}" )
+                                surf_coms.append( f"move body {{ {ids} }} midpoint location {x} {y} {z}" )
                         side_to_side_diameter =  pitch[0]/2 * math.sqrt( 3 )
                         center_to_mid_side_diameter = ( ( pitch[0] / 2 ) * math.sin( math.pi / 6 ) ) + pitch[0] / 2
                         if ring_id < 2:
@@ -519,7 +512,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                                     #results.append( id )
                                     pass
                                 if ids != '':
-                                    cmds.append( f"move body {{ {ids} }} midpoint location {x} {y} {z}" )
+                                    surf_coms.append( f"move body {{ {ids} }} midpoint location {x} {y} {z}" )
                         j = j + 1
                     i = i + 1
 
@@ -547,7 +540,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                             #results.append( id )
                             pass
                         if ids != '':
-                            cmds.append( f"move body {{ {ids} }} midpoint location {x} {y} 0 except z" )
+                            surf_coms.append( f"move body {{ {ids} }} midpoint location {x} {y} 0 except z" )
                     j = j + 1
                 i = i + 1
                 
@@ -555,13 +548,13 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         r = flatten( results )
         if len( r ) > 0:
             if node.name:
-                cmds.append( f"body {{ {r[0]} }} name \"{node.name}\"" )
+                surf_coms.append( f"body {{ {r[0]} }} name \"{node.name}\"" )
             else:
-                cmds.append( f"body {{ {r[0]} }} name \"Cell_{node.id}\"" )
+                surf_coms.append( f"body {{ {r[0]} }} name \"Cell_{node.id}\"" )
         return r
 
     def do_cell(cell, cell_ids: Iterable[int] = None):
-        #before = len( cmds )
+        #before = len( surf_coms )
         ids = process_node( cell, w )
 
         # if cell_ids is not None and cell.id in cell_ids:
@@ -569,7 +562,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         #         cell_filename = filename[:-4] + f"_cell{cell.id}.jou"
         #     else:
         #         cell_filename = filename + f"_cell{cell.id}"
-        #     write_journal_file(cell_filename, cmds[before:after])
+        #     write_journal_file(cell_filename, surf_coms[before:after])
 
     for cell in geom.root_universe._cells.values():
         if cells is not None and cell.id in cells:
@@ -578,17 +571,16 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             do_cell( cell )
 
     if filename:
-        write_journal_file(filename, cmds)
+        write_journal_file(filename, surf_coms)
 
     if to_cubit:
         cubit.cmd( "reset" )
-        for x in cmds:
+        for x in surf_coms:
             cubit.cmd( x )
             cubit.cmd(f"save as {filename[:-4]}.cub overwrite")
 
 
-def write_journal_file(filename, cmds, verbose_journal=False):
-    global surf_map, surf_coms
+def write_journal_file(filename, surf_coms, verbose_journal=False):
     with open(filename, "w") as f:
         if not verbose_journal:
             f.write("set echo off\n")
@@ -598,8 +590,6 @@ def write_journal_file(filename, cmds, verbose_journal=False):
             f.write("set journal off\n")
             f.write("set default autosize off\n")
         for x in surf_coms:
-            f.write(x + "\n")
-        for x in cmds:
             f.write(x + "\n")
         if not verbose_journal:
             f.write("graphics flush\n")
