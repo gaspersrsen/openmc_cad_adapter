@@ -313,7 +313,9 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 inter_id = lastid()
                 for subnode in node:
                     s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world, ent_type = ent_type ,)
-                    cmds.append( f"intersect {ent_type} {{ {inter_id} }} {{ {s} }}" )
+                    cmds.append( f"intersect {ent_type} {{ {inter_id} }} {{ {s} }} keep" )
+                    cmds.append( f"delete {ent_type} {{ {inter_id} }}" )
+                    inter_id = lastid()
             return inter_id
         elif isinstance(node, Union):
             if len( node ) > 0:
@@ -323,10 +325,14 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     cmds.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                 union_id = lastid()
                 first = surface_to_cubit_journal( node[0], w, indent + 1, inner_world)
-                cmds.append( f"intersect body {{ {inter_id} }} {{ {first} }}" )
+                cmds.append( f"intersect body {{ {union_id} }} {{ {first} }} keep" )
+                cmds.append( f"delete {ent_type} {{ {union_id} }}" )
+                union_id = lastid()
                 for subnode in node[1:]:
                     s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world)
                     cmds.append( f"unite body {{ {first} }} {{ {s} }}" )
+                    cmds.append( f"delete {ent_type} {{ {union_id} }}" )
+                    union_id = lastid()
             return union_id
         elif isinstance(node, Quadric):
             pass
