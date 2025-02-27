@@ -18,7 +18,7 @@ from openmc.surface import Halfspace, Quadric
 from openmc.lattice import Lattice, HexLattice, RectLattice
 from openmc import Universe, Cell, Material
 from openmc import Plane, XPlane, YPlane, ZPlane, XCylinder, YCylinder, ZCylinder, Sphere, Cone
-from openmc import XCone, YCone, ZCone, XTorus, YTorus, Ztorus
+from openmc import XCone, YCone, ZCone, XTorus, YTorus, ZTorus
 
 from .gqs import *
 from .cubit_util import *
