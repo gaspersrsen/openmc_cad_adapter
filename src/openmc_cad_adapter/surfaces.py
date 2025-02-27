@@ -58,7 +58,7 @@ class CADPlane(CADSurface, openmc.Plane):
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         cmds = []
-        if node not in surf_map:
+        if surf_id(node) not in surf_map:
             n = np.array([self.coefficients[k] for k in ('a', 'b', 'c')])
             distance = self.coefficients['d'] / np.linalg.norm(n)
 
@@ -103,12 +103,12 @@ class CADXPlane(CADSurface, openmc.XPlane):
         return "reverse" if node.side == '-' else ""
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
-        if node not in surf_map:
+        if surf_id(node) not in surf_map:
             surf_coms.append(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
             ids = lastid()
             surf_coms.append(f"section body {{ {ids} }} with xplane offset {self.coefficients['x0']} {self.reverse(node)}")
-            surf_map[node] = ids
-        return surf_map[node]
+            surf_map[surf_id(node)] = ids
+        return surf_map[surf_id(node)]
 
     @classmethod
     def from_openmc_surface_inner(cls, plane):
@@ -122,12 +122,12 @@ class CADYPlane(CADSurface, openmc.YPlane):
         return "reverse" if node.side == '-' else ""
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
-        if node not in surf_map:
+        if surf_id(node) not in surf_map:
             surf_coms.append(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
             ids = lastid()
             surf_coms.append(f"section body {{ {ids} }} with yplane offset {self.coefficients['y0']} {self.reverse(node)}")
-            surf_map[node] = ids
-        return surf_map[node]
+            surf_map[surf_id(node)] = ids
+        return surf_map[surf_id(node)]
 
     @classmethod
     def from_openmc_surface_inner(cls, plane):
@@ -141,12 +141,12 @@ class CADZPlane(CADSurface, openmc.ZPlane):
         return "reverse" if node.side == '-' else ""
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
-        if node not in surf_map:
+        if surf_id(node) not in surf_map:
             surf_coms.append(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
             ids = lastid()
             surf_coms.append(f"section body {{ {ids} }} with zplane offset {self.coefficients['z0']} {self.reverse(node)}")
-            surf_map[node] = ids
-        return surf_map[node]
+            surf_map[surf_id(node)] = ids
+        return surf_map[surf_id(node)]
 
     @classmethod
     def from_openmc_surface_inner(cls, plane):
@@ -189,7 +189,7 @@ class CADCylinder(CADSurface, openmc.Cylinder):
 class CADXCylinder(CADSurface, openmc.XCylinder):
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
-        if node not in surf_map:
+        if surf_id(node) not in surf_map:
             cad_cmds = []
             h = inner_world[0] if inner_world else extents[0]
             cad_cmds.append( f"cylinder height {h} radius {self.r}")
@@ -212,8 +212,8 @@ class CADXCylinder(CADSurface, openmc.XCylinder):
                 cad_cmds.append(f"subtract body {{ { ids } }} from body {{ { wid } }}")
             cad_cmds.append( move(wid, 0, self.y0, self.z0, cad_cmds) )
             surf_coms += [cad_cmds]
-            surf_map[node] = ids
-        return surf_map[node]
+            surf_map[surf_id(node)] = ids
+        return surf_map[surf_id(node)]
 
     @classmethod
     def from_openmc_surface_inner(cls, cyl):
@@ -223,7 +223,7 @@ class CADXCylinder(CADSurface, openmc.XCylinder):
 class CADYCylinder(CADSurface, openmc.YCylinder):
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
-        if node not in surf_map:
+        if surf_id(node) not in surf_map:
             cad_cmds = []
             h = inner_world[1] if inner_world else extents[1]
             cad_cmds.append( f"cylinder height {h} radius {self.r}")
@@ -246,8 +246,8 @@ class CADYCylinder(CADSurface, openmc.YCylinder):
                 cad_cmds.append(f"subtract body {{ { ids } }} from body {{ { wid } }}")
             cad_cmds.append( move(wid, self.x0, 0, self.z0) )
             surf_coms += [cad_cmds]
-            surf_map[node] = ids
-        return surf_map[node]
+            surf_map[surf_id(node)] = ids
+        return surf_map[surf_id(node)]
 
     @classmethod
     def from_openmc_surface_inner(cls, cyl):
