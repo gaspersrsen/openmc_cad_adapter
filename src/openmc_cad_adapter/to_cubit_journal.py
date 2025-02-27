@@ -348,6 +348,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             return results
         
         elif isinstance( node, Cell ):
+            print(type(node.fill))
             #TODO add bb
             if hasattr( node.fill, "__iter__" ):
                 for uni in node.fill:
