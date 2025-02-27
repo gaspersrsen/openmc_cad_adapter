@@ -306,7 +306,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 inter_id = lastid()
                 for subnode in node:
                     s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world, ent_type = ent_type ,)
-                    surf_coms.append( f"intersect {ent_type} {{ {inter_id} }} {{ {s} }} keep" )
+                    surf_coms.append( f"intersect {ent_type} {{ {s} }} {{ {inter_id} }} keep" )
                     #surf_coms.append( f"delete {ent_type} {{ {inter_id} }}" )
                     inter_id = lastid()
             return inter_id
