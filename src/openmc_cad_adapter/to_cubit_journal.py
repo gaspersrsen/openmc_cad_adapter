@@ -112,7 +112,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 surface = node.surface
                 if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                     cad_surface = cad_surface.from_openmc_surface(surface)
-                    print(surface,cad_surface)
+                    print(surface,type(surface))
                     return cad_surface.to_cubit_surface(ent_type, node, w, inner_world, hex)
                 #TODO quadric
                 elif surface._type == "quadric":
