@@ -61,7 +61,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
     """
     reset_cubit_ids()
-    global surf_coms
+    global surf_coms, cell_ids
 
     if not filename.endswith('.jou'):
         filename += '.jou'
@@ -70,7 +70,9 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         geometry = geometry.geometry
 
     if cells is not None:
-        cells = [c if not isinstance(c, openmc.Cell) else c.id for c in cells]
+        cells_ids = [c if not isinstance(c, openmc.Cell) else c.id for c in cells]
+    else:
+        cell_ids = []
 
     if to_cubit:
         try:
@@ -98,7 +100,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
     def surface_to_cubit_journal(node, w, indent = 0, inner_world = None,
                                  hex = False, ent_type = "body", materials='group'):
-        global surf_coms
+        global surf_coms, cell_ids
         def ind():
             return ' ' * (2*indent)
         if isinstance(node, Halfspace):
@@ -334,31 +336,28 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
 
     def process_node( node, bb, surfs=None, lat_pos=None ):
+        global surf_coms, cell_ids
+        start = len(surf_coms)
         
         if isinstance( node, Universe ): #Universes only contain cells, they are not added to cubit
             if bb is not None:
                 bb = node.bounding_box
             if hasattr( node.fill, "__iter__" ):
                 for c in node.fill:
-                    r = process_node( c, w)
-                return
+                    process_node( c, w )
             else:
-                r = process_node( node.fill, bb )
-                return
+                process_node( node.fill, bb )
         
         elif isinstance( node, Cell ):
             #TODO add bb, handle single cell conversions
             if hasattr( node.fill, "__iter__" ):
                 for uni in node.fill:
-                    r = process_node( uni, node.bb)
-                return
+                    process_node( uni, node.bb)
             
             elif isinstance( node.fill, Universe ):
-                return process_node( node.fill, bb )
+                process_node( node.fill, bb )
             
             elif isinstance( node.fill, Material ):
-                print("IN")
-                r = []
                 ids = surface_to_cubit_journal(node.region, w)
                 mat_identifier = f"mat:{node.fill.id}"
                 # use material names when possible
@@ -368,17 +367,17 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     mat_identifier = mat_identifier[:32]
                     warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
                 surf_coms.append( f'group \"{mat_identifier}\" add body {{ { ids } }} ' )
-                return
             
             elif node.fill is None:
                 ids = surface_to_cubit_journal(node, w)
                 surf_coms.append( f'group "mat:void" add body {{ { ids } }} ' )
-                return 
             
             else:
                 raise NotImplementedError(f"{node} not implemented")
 
-        return
+        if cell.id in cell_ids:
+            write_journal_file(f"{filename[:-4]}{cell,id}.jou", surf_coms[start:])
+            
     
     def process_node_or_fill( node, w, indent = 0, offset = [0, 0], inner_world = None, outer_ll = None, ent_type = "body", hex = False ):
         def ind():
@@ -567,10 +566,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         #     write_journal_file(cell_filename, surf_coms[before:after])
 
     for cell in geom.root_universe._cells.values():
-        if cells is not None and cell.id in cells:
-            do_cell( cell, cell_ids=cells)
-        else:
-            do_cell( cell )
+        do_cell( cell )
 
     if filename:
         write_journal_file(filename, surf_coms)
@@ -602,30 +598,6 @@ def write_journal_file(filename, surf_coms, verbose_journal=False):
             f.write("set warning on\n")
             f.write("set journal on\n")
     print(surf_map)
-
-
-def material_assignment(cell, geom_id, assignment_type='group'):
-    if cell.fill is None:
-        mat_identifier = "mat:void"
-    elif cell.fill_type == "material":
-        mat_identifier = f"mat:{cell.fill.id}"
-        # use material names when possible
-        if cell.fill.name is not None and cell.fill.name:
-            mat_identifier = f"mat:{cell.fill.name}"
-    else:
-        return []
-
-    if len(mat_identifier) > 32:
-        mat_identifier = mat_identifier[:32]
-        warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
-
-    cmds = []
-    if assignment_type == 'group':
-        cmds.append(f'group \"{mat_identifier}\" add body {{ { geom_id } }}')
-    else:
-        raise ValueError(f"Unknown material assignment type requested: {assignment_type}")
-
-    return cmds
 
 
 def openmc_to_cad():
