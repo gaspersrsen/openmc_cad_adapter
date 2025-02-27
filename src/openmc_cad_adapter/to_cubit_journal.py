@@ -302,7 +302,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             cmds.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             wid = lastid()
             cmds.append( f"subtract body {{ {id} }} from body {{ {wid} }} keep_tool" )
-            return lastid()
+            return wid
         elif isinstance(node, Intersection):
             last = 0
             if len( node ) > 0:
@@ -314,7 +314,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 for subnode in node:
                     s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world, ent_type = ent_type ,)
                     cmds.append( f"intersect {ent_type} {{ {inter_id} }} {{ {s} }}" )
-                    after = lastid()
             return inter_id
         elif isinstance(node, Union):
             if len( node ) > 0:
