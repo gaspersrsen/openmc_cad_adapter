@@ -34,7 +34,6 @@ def flatten(S):
         return flatten(S[0]) + flatten(S[1:])
     return S[:1] + flatten(S[1:])
 
-
 def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                      cells: Iterable[int, openmc.Cell] = None,
                      filename: str = "openmc.jou",
@@ -376,7 +375,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 ids = np.append(ids, np.array(process_node( node.fill, process_bb(node.bounding_box, w) ))).astype(int)
 
             if node.id in cell_ids:
-                write_journal_file(f"{filename[:-4]}{cell.id}.jou", surf_coms[start:])
+                write_journal_file(f"{filename[:-4]}{cell.id}.jou", surf_coms[start:], process_bb(node.bounding_box, w))
             
             return ids
                 
@@ -596,7 +595,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         do_cell( cell )
 
     if filename:
-        write_journal_file(filename, surf_coms)
+        write_journal_file(filename, surf_coms, world)
 
     if to_cubit:
         cubit.cmd( "reset" )
@@ -605,8 +604,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             cubit.cmd(f"save as {filename[:-4]}.cub overwrite")
 
 
-def write_journal_file(filename, surf_coms, verbose_journal=False):
-    global world
+def write_journal_file(filename, surf_coms, world, verbose_journal=False):
     with open(filename, "w") as f:
         if not verbose_journal:
             f.write("set echo off\n")
