@@ -10,7 +10,8 @@ def lastid():
     global _CUBIT_ID
     id_out = _CUBIT_ID
     _CUBIT_ID += 1
-    #print(id_out)
+    if _CUBIT_ID % int(1e6) == 0:
+        print(f"Processed {_CUBIT_ID} actions")
     return id_out
 
 
