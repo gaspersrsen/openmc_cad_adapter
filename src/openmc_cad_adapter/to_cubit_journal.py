@@ -109,7 +109,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                     cad_surface = cad_surface.from_openmc_surface(surface)
                     ids = cad_surface.to_cubit_surface(ent_type, node, w, inner_world, hex)
-                    print(surface,type(surface),ids)
+                    #print(surface,type(surface),ids)
                     return ids
                     #return cad_surface.to_cubit_surface(ent_type, node, w, inner_world, hex)
                 if 0:
@@ -297,14 +297,14 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 else:
                     raise NotImplementedError(f"{surface.type} not implemented")
         elif isinstance(node, Complement):
-            print( "Complement:" )
+            #print( "Complement:" )
             id = surface_to_cubit_journal(node.node, w, indent + 1, inner_world, ent_type = ent_type )
             surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             wid = lastid()
             surf_coms.append( f"subtract body {{ {id} }} from body {{ {wid} }} keep_tool" )
             return wid
         elif isinstance(node, Intersection):
-            print( "Intersection:" )
+            #print( "Intersection:" )
             if len( node ) > 0:
                 if inner_world:
                     surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
@@ -321,7 +321,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             print(inter_id)
             return inter_id
         elif isinstance(node, Union):
-            print( "Union:" )
+            #print( "Union:" )
             if len( node ) > 0:
                 if inner_world:
                     surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
@@ -349,7 +349,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     def process_node( node, bb, surfs=None, lat_pos=None ):
         global surf_coms, cell_ids
         start = len(surf_coms)
-        print(type(node))
+        #print(type(node))
         
         if isinstance( node, Universe ): #Universes only contain cells, they are not added to cubit
             ids = np.array([])
