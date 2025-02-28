@@ -101,9 +101,9 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         w_out = []
         for i in range(3):
             if np.isfinite(w2[i]):
-                wout += [w2[i]]
+                w_out += [w2[i]]
             else:
-                wout += [w[i]]
+                w_out += [w[i]]
         return w_out
 
     def surface_to_cubit_journal(node, w, indent = 0, inner_world = None,
