@@ -352,13 +352,13 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         print(type(node))
         
         if isinstance( node, Universe ): #Universes only contain cells, they are not added to cubit
-            ids = [0]
+            ids = np.array([])
             for c in node._cells.values():
-                ids.extend(process_node( c, process_bb(node.bounding_box) ))
-            return ids[1:]
+                ids = np.append(ids,np.array(process_node( c, process_bb(node.bounding_box) )))
+            return ids
         
         elif isinstance( node, Cell ):
-            ids = [0]
+            ids = np.array([])
             #TODO add bb, handle single cell conversions
             if isinstance( node.fill, Material ):
                 s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box))
@@ -371,27 +371,27 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
                 surf_coms.append( f'group \"{mat_identifier}\" add body {{ { s_ids } }} ' )
                 print(s_ids,ids)
-                ids.extend(np.array(s_ids))
+                ids = np.append(ids,np.array(s_ids))
             
             elif node.fill is None:
                 s_ids = surface_to_cubit_journal(node, process_bb(node.bounding_box))
                 surf_coms.append( f'group "mat:void" add body {{ { s_ids } }} ' )
-                ids.extend(np.array(s_ids))
+                ids = np.append(ids,np.array(s_ids))
             
             elif isinstance( node.fill, Iterable ):
                 for uni in node.fill:
-                    ids.extend(process_node( uni, process_bb(node.bounding_box) ))
+                    ids = np.append(ids, np.array(process_node( uni, process_bb(node.bounding_box) )))
             
             else:
-                ids.extend(process_node( node.fill, process_bb(node.bounding_box) ))
+                ids = np.append(ids, np.array(process_node( node.fill, process_bb(node.bounding_box) )))
 
             if cell.id in cell_ids:
                 write_journal_file(f"{filename[:-4]}{cell.id}.jou", surf_coms[start:])
             
-            return ids[1:]
+            return ids
                 
         elif isinstance( node, RectLattice ):
-            ids = [0]
+            ids = np.array([])
             if node.ndim ==2:
                 pitch = node._pitch
                 ll = [ node.lower_left[0], node.lower_left[1] ]
@@ -415,12 +415,12 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                                 pass
                             if ids2 != '':
                                 surf_coms.append( f"move body {{ {ids2} }} midpoint location {x} {y} 0 except z" )
-                            ids.extend(id)
+                            ids = np.append(ids, np.array(id))
                         j = j + 1
                     i = i + 1
             else:
                 raise NotImplementedError(f"{node} not implemented")
-            return ids[1:]
+            return ids
             
             
     
