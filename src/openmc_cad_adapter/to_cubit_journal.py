@@ -339,7 +339,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     def process_node( node, bb, surfs=None, lat_pos=None ):
         global surf_coms, cell_ids
         start = len(surf_coms)
-        print(type(node))
+        #print(type(node))
         
         if isinstance( node, Universe ): #Universes only contain cells, they are not added to cubit
             ids = []
