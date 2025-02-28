@@ -372,7 +372,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     ids.extend(process_node( uni, process_bb(node.bounding_box) ))
             
             else:
-                ids.extend(process_node( uni, process_bb(node.bounding_box) ))
+                ids.extend(process_node( node.fill, process_bb(node.bounding_box) ))
 
             if cell.id in cell_ids:
                 write_journal_file(f"{filename[:-4]}{cell.id}.jou", surf_coms[start:])
