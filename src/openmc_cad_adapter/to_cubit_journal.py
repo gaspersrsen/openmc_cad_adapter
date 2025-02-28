@@ -111,185 +111,185 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     #print(surface,type(surface))
                     return cad_surface.to_cubit_surface(ent_type, node, w, inner_world, hex)
                 #TODO quadric
-                elif surface._type == "quadric":
-                    (gq_type, A_, B_, C_, K_, translation, rotation_matrix) = characterize_general_quadratic(surface)
+                # elif surface._type == "quadric":
+                #     (gq_type, A_, B_, C_, K_, translation, rotation_matrix) = characterize_general_quadratic(surface)
 
-                    def rotation_to_axis_angle( mat ):
-                        x = mat[2, 1]-mat[1, 2]
-                        y = mat[0, 2]-mat[2, 0]
-                        z = mat[1, 0]-mat[0, 1]
-                        r = math.hypot( x, math.hypot( y,z ))
-                        t = mat[0,0] + mat[1,1] + mat[2,2]
-                        theta = math.atan2(r,t-1)
+                #     def rotation_to_axis_angle( mat ):
+                #         x = mat[2, 1]-mat[1, 2]
+                #         y = mat[0, 2]-mat[2, 0]
+                #         z = mat[1, 0]-mat[0, 1]
+                #         r = math.hypot( x, math.hypot( y,z ))
+                #         t = mat[0,0] + mat[1,1] + mat[2,2]
+                #         theta = math.atan2(r,t-1)
 
-                        if abs(theta) <= np.finfo(np.float64).eps:
-                            return ( np.array([ 0, 0, 0 ]), 0 )
-                        elif abs( theta - math.pi ) <= np.finfo(np.float64).eps:
-                          # theta is pi (180 degrees) or extremely close to it
-                          # find the column of mat with the largest diagonal
-                          col = 0
-                          if mat[1,1] > mat[col,col]: col = 1
-                          if mat[2,2] > mat[col,col]: col = 2
+                #         if abs(theta) <= np.finfo(np.float64).eps:
+                #             return ( np.array([ 0, 0, 0 ]), 0 )
+                #         elif abs( theta - math.pi ) <= np.finfo(np.float64).eps:
+                #           # theta is pi (180 degrees) or extremely close to it
+                #           # find the column of mat with the largest diagonal
+                #           col = 0
+                #           if mat[1,1] > mat[col,col]: col = 1
+                #           if mat[2,2] > mat[col,col]: col = 2
 
-                          axis = np.array([ 0, 0, 0 ])
+                #           axis = np.array([ 0, 0, 0 ])
 
-                          axis[col] = math.sqrt( (mat[col,col]+1)/2 )
-                          denom = 2*axis[col]
-                          axis[(col+1)%3] = mat[col,(col+1)%3] / denom
-                          axis[(col+2)%3] = mat[col,(col+2)%3] / denom
-                          return ( axis, theta )
-                        else:
-                          axis = np.array([ x/r, y/r, z/r ])
-                          return ( axis, theta )
-                    (r_axis, r_theta ) = rotation_to_axis_angle( rotation_matrix )
-                    #compensate for cubits insertion of a negative
-                    r_degs = - math.degrees( r_theta )
-                    print( r_axis, math.degrees( r_theta ), r_degs )
-                    if gq_type == ELLIPSOID : #1
-                            r1 = math.sqrt( abs( -K_/A_ ) )
-                            r2 = math.sqrt( abs( -K_/B_ ) )
-                            r3 = math.sqrt( abs( -K_/C_ ) )
-                            surf_coms.append( f"sphere radius 1")
-                            ids = lastid()
-                            surf_coms.append( f"body {{ { ids } }} scale x { r1 } y { r2 } z { r3 }")
-                            move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                    elif gq_type == ELLIPTIC_CYLINDER : #7
-                        if A_ == 0:
-                            print( "X", gq_type, A_, B_, C_, K_, r_axis, r_degs )
-                            h = inner_world[0] if inner_world else w[0]
-                            r1 = math.sqrt( abs( K_/C_ ) )
-                            r2 = math.sqrt( abs( K_/B_ ) )
-                            surf_coms.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
-                            ids = lastid()
-                            surf_coms.append( f"rotate body {{ { ids } }} about y angle 90")
-                            if node.side != '-':
-                                wid = 0
-                                if inner_world:
-                                    if hex:
-                                        surf_coms.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
-                                        wid = lastid()
-                                        surf_coms.append( f"rotate body {{ {wid} }} about z angle 30" )
-                                        surf_coms.append( f"rotate body {{ {wid} }} about y angle 90")
-                                    else:
-                                        surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-                                        wid = lastid()
-                                else:
-                                    surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-                                    wid = lastid()
-                                surf_coms.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
-                                surf_coms.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                                move( wid, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                                return wid
-                            surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                            move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                            return ids
-                        if B_ == 0:
-                            print( "Y", gq_type, A_, B_, C_, K_ )
-                            h = inner_world[1] if inner_world else w[1]
-                            r1 = math.sqrt( abs( K_/A_ ) )
-                            r2 = math.sqrt( abs( K_/C_ ) )
-                            surf_coms.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
-                            ids = lastid()
-                            surf_coms.append( f"rotate body {{ { ids } }} about x angle 90")
-                            if node.side != '-':
-                                wid = 0
-                                if inner_world:
-                                    if hex:
-                                        surf_coms.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
-                                        wid = lastid()
-                                        surf_coms.append( f"rotate body {{ {wid} }} about z angle 30" )
-                                        surf_coms.append( f"rotate body {{ {wid} }} about y angle 90")
-                                    else:
-                                        surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-                                        wid = lastid()
-                                else:
-                                    surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-                                    wid = lastid()
-                                surf_coms.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
-                                surf_coms.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                                move( wid, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                                return wid
-                            surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                            move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                            return ids
-                        if C_ == 0:
-                            print( "Z", gq_type, A_, B_, C_, K_ )
-                            h = inner_world[2] if inner_world else w[2]
-                            r1 = math.sqrt( abs( K_/A_ ) )
-                            r2 = math.sqrt( abs( K_/B_ ) )
-                            surf_coms.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
-                            ids = lastid()
-                            if node.side != '-':
-                                wid = 0
-                                if inner_world:
-                                    if hex:
-                                        surf_coms.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
-                                        wid = lastid()
-                                        surf_coms.append( f"rotate body {{ {wid} }} about z angle 30" )
-                                        surf_coms.append( f"rotate body {{ {wid} }} about y angle 90")
-                                    else:
-                                        surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-                                        wid = lastid()
-                                else:
-                                    surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-                                    wid = lastid()
-                                surf_coms.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
-                                surf_coms.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                                move( wid, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                                return wid
-                            surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                            move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                            return ids
-                    elif gq_type == ELLIPTIC_CONE : #3
-                        if A_ == 0:
-                            h = inner_world[0] if inner_world else w[0]
-                            minor = math.sqrt( abs( -A_/C_ ) )
-                            major = math.sqrt( abs( -A_/B_ ) )
-                            rot_angle = - 90
-                            rot_axis = 1
-                            surf_coms.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
-                            ids = lastid()
-                            surf_coms.append( f"rotate body {{ { ids } }} about y angle -90")
-                            surf_coms.append( f"copy body {{ { ids } }}")
-                            mirror = lastid()
-                            surf_coms.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
-                            surf_coms.append( f"unit body {{ { ids } }} {{ { mirror } }}")
-                            surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                            move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                            return ids
-                        if B_ == 0:
-                            h = inner_world[1] if inner_world else w[1]
-                            minor = math.sqrt( abs( -B_/A_ ) )
-                            major = math.sqrt( abs( -B_/C_ ) )
-                            rot_angle = 90
-                            rot_axis = 0
-                            surf_coms.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
-                            ids = lastid()
-                            surf_coms.append( f"rotate body {{ { ids } }} about x angle 90")
-                            surf_coms.append( f"copy body {{ { ids } }}")
-                            mirror = lastid()
-                            surf_coms.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
-                            surf_coms.append( f"unit body {{ { ids } }} {{ { mirror } }}")
-                            surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                            move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                            return ids
-                        if C_ == 0:
-                            h = inner_world[2] if inner_world else w[2]
-                            minor = math.sqrt( abs( -C_/A_ ) )
-                            major = math.sqrt( abs( -C_/B_ ) )
-                            rot_angle = 180
-                            rot_axis = 0
-                            surf_coms.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
-                            ids = lastid()
-                            surf_coms.append( f"copy body {{ { ids } }}")
-                            mirror = lastid()
-                            surf_coms.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
-                            surf_coms.append( f"unit body {{ { ids } }} {{ { mirror } }}")
-                            surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                            move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                            return ids
-                    else:
-                        raise NotImplementedError(f"{surface.type} not implemented")
+                #           axis[col] = math.sqrt( (mat[col,col]+1)/2 )
+                #           denom = 2*axis[col]
+                #           axis[(col+1)%3] = mat[col,(col+1)%3] / denom
+                #           axis[(col+2)%3] = mat[col,(col+2)%3] / denom
+                #           return ( axis, theta )
+                #         else:
+                #           axis = np.array([ x/r, y/r, z/r ])
+                #           return ( axis, theta )
+                #     (r_axis, r_theta ) = rotation_to_axis_angle( rotation_matrix )
+                #     #compensate for cubits insertion of a negative
+                #     r_degs = - math.degrees( r_theta )
+                #     print( r_axis, math.degrees( r_theta ), r_degs )
+                #     if gq_type == ELLIPSOID : #1
+                #             r1 = math.sqrt( abs( -K_/A_ ) )
+                #             r2 = math.sqrt( abs( -K_/B_ ) )
+                #             r3 = math.sqrt( abs( -K_/C_ ) )
+                #             surf_coms.append( f"sphere radius 1")
+                #             ids = lastid()
+                #             surf_coms.append( f"body {{ { ids } }} scale x { r1 } y { r2 } z { r3 }")
+                #             move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
+                #     elif gq_type == ELLIPTIC_CYLINDER : #7
+                #         if A_ == 0:
+                #             print( "X", gq_type, A_, B_, C_, K_, r_axis, r_degs )
+                #             h = inner_world[0] if inner_world else w[0]
+                #             r1 = math.sqrt( abs( K_/C_ ) )
+                #             r2 = math.sqrt( abs( K_/B_ ) )
+                #             surf_coms.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
+                #             ids = lastid()
+                #             surf_coms.append( f"rotate body {{ { ids } }} about y angle 90")
+                #             if node.side != '-':
+                #                 wid = 0
+                #                 if inner_world:
+                #                     if hex:
+                #                         surf_coms.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
+                #                         wid = lastid()
+                #                         surf_coms.append( f"rotate body {{ {wid} }} about z angle 30" )
+                #                         surf_coms.append( f"rotate body {{ {wid} }} about y angle 90")
+                #                     else:
+                #                         surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
+                #                         wid = lastid()
+                #                 else:
+                #                     surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+                #                     wid = lastid()
+                #                 surf_coms.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
+                #                 surf_coms.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                #                 move( wid, translation[0,0], translation[1,0], translation[2,0], surf_coms)
+                #                 return wid
+                #             surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                #             move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
+                #             return ids
+                #         if B_ == 0:
+                #             print( "Y", gq_type, A_, B_, C_, K_ )
+                #             h = inner_world[1] if inner_world else w[1]
+                #             r1 = math.sqrt( abs( K_/A_ ) )
+                #             r2 = math.sqrt( abs( K_/C_ ) )
+                #             surf_coms.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
+                #             ids = lastid()
+                #             surf_coms.append( f"rotate body {{ { ids } }} about x angle 90")
+                #             if node.side != '-':
+                #                 wid = 0
+                #                 if inner_world:
+                #                     if hex:
+                #                         surf_coms.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
+                #                         wid = lastid()
+                #                         surf_coms.append( f"rotate body {{ {wid} }} about z angle 30" )
+                #                         surf_coms.append( f"rotate body {{ {wid} }} about y angle 90")
+                #                     else:
+                #                         surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
+                #                         wid = lastid()
+                #                 else:
+                #                     surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+                #                     wid = lastid()
+                #                 surf_coms.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
+                #                 surf_coms.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                #                 move( wid, translation[0,0], translation[1,0], translation[2,0], surf_coms)
+                #                 return wid
+                #             surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                #             move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
+                #             return ids
+                #         if C_ == 0:
+                #             print( "Z", gq_type, A_, B_, C_, K_ )
+                #             h = inner_world[2] if inner_world else w[2]
+                #             r1 = math.sqrt( abs( K_/A_ ) )
+                #             r2 = math.sqrt( abs( K_/B_ ) )
+                #             surf_coms.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
+                #             ids = lastid()
+                #             if node.side != '-':
+                #                 wid = 0
+                #                 if inner_world:
+                #                     if hex:
+                #                         surf_coms.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
+                #                         wid = lastid()
+                #                         surf_coms.append( f"rotate body {{ {wid} }} about z angle 30" )
+                #                         surf_coms.append( f"rotate body {{ {wid} }} about y angle 90")
+                #                     else:
+                #                         surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
+                #                         wid = lastid()
+                #                 else:
+                #                     surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+                #                     wid = lastid()
+                #                 surf_coms.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
+                #                 surf_coms.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                #                 move( wid, translation[0,0], translation[1,0], translation[2,0], surf_coms)
+                #                 return wid
+                #             surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                #             move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
+                #             return ids
+                #     elif gq_type == ELLIPTIC_CONE : #3
+                #         if A_ == 0:
+                #             h = inner_world[0] if inner_world else w[0]
+                #             minor = math.sqrt( abs( -A_/C_ ) )
+                #             major = math.sqrt( abs( -A_/B_ ) )
+                #             rot_angle = - 90
+                #             rot_axis = 1
+                #             surf_coms.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
+                #             ids = lastid()
+                #             surf_coms.append( f"rotate body {{ { ids } }} about y angle -90")
+                #             surf_coms.append( f"copy body {{ { ids } }}")
+                #             mirror = lastid()
+                #             surf_coms.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
+                #             surf_coms.append( f"unit body {{ { ids } }} {{ { mirror } }}")
+                #             surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                #             move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
+                #             return ids
+                #         if B_ == 0:
+                #             h = inner_world[1] if inner_world else w[1]
+                #             minor = math.sqrt( abs( -B_/A_ ) )
+                #             major = math.sqrt( abs( -B_/C_ ) )
+                #             rot_angle = 90
+                #             rot_axis = 0
+                #             surf_coms.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
+                #             ids = lastid()
+                #             surf_coms.append( f"rotate body {{ { ids } }} about x angle 90")
+                #             surf_coms.append( f"copy body {{ { ids } }}")
+                #             mirror = lastid()
+                #             surf_coms.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
+                #             surf_coms.append( f"unit body {{ { ids } }} {{ { mirror } }}")
+                #             surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                #             move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
+                #             return ids
+                #         if C_ == 0:
+                #             h = inner_world[2] if inner_world else w[2]
+                #             minor = math.sqrt( abs( -C_/A_ ) )
+                #             major = math.sqrt( abs( -C_/B_ ) )
+                #             rot_angle = 180
+                #             rot_axis = 0
+                #             surf_coms.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
+                #             ids = lastid()
+                #             surf_coms.append( f"copy body {{ { ids } }}")
+                #             mirror = lastid()
+                #             surf_coms.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
+                #             surf_coms.append( f"unit body {{ { ids } }} {{ { mirror } }}")
+                #             surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
+                #             move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
+                #             return ids
+                    # else:
+                    #     raise NotImplementedError(f"{surface.type} not implemented")
                 else:
                     raise NotImplementedError(f"{surface.type} not implemented")
         elif isinstance(node, Complement):
@@ -330,8 +330,8 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     surf_coms.append( f"delete {ent_type} {{ {union_id} }}" )
                     union_id = lastid()
             return union_id
-        elif isinstance(node, Quadric):
-            pass
+        # elif isinstance(node, Quadric):
+        #     pass
         else:
             raise NotImplementedError(f"{node} not implemented")
 
