@@ -1,9 +1,9 @@
-_CUBIT_ID = 1
+_CUBIT_ID = 2
 
 
 def reset_cubit_ids():
     global _CUBIT_ID
-    _CUBIT_ID = 1
+    _CUBIT_ID = 2
 
 
 def lastid():

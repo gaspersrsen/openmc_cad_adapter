@@ -84,14 +84,10 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
     if world is None:
         bbox = geometry.bounding_box
-        if not all(np.isfinite(bbox[0])) or not all(np.isfinite(bbox[1])):
+        world = np.abs(bbox.upper_right-bbox.lower_left)
+        if not all(np.isfinite(world)):
             raise RuntimeError('Model bounds were not provided and the bounding box determined by OpenMC is not finite.'
                                ' Please provide a world size argument to proceed')
-        # to ensure that the box
-        # box_max = np.max(np.abs(bbox[0], bbox[1]).T)
-        # world = (2 * box_max, 2 * box_max, 2 * box_max)
-        world = np.abs(bbox[1]-bbox[0])
-
     if world is None:
         raise RuntimeError("Model extents could not be determined automatically and must be provided manually")
 
@@ -610,6 +606,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
 
 def write_journal_file(filename, surf_coms, verbose_journal=False):
+    global world
     with open(filename, "w") as f:
         if not verbose_journal:
             f.write("set echo off\n")
@@ -618,6 +615,9 @@ def write_journal_file(filename, surf_coms, verbose_journal=False):
             f.write("graphics pause\n")
             f.write("set journal off\n")
             f.write("set default autosize off\n")
+            f.write("undo off\n")
+            f.write(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
+            
         for x in surf_coms:
             f.write(x + "\n")
         if not verbose_journal:
