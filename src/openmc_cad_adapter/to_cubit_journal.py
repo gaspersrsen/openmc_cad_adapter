@@ -316,6 +316,8 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     surf_coms.append( f"intersect {ent_type} {{ {inter_id} }} {{ {s} }} keep" )
                     surf_coms.append( f"delete {ent_type} {{ {inter_id} }}" )
                     inter_id = lastid()
+            else:
+                raise NotImplementedError(f"{node} empty")
             return inter_id
         elif isinstance(node, Union):
             if len( node ) > 0:
@@ -333,6 +335,8 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     surf_coms.append( f"unite body {{ {union_id} }} {{ {s} }} keep" )
                     surf_coms.append( f"delete {ent_type} {{ {union_id} }}" )
                     union_id = lastid()
+            else:
+                raise NotImplementedError(f"{node} empty")
             return union_id
         # elif isinstance(node, Quadric):
         #     pass
