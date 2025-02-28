@@ -350,7 +350,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         elif isinstance( node, Cell ):
             ids = []
             #TODO add bb, handle single cell conversions
-            if hasattr( node.fill, "__iter__" ):
+            if isinstance( node.fill, Iterable ):
                 for uni in node.fill:
                     ids.extend(process_node( uni, process_bb(node.bounding_box) ))
             
