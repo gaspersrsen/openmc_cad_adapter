@@ -350,36 +350,33 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         elif isinstance( node, Cell ):
             ids = []
             #TODO add bb, handle single cell conversions
-            if isinstance( node.fill, Iterable ):
+            if isinstance( node.fill, Material ):
+                s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box))
+                mat_identifier = f"mat:{node.fill.id}"
+                # use material names when possible
+                if node.fill.name is not None and node.fill.name:
+                    mat_identifier = f"mat:{node.fill.name}"
+                if len(mat_identifier) > 32:
+                    mat_identifier = mat_identifier[:32]
+                    warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
+                surf_coms.append( f'group \"{mat_identifier}\" add body {{ { s_ids } }} ' )
+                ids.extend(s_ids)
+            
+            elif node.fill is None:
+                s_ids = surface_to_cubit_journal(node, process_bb(node.bounding_box))
+                surf_coms.append( f'group "mat:void" add body {{ { s_ids } }} ' )
+                ids.extend(s_ids)
+            
+            elif isinstance( node.fill, Iterable ):
                 for uni in node.fill:
                     ids.extend(process_node( uni, process_bb(node.bounding_box) ))
+            
             else:
-                ids.extend(process_node( node.fill, process_bb(node.bounding_box) ))
+                ids.extend(process_node( uni, process_bb(node.bounding_box) ))
 
             if cell.id in cell_ids:
                 write_journal_file(f"{filename[:-4]}{cell.id}.jou", surf_coms[start:])
             
-            return ids
-        
-        elif isinstance( node, Material ):
-            ids = []
-            s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box))
-            mat_identifier = f"mat:{node.id}"
-            # use material names when possible
-            if node.name is not None and node.name:
-                mat_identifier = f"mat:{node.name}"
-            if len(mat_identifier) > 32:
-                mat_identifier = mat_identifier[:32]
-                warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
-            surf_coms.append( f'group \"{mat_identifier}\" add body {{ { s_ids } }} ' )
-            ids.extend(s_ids)
-            return ids
-            
-        elif node is None:
-            ids = []
-            s_ids = surface_to_cubit_journal(node, process_bb(node.bounding_box))
-            surf_coms.append( f'group "mat:void" add body {{ { s_ids } }} ' )
-            ids.extend(s_ids)
             return ids
                 
         elif isinstance( node, RectLattice ):
