@@ -304,6 +304,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             surf_coms.append( f"subtract body {{ {id} }} from body {{ {wid} }} keep_tool" )
             return wid
         elif isinstance(node, Intersection):
+            print( "Intersection:" )
             last = 0
             if len( node ) > 0:
                 if inner_world:
@@ -320,6 +321,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 raise NotImplementedError(f"{node} empty")
             return inter_id
         elif isinstance(node, Union):
+            print( "Union:" )
             if len( node ) > 0:
                 if inner_world:
                     surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
