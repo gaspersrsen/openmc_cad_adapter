@@ -108,10 +108,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 surface = node.surface
                 if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                     cad_surface = cad_surface.from_openmc_surface(surface)
-                    ids = cad_surface.to_cubit_surface(ent_type, node, w, inner_world, hex)
-                    #print(surface,type(surface),ids)
-                    return ids
-                    #return cad_surface.to_cubit_surface(ent_type, node, w, inner_world, hex)
+                    return cad_surface.to_cubit_surface(ent_type, node, w, inner_world, hex)
                 if 0:
                     #TODO quadric
                     # elif surface._type == "quadric":
@@ -297,48 +294,38 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 else:
                     raise NotImplementedError(f"{surface.type} not implemented")
         elif isinstance(node, Complement):
-            #print( "Complement:" )
             id = surface_to_cubit_journal(node.node, w, indent + 1, inner_world, ent_type = ent_type )
             surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             wid = lastid()
             surf_coms.append( f"subtract body {{ {id} }} from body {{ {wid} }} keep_tool" )
             return wid
         elif isinstance(node, Intersection):
-            #print( "Intersection:" )
-            if len( node ) > 0:
-                if inner_world:
-                    surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-                else:
-                    surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-                inter_id = lastid()
-                for subnode in node:
-                    s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world, ent_type = ent_type ,)
-                    surf_coms.append( f"intersect {ent_type} {{ {inter_id} }} {{ {s} }} keep" )
-                    surf_coms.append( f"delete {ent_type} {{ {inter_id} }}" )
-                    inter_id = lastid()
+            if inner_world:
+                surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
             else:
-                raise NotImplementedError(f"{node} empty")
-            #print(inter_id)
+                surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+            inter_id = lastid()
+            for subnode in node:
+                s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world, ent_type = ent_type ,)
+                surf_coms.append( f"intersect {ent_type} {{ {inter_id} }} {{ {s} }} keep" )
+                surf_coms.append( f"delete {ent_type} {{ {inter_id} }}" )
+                inter_id = lastid()
             return inter_id
         elif isinstance(node, Union):
-            #print( "Union:" )
-            if len( node ) > 0:
-                if inner_world:
-                    surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-                else:
-                    surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-                union_id = lastid()
-                first = surface_to_cubit_journal( node[0], w, indent + 1, inner_world)
-                surf_coms.append( f"intersect body {{ {union_id} }} {{ {first} }} keep" )
+            if inner_world:
+                surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
+            else:
+                surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+            union_id = lastid()
+            first = surface_to_cubit_journal( node[0], w, indent + 1, inner_world)
+            surf_coms.append( f"intersect body {{ {union_id} }} {{ {first} }} keep" )
+            surf_coms.append( f"delete {ent_type} {{ {union_id} }}" )
+            union_id = lastid()
+            for subnode in node[1:]:
+                s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world)
+                surf_coms.append( f"unite body {{ {union_id} }} {{ {s} }} keep" )
                 surf_coms.append( f"delete {ent_type} {{ {union_id} }}" )
                 union_id = lastid()
-                for subnode in node[1:]:
-                    s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world)
-                    surf_coms.append( f"unite body {{ {union_id} }} {{ {s} }} keep" )
-                    surf_coms.append( f"delete {ent_type} {{ {union_id} }}" )
-                    union_id = lastid()
-            else:
-                raise NotImplementedError(f"{node} empty")
             return union_id
         # elif isinstance(node, Quadric):
         #     pass
