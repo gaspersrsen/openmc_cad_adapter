@@ -22,10 +22,10 @@ def surf_id(node):
 class CADSurface(ABC):
 
     def to_cubit_surface(self, ent_type, node, extents, inner_world=None, hex=False):
-        ids = self.to_cubit_surface_inner(ent_type, node, extents, inner_world, hex)
+        ids_map = self.to_cubit_surface_inner(ent_type, node, extents, inner_world, hex)
         # TODO: Add boundary condition to the correct surface(s)
         # cmds += self.boundary_condition(ids)
-        return ids
+        return ids_map
 
     @abstractmethod
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
@@ -67,8 +67,8 @@ class CADPlane(CADSurface, openmc.Plane):
             # the +z plane of the block is coincident with this general plane
             max_extent = np.max(extents)
             cmds.append(f"brick x {2*max_extent} y {2*max_extent} z {2*max_extent}" )
-            ids = emit_get_last_id( ent_type, cmds)
-            cmds.append(f"body {{ { ids } }} move 0.0 0.0 {-max_extent}")
+            ids_map = emit_get_last_id( ent_type, cmds)
+            cmds.append(f"body {{ { ids_map } }} move 0.0 0.0 {-max_extent}")
 
             nhat = n / np.linalg.norm(n)
             rhat = np.array([0.0, 0.0, 1.0])
@@ -78,19 +78,19 @@ class CADPlane(CADSurface, openmc.Plane):
                 rot_axis = np.cross(rhat, nhat)
                 rot_axis /= np.linalg.norm(rot_axis)
                 axis = f"{rot_axis[0]} {rot_axis[1]} {rot_axis[2]}"
-                cmds.append(f"Rotate body {{ {ids} }} about 0 0 0 direction {axis} Angle {angle}")
+                cmds.append(f"Rotate body {{ {ids_map} }} about 0 0 0 direction {axis} Angle {angle}")
 
             tvec = distance*nhat
-            cmds.append(f"body {{ { ids } }} move {tvec[0]} {tvec[1]} {tvec[2]}")
-            wid = emit_get_last_id( ent_type, cmds)
+            cmds.append(f"body {{ { ids_map } }} move {tvec[0]} {tvec[1]} {tvec[2]}")
+            wid_map = emit_get_last_id( ent_type, cmds)
             # if positive half space we subtract the cutter block from the world
             if node.side != '-':
-                cmds.append(f"subtract body {{ { ids } }} from body 1")
+                cmds.append(f"subtract body {{ { ids_map } }} from body 1")
             # if negative half space we intersect the cutter block with the world
             else:
-                cmds.append(f"intersect body {{ { ids } }} 1")
+                cmds.append(f"intersect body {{ { ids_map } }} 1")
 
-        return wid, cmds
+        return wid_map, cmds
 
     @classmethod
     def from_openmc_surface_inner(cls, plane):
@@ -107,9 +107,9 @@ class CADXPlane(CADSurface, openmc.XPlane):
         global surf_map, surf_coms
         if surf_id(node) not in surf_map:
             surf_coms.append(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
-            ids = lastid()
-            surf_coms.append(f"section body {{ {ids} }} with xplane offset {self.coefficients['x0']} {self.reverse(node)}")
-            surf_map[surf_id(node)] = ids
+            ids_map = lastid()
+            surf_coms.append(f"section body {{ {ids_map} }} with xplane offset {self.coefficients['x0']} {self.reverse(node)}")
+            surf_map[surf_id(node)] = ids_map
         return surf_map[surf_id(node)]
 
     @classmethod
@@ -127,9 +127,9 @@ class CADYPlane(CADSurface, openmc.YPlane):
         global surf_map, surf_coms
         if surf_id(node) not in surf_map:
             surf_coms.append(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
-            ids = lastid()
-            surf_coms.append(f"section body {{ {ids} }} with yplane offset {self.coefficients['y0']} {self.reverse(node)}")
-            surf_map[surf_id(node)] = ids
+            id_map = lastid()
+            surf_coms.append(f"section body {{ {id_map} }} with yplane offset {self.coefficients['y0']} {self.reverse(node)}")
+            surf_map[surf_id(node)] = id_map
         return surf_map[surf_id(node)]
 
     @classmethod
@@ -147,9 +147,9 @@ class CADZPlane(CADSurface, openmc.ZPlane):
         global surf_map, surf_coms
         if surf_id(node) not in surf_map:
             surf_coms.append(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
-            ids = lastid()
-            surf_coms.append(f"section body {{ {ids} }} with zplane offset {self.coefficients['z0']} {self.reverse(node)}")
-            surf_map[surf_id(node)] = ids
+            ids_map = lastid()
+            surf_coms.append(f"section body {{ {ids_map} }} with zplane offset {self.coefficients['z0']} {self.reverse(node)}")
+            surf_map[surf_id(node)] = ids_map
         return surf_map[surf_id(node)]
 
     @classmethod
@@ -163,27 +163,27 @@ class CADCylinder(CADSurface, openmc.Cylinder):
         cad_cmds = []
         h = inner_world[2] if inner_world else extents[2]
         cad_cmds.append(f"cylinder height {h} radius {self.r}")
-        ids = emit_get_last_id(cmds=cad_cmds)
+        ids_map = emit_get_last_id(cmds=cad_cmds)
         if node.side != '-':
-            wid = 0
+            wid_map = 0
             if inner_world:
                 if hex:
                     cad_cmds.append(f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2 ) }")
-                    wid = lastid()
-                    cad_cmds.append(f"rotate body {{ {wid} }} about z angle 30")
+                    wid_map = lastid()
+                    cad_cmds.append(f"rotate body {{ {wid_map} }} about z angle 30")
                 else:
                     cad_cmds.append(f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}")
-                    wid = lastid()
+                    wid_map = lastid()
             else:
                 cad_cmds.append( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
-                wid = lastid()
-            cad_cmds.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
-            rotate( wid, self.dx, self.dy, self.dz, cad_cmds)
-            move( wid, self.x0, self.y0, self.z0, cad_cmds)
-            return wid, cad_cmds
-        rotate( ids, self.dx, self.dy, self.dz, cad_cmds)
-        move( ids, self.x0, self.y0, self.z0, cad_cmds)
-        return ids, cad_cmds
+                wid_map = lastid()
+            cad_cmds.append( f"subtract body {{ { ids_map } }} from body {{ { wid_map } }}" )
+            rotate( wid_map, self.dx, self.dy, self.dz, cad_cmds)
+            move( wid_map, self.x0, self.y0, self.z0, cad_cmds)
+            return wid_map, cad_cmds
+        rotate( ids_map,self.dx, self.dy, self.dz, cad_cmds)
+        move( ids_map,self.x0, self.y0, self.z0, cad_cmds)
+        return ids_map,cad_cmds
 
     @classmethod
     def from_openmc_surface_inner(cls, cyl):
@@ -198,26 +198,26 @@ class CADXCylinder(CADSurface, openmc.XCylinder):
             cad_cmds = []
             h = inner_world[0] if inner_world else extents[0]
             cad_cmds.append( f"cylinder height {h} radius {self.r}")
-            ids = lastid()
-            cad_cmds.append(f"rotate body {{ {ids} }} about y angle 90")
+            ids_map = lastid()
+            cad_cmds.append(f"rotate body {{ {ids_map} }} about y angle 90")
             if node.side != '-':
-                wid = 0
+                wid_map = 0
                 if inner_world:
                     if hex:
                         cad_cmds.append(f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2 ) }")
-                        wid = lastid()
-                        cad_cmds.append(f"rotate body {{ {wid} }} about z angle 30")
-                        cad_cmds.append(f"rotate body {{ {wid} }} about y angle 90")
+                        wid_map = lastid()
+                        cad_cmds.append(f"rotate body {{ {wid_map} }} about z angle 30")
+                        cad_cmds.append(f"rotate body {{ {wid_map} }} about y angle 90")
                     else:
                         cad_cmds.append(f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}")
-                        wid = lastid()
+                        wid_map = lastid()
                 else:
                     cad_cmds.append( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
-                    wid = lastid()
-                cad_cmds.append(f"subtract body {{ { ids } }} from body {{ { wid } }}")
-            cad_cmds.append( move(wid, 0, self.y0, self.z0, cad_cmds) )
+                    wid_map = lastid()
+                cad_cmds.append(f"subtract body {{ { ids_map } }} from body {{ { wid_map } }}")
+            cad_cmds.append( move(wid_map, 0, self.y0, self.z0, cad_cmds) )
             surf_coms += [cad_cmds]
-            surf_map[surf_id(node)] = ids
+            surf_map[surf_id(node)] = ids_map
         return surf_map[surf_id(node)]
 
     @classmethod
@@ -233,26 +233,26 @@ class CADYCylinder(CADSurface, openmc.YCylinder):
             cad_cmds = []
             h = inner_world[1] if inner_world else extents[1]
             cad_cmds.append( f"cylinder height {h} radius {self.r}")
-            ids = lastid()
-            cad_cmds.append(f"rotate body {{ {ids} }} about x angle 90")
+            ids_map = lastid()
+            cad_cmds.append(f"rotate body {{ {ids_map} }} about x angle 90")
             if node.side != '-':
-                wid = 0
+                wid_map = 0
                 if inner_world:
                     if hex:
                         cad_cmds.append(f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2 ) }")
-                        wid = lastid()
-                        cad_cmds.append(f"rotate body {{ {wid} }} about z angle 30")
-                        cad_cmds.append(f"rotate body {{ {wid} }} about x angle 90")
+                        wid_map = lastid()
+                        cad_cmds.append(f"rotate body {{ {wid_map} }} about z angle 30")
+                        cad_cmds.append(f"rotate body {{ {wid_map} }} about x angle 90")
                     else:
                         cad_cmds.append(f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}")
-                        wid = lastid()
+                        wid_map = lastid()
                 else:
                     cad_cmds.append( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
-                    wid = lastid()
-                cad_cmds.append(f"subtract body {{ { ids } }} from body {{ { wid } }}")
-            cad_cmds.append( move(wid, self.x0, 0, self.z0) )
+                    wid_map = lastid()
+                cad_cmds.append(f"subtract body {{ { ids_map } }} from body {{ { wid_map } }}")
+            cad_cmds.append( move(wid_map, self.x0, 0, self.z0) )
             surf_coms += [cad_cmds]
-            surf_map[surf_id(node)] = ids
+            surf_map[surf_id(node)] = ids_map
         return surf_map[surf_id(node)]
 
     @classmethod
@@ -268,26 +268,26 @@ class CADZCylinder(CADSurface, openmc.ZCylinder):
             cad_cmds = []
             h = inner_world[2] if inner_world else extents[2]
             cad_cmds.append(f"cylinder height {h} radius {self.r}")
-            ids = lastid()
+            ids_map = lastid()
             if node.side != '-':
                 if inner_world:
                     if hex:
                         cad_cmds.append(f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2 ) }")
-                        wid = lastid()
-                        cad_cmds.append(f"rotate body {{ {wid} }} about z angle 30")
+                        wid_map = lastid()
+                        cad_cmds.append(f"rotate body {{ {wid_map} }} about z angle 30")
                     else:
                         cad_cmds.append(f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}")
-                        wid = lastid()
+                        wid_map = lastid()
                 else:
                     cad_cmds.append( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
-                    wid = lastid()
-                cad_cmds.append(f"subtract body {{ { ids } }} from body {{ { wid } }} keep_tool")
-                ids = wid
-            move_cmd = move(ids, self.x0, self.y0, 0)
+                    wid_map = lastid()
+                cad_cmds.append(f"subtract body {{ { ids_map } }} from body {{ { wid_map } }} keep_tool")
+                ids_map = wid_map
+            move_cmd = move(ids_map, self.x0, self.y0, 0)
             if move_cmd is not None:
                 cad_cmds.append( move_cmd )
             surf_coms.extend(cad_cmds)
-            surf_map[surf_id(node)] = ids
+            surf_map[surf_id(node)] = ids_map
         return surf_map[surf_id(node)]
 
     @classmethod
@@ -300,14 +300,14 @@ class CADSphere(CADSurface, openmc.Sphere):
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         cad_cmds = []
         cad_cmds.append( f"sphere radius {self.r}")
-        ids = lastid()
-        move(ids, self.x0, self.y0, self.z0, cad_cmds)
+        ids_map = lastid()
+        move(ids_map, self.x0, self.y0, self.z0, cad_cmds)
         if node.side != '-':
             cad_cmds.append( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
-            wid = emit_get_last_id( ent_type , cad_cmds)
-            cad_cmds.append(f"subtract body {{ {ids} }} from body {{ {wid} }}")
-            ids = wid
-        return ids, cad_cmds
+            wid_map = emit_get_last_id( ent_type , cad_cmds)
+            cad_cmds.append(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
+            ids_map = wid_map
+        return ids_map,cad_cmds
 
     @classmethod
     def from_openmc_surface_inner(cls, sphere):
@@ -327,21 +327,21 @@ class CADXCone(CADSurface, openmc.XCone):
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         cad_cmds = []
         cad_cmds.append( f"create frustum height {extents[0]} radius {math.sqrt(self.coefficients['r2'])*extents[0]} top 0")
-        ids = lastid()
-        cad_cmds.append(f"body {{ {ids} }} move 0 0 -{extents[0]/2.0}")
-        cad_cmds.append(f"body {{ {ids} }} copy reflect z")
+        ids_map = lastid()
+        cad_cmds.append(f"body {{ {ids_map} }} move 0 0 -{extents[0]/2.0}")
+        cad_cmds.append(f"body {{ {ids_map} }} copy reflect z")
         ids2 = lastid()
-        cad_cmds.append(f"unite body {{ {ids} }}  {{ {ids2} }}")
-        cad_cmds.append( f"rotate body {{ {ids} }} about y angle 90")
+        cad_cmds.append(f"unite body {{ {ids_map} }}  {{ {ids2} }}")
+        cad_cmds.append( f"rotate body {{ {ids_map} }} about y angle 90")
         x0, y0, z0 = self.coefficients['x0'], self.coefficients['y0'], self.coefficients['z0']
-        cad_cmds.append(f"body {{ {ids} }} move {x0} {y0} {z0}")
+        cad_cmds.append(f"body {{ {ids_map} }} move {x0} {y0} {z0}")
 
         if node.side != '-':
             cad_cmds.append( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
-            wid = emit_get_last_id(ent_type , cad_cmds)
-            cad_cmds.append(f"subtract body {{ {ids} }} from body {{ {wid} }}")
-            ids = wid
-        return ids, cad_cmds
+            wid_map = emit_get_last_id(ent_type , cad_cmds)
+            cad_cmds.append(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
+            ids_map = wid_map
+        return ids_map,cad_cmds
 
     @classmethod
     def from_openmc_surface_inner(cls, surface):
@@ -353,21 +353,21 @@ class CADYCone(CADSurface, openmc.YCone):
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         cad_cmds = []
         cad_cmds.append( f"create frustum height {extents[1]} radius {math.sqrt(self.coefficients['r2'])*extents[1]} top 0")
-        ids = lastid()
-        cad_cmds.append(f"body {{ {ids} }} move 0 0 -{extents[1]/2.0}")
-        cad_cmds.append(f"body {{ {ids} }} copy reflect z")
+        ids_map = lastid()
+        cad_cmds.append(f"body {{ {ids_map} }} move 0 0 -{extents[1]/2.0}")
+        cad_cmds.append(f"body {{ {ids_map} }} copy reflect z")
         ids2 = lastid()
-        cad_cmds.append(f"unite body {{ {ids} }}  {{ {ids2} }}")
-        cad_cmds.append( f"rotate body {{ {ids} }} about x angle 90")
+        cad_cmds.append(f"unite body {{ {ids_map} }}  {{ {ids2} }}")
+        cad_cmds.append( f"rotate body {{ {ids_map} }} about x angle 90")
         x0, y0, z0 = self.coefficients['x0'], self.coefficients['y0'], self.coefficients['z0']
-        cad_cmds.append(f"body {{ {ids} }} move {x0} {y0} {z0}")
+        cad_cmds.append(f"body {{ {ids_map} }} move {x0} {y0} {z0}")
 
         if node.side != '-':
             cad_cmds.append( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
-            wid = emit_get_last_id(ent_type , cad_cmds)
-            cad_cmds.append(f"subtract body {{ {ids} }} from body {{ {wid} }}")
-            ids = wid
-        return ids, cad_cmds
+            wid_map = emit_get_last_id(ent_type , cad_cmds)
+            cad_cmds.append(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
+            ids_map = wid_map
+        return ids_map,cad_cmds
 
     @classmethod
     def from_openmc_surface_inner(cls, surface):
@@ -379,20 +379,20 @@ class CADZCone(CADSurface, openmc.ZCone):
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         cad_cmds = []
         cad_cmds.append( f"create frustum height {extents[2]} radius {math.sqrt(self.coefficients['r2'])*extents[2]} top 0")
-        ids = lastid()
-        cad_cmds.append(f"body {{ {ids} }} move 0 0 -{extents[2]/2.0}")
-        cad_cmds.append(f"body {{ {ids} }} copy reflect z")
+        ids_map = lastid()
+        cad_cmds.append(f"body {{ {ids_map} }} move 0 0 -{extents[2]/2.0}")
+        cad_cmds.append(f"body {{ {ids_map} }} copy reflect z")
         ids2 = lastid()
-        cad_cmds.append(f"unite body {{ {ids} }}  {{ {ids2} }}")
+        cad_cmds.append(f"unite body {{ {ids_map} }}  {{ {ids2} }}")
         x0, y0, z0 = self.coefficients['x0'], self.coefficients['y0'], self.coefficients['z0']
-        cad_cmds.append(f"body {{ {ids} }} move {x0} {y0} {z0}")
+        cad_cmds.append(f"body {{ {ids_map} }} move {x0} {y0} {z0}")
 
         if node.side != '-':
             cad_cmds.append( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
-            wid = emit_get_last_id(ent_type , cad_cmds)
-            cad_cmds.append(f"subtract body {{ {ids} }} from body {{ {wid} }}")
-            ids = wid
-        return ids, cad_cmds
+            wid_map = emit_get_last_id(ent_type , cad_cmds)
+            cad_cmds.append(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
+            ids_map = wid_map
+        return ids_map,cad_cmds
 
     @classmethod
     def from_openmc_surface_inner(cls, surface):
@@ -415,17 +415,17 @@ class CADXTorus(CADTorus, openmc.XTorus):
         self.check_coeffs()
         cad_cmds = []
         cad_cmds.append( f"torus major radius {self.a} minor radius {self.b}" )
-        ids = lastid()
-        cad_cmds.append( f"rotate body {{ {ids} }} about y angle 90")
+        ids_map = lastid()
+        cad_cmds.append( f"rotate body {{ {ids_map} }} about y angle 90")
         if node.side != '-':
             cad_cmds.append( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
-            wid = lastid()
-            cad_cmds.append(f"subtract body {{ {ids} }} from body {{ {wid} }}")
-            move(wid, self.x0, self.y0, self.z0, cad_cmds)
-            ids = wid
+            wid_map = lastid()
+            cad_cmds.append(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
+            move(wid_map, self.x0, self.y0, self.z0, cad_cmds)
+            ids_map = wid_map
         else:
-            move(ids, self.x0, self.y0, self.z0, cad_cmds)
-        return ids, cad_cmds
+            move(ids_map, self.x0, self.y0, self.z0, cad_cmds)
+        return ids_map,cad_cmds
 
 
 class CADYTorus(CADTorus, openmc.YTorus):
@@ -434,17 +434,17 @@ class CADYTorus(CADTorus, openmc.YTorus):
         self.check_coeffs()
         cad_cmds = []
         cad_cmds.append( f"torus major radius {self.a} minor radius {self.b}" )
-        ids = lastid()
-        cad_cmds.append( f"rotate body {{ {ids} }} about x angle 90")
+        ids_map = lastid()
+        cad_cmds.append( f"rotate body {{ {ids_map} }} about x angle 90")
         if node.side != '-':
             cad_cmds.append( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
-            wid = lastid()
-            cad_cmds.append(f"subtract body {{ {ids} }} from body {{ {wid} }}")
-            move(wid, self.x0, self.y0, self.z0, cad_cmds)
-            ids = wid
+            wid_map = lastid()
+            cad_cmds.append(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
+            move(wid_map, self.x0, self.y0, self.z0, cad_cmds)
+            ids_map = wid_map
         else:
-            move(ids, self.x0, self.y0, self.z0, cad_cmds)
-        return ids, cad_cmds
+            move(ids_map, self.x0, self.y0, self.z0, cad_cmds)
+        return ids_map,cad_cmds
 
 
 class CADZTorus(CADTorus, openmc.ZTorus):
@@ -453,16 +453,16 @@ class CADZTorus(CADTorus, openmc.ZTorus):
         self.check_coeffs()
         cad_cmds = []
         cad_cmds.append( f"torus major radius {self.a} minor radius {self.b}" )
-        ids = lastid()
+        ids_map = lastid()
         if node.side != '-':
             cad_cmds.append( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
-            wid = lastid()
-            cad_cmds.append(f"subtract body {{ {ids} }} from body {{ {wid} }}")
-            move(wid, self.x0, self.y0, self.z0, cad_cmds)
-            ids = wid
+            wid_map = lastid()
+            cad_cmds.append(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
+            move(wid_map, self.x0, self.y0, self.z0, cad_cmds)
+            ids_map = wid_map
         else:
-            move(ids, self.x0, self.y0, self.z0, cad_cmds)
-        return ids, cad_cmds
+            move(ids_map, self.x0, self.y0, self.z0, cad_cmds)
+        return ids_map,cad_cmds
 
 
 _CAD_SURFACES = [CADPlane, CADXPlane, CADYPlane, CADZPlane, CADCylinder, CADXCylinder, CADYCylinder, CADZCylinder, CADSphere, CADXCone, CADYCone, CADZCone, CADXTorus, CADYTorus, CADZTorus]
