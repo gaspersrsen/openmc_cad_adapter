@@ -318,7 +318,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     inter_id = lastid()
             else:
                 raise NotImplementedError(f"{node} empty")
-            print(inter_id)
+            #print(inter_id)
             return inter_id
         elif isinstance(node, Union):
             #print( "Union:" )
