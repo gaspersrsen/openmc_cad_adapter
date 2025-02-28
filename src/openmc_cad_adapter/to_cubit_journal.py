@@ -352,13 +352,13 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         print(type(node))
         
         if isinstance( node, Universe ): #Universes only contain cells, they are not added to cubit
-            ids = []
+            ids = [0]
             for c in node._cells.values():
                 ids.extend(process_node( c, process_bb(node.bounding_box) ))
-            return ids
+            return ids[1:]
         
         elif isinstance( node, Cell ):
-            ids = []
+            ids = [0]
             #TODO add bb, handle single cell conversions
             if isinstance( node.fill, Material ):
                 s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box))
@@ -388,10 +388,10 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             if cell.id in cell_ids:
                 write_journal_file(f"{filename[:-4]}{cell.id}.jou", surf_coms[start:])
             
-            return ids
+            return ids[1:]
                 
         elif isinstance( node, RectLattice ):
-            ids = []
+            ids = [0]
             if node.ndim ==2:
                 pitch = node._pitch
                 ll = [ node.lower_left[0], node.lower_left[1] ]
@@ -418,9 +418,9 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                             ids.extend(id)
                         j = j + 1
                     i = i + 1
-                return ids
             else:
                 raise NotImplementedError(f"{node} not implemented")
+            return ids[1:]
             
             
     
