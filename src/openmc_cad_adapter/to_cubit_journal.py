@@ -361,7 +361,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 ids = np.append(ids,np.array(s_ids))
             
             elif node.fill is None:
-                s_ids = surface_to_cubit_journal(node, process_bb(node.bounding_box))
+                s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box))
                 surf_coms.append( f'group "mat:void" add body {{ { s_ids } }} ' )
                 ids = np.append(ids,np.array(s_ids))
             
