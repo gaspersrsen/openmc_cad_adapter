@@ -96,7 +96,8 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         raise RuntimeError("Model extents could not be determined automatically and must be provided manually")
 
     w = world
-
+    def process_bb(bbox):
+        return bbox.upper_right-bbox.lower_left
 
     def surface_to_cubit_journal(node, w, indent = 0, inner_world = None,
                                  hex = False, ent_type = "body", materials='group'):
@@ -343,7 +344,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         if isinstance( node, Universe ): #Universes only contain cells, they are not added to cubit
             ids = []
             for c in node._cells.values():
-                ids.extend(process_node( c, node.bounding_box ))
+                ids.extend(process_node( c, process_bb(node.bounding_box) ))
             return ids
         
         elif isinstance( node, Cell ):
@@ -351,13 +352,13 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             #TODO add bb, handle single cell conversions
             if hasattr( node.fill, "__iter__" ):
                 for uni in node.fill:
-                    ids.extend(process_node( uni, node.bounding_box ))
+                    ids.extend(process_node( uni, process_bb(node.bounding_box) ))
             
             elif isinstance( node.fill, Universe ) or isinstance( node.fill, Lattice ) or isinstance( node.fill, HexLattice ):
                 ids.extend(process_node( node.fill, node.fill.bounding_box ))
             
             elif isinstance( node.fill, Material ):
-                s_ids = surface_to_cubit_journal(node.region, node.bounding_box)
+                s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box))
                 mat_identifier = f"mat:{node.fill.id}"
                 # use material names when possible
                 if node.fill.name is not None and node.fill.name:
@@ -369,7 +370,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 ids.extend(s_ids)
             
             elif node.fill is None:
-                s_ids = surface_to_cubit_journal(node, node.bounding_box)
+                s_ids = surface_to_cubit_journal(node, process_bb(node.bounding_box))
                 surf_coms.append( f'group "mat:void" add body {{ { s_ids } }} ' )
                 ids.extend(s_ids)
             
