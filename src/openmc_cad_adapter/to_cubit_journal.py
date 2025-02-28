@@ -361,13 +361,13 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             
             return ids
         
-        elif isinstance( node.fill, Material ):
+        elif isinstance( node, Material ):
             ids = []
             s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box))
-            mat_identifier = f"mat:{node.fill.id}"
+            mat_identifier = f"mat:{node.id}"
             # use material names when possible
-            if node.fill.name is not None and node.fill.name:
-                mat_identifier = f"mat:{node.fill.name}"
+            if node.name is not None and node.name:
+                mat_identifier = f"mat:{node.name}"
             if len(mat_identifier) > 32:
                 mat_identifier = mat_identifier[:32]
                 warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
@@ -375,7 +375,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             ids.extend(s_ids)
             return ids
             
-        elif node.fill is None:
+        elif node is None:
             ids = []
             s_ids = surface_to_cubit_journal(node, process_bb(node.bounding_box))
             surf_coms.append( f'group "mat:void" add body {{ { s_ids } }} ' )
