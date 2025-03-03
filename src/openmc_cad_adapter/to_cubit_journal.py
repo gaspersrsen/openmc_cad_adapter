@@ -124,8 +124,8 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 if body_id() != s:
                     added = True
                     strt = body_id()
-            exec_cubit( f"delete volume {{ {id} }}" )
-        exec_cubit( f"delete volume {{ {s} }}" )
+            # exec_cubit( f"delete volume {{ {id} }}" )
+        # exec_cubit( f"delete volume {{ {s} }}" )
         stp = body_id()
         if strt > stp:
             raise ValueError(f"Universe {node} trim unsuccessful")
@@ -158,7 +158,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             for subnode in node:
                 s = surface_to_cubit_journal( subnode, w)
                 exec_cubit( f"intersect volume {{ {inter_id} }} {{ {s} }} keep" )
-                exec_cubit( f"delete volume {{ {inter_id} }}" )
+                # exec_cubit( f"delete volume {{ {inter_id} }}" )
                 inter_id = body_id()
             try:
                 if len(inter_id) > 1:
@@ -173,14 +173,14 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             union_id = body_id()
             first = surface_to_cubit_journal( node[0], w,  + 1, )
             exec_cubit( f"intersect volume {{ {union_id} }} {{ {first} }} keep" )
-            exec_cubit( f"delete volume {{ {union_id} }}" )
+            # exec_cubit( f"delete volume {{ {union_id} }}" )
             union_id = body_id()
             for subnode in node[1:]:
                 s = surface_to_cubit_journal( subnode, w,  + 1, )
                 exec_cubit( f"unite volume {{ {union_id} }} {{ {s} }} keep" )
-                exec_cubit( f"delete volume {{ {union_id} }}" )
+                # exec_cubit( f"delete volume {{ {union_id} }}" )
                 union_id = body_id()
-            exec_cubit( f"delete volume {{ {s} }}" )
+            # exec_cubit( f"delete volume {{ {s} }}" )
             return union_id
         else:
             raise NotImplementedError(f"{node} not implemented")
@@ -300,7 +300,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     
     # Cleanup
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
-    for i in range(1,body_id(),1):
+    for i in range(1,body_id()+1,1):
         if i not in final_ids:
             exec_cubit( f"delete volume {{ {i} }}" )
     
