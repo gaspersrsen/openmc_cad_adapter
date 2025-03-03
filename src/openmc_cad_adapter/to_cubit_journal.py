@@ -116,9 +116,14 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         #print(f"{{ {' '.join( map(str, np.array(all_ids)) )} }}")
         
         #exec_cubit( f"intersect body {{ {ids} }} {{ {s} }} keep" )
+        added = False
         for id in ids:
             inter_ids = np.append(np.array(id), np.array(s))
             exec_cubit( f"intersect body {' '.join( map(str, np.array(inter_ids)) )} keep" )
+            if not added:
+                if body_id() != s:
+                    added = True
+                    strt = body_id()
             exec_cubit( f"delete body {{ {id} }}" )
         exec_cubit( f"delete body {{ {s} }}" )
         stp = body_id()
