@@ -104,7 +104,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 w_out += [w[i]]
         return w_out
 
-    def trim_uni(node, ids):
+    def trim_uni(node, ids, w):
         #TODO what if a whole cell is cut-off and _CUBIT_ID is not created
         #TODO fix move in surfaces, YCyl,.., remove cad_cmds
         w = process_bb(node.bounding_box, w)
@@ -185,7 +185,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             stp = body_id()
             ids3 = range(strt,stp,1)
             exec_cubit( f"move body {strt} to {stp} midpoint location {midp(node)}" )
-            trim_uni(node, ids3)
+            trim_uni(node, ids3, bb)
             return ids3
         
         elif isinstance( node, Cell ): # Cell instance that is moved to proper location by universe
