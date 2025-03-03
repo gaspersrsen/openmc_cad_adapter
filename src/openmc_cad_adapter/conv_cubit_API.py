@@ -2,7 +2,7 @@ import sys
 import cubit
 #coreform_cubit as cubit
 
-cubit.init()
+#cubit.init()
 
 def exec_cubit(command):
     return cubit.cmd(command)
