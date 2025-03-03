@@ -214,38 +214,33 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 if isinstance( node.fill, Material ):
                     #s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box, w))
                     s_ids = surface_to_cubit_journal(node.region, bb)
-                    mat_identifier = f"mat:{node.fill.id}"
+                    mat_identifier = f"mat_{node.fill.id}"
                     # use material names when possible
                     if node.fill.name is not None and node.fill.name:
-                        mat_identifier = f"mat:{node.fill.name}"
+                        mat_identifier = f"mat_{node.fill.name}"
                     if len(mat_identifier) > 32:
                         mat_identifier = mat_identifier[:32]
                         warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
-                    #exec_cubit( f'group \"{mat_identifier}\" add volume {{ { s_ids } }} ' )
+                    exec_cubit( f'group \"{mat_identifier}\" add volume {{ { s_ids } }} ' )
                     #print(s_ids,ids)
                     ids = np.append(ids,np.array(s_ids)).astype(int)
                 
                 elif node.fill is None:
                     #s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box, w))
                     s_ids = surface_to_cubit_journal(node.region, bb)
-                    #exec_cubit( f'group "mat:void" add volume {{ { s_ids } }} ' )
+                    exec_cubit( f'group "mat_void" add volume {{ { s_ids } }} ' )
                     ids = np.append(ids,np.array(s_ids)).astype(int)
                 
                 elif isinstance( node.fill, Iterable ):
                     for uni in node.fill:
-                        #ids = np.append(ids, np.array(process_node( uni, process_bb(node.bounding_box, w) ))).astype(int)
                         ids = np.append(ids, np.array(process_node( uni, bb ))).astype(int)
                 
                 else:
-                    #ids = np.append(ids, np.array(process_node( node.fill, process_bb(node.bounding_box, w) ))).astype(int)
                     ids = np.append(ids, np.array(process_node( node.fill, bb ))).astype(int)
 
-                # if node.id in cell_ids:
-                #     write_journal_file(f"{filename[:-4]}{node.id}.jou", surf_coms[start:], process_bb(node.bounding_box, w))
                 if node.name is None:
                     #exec_cubit( f'create group "cell_{node.id}"' )
                     pass
-                    #exec_cubit( f'create group "cell_{node.id}"' )
                 else:
                     exec_cubit( f'volume {{ {' '.join( map(str, np.array(ids)) )} }} Rename "cell_{node.name}"' )
                 cell_map[node.id] = ids
@@ -299,10 +294,8 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     # exec_cubit("set default autosize off\n")
     # exec_cubit("undo off\n")
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
+    
     # Process geometry
-    # final_ids = []
-    # for cell in geom.root_universe._cells.values():
-    #     final_ids += process_node(cell, w)
     final_ids = process_node(geom.root_universe, w)
     
     # Cleanup
@@ -310,16 +303,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     for i in range(1,body_id(),1):
         if i not in final_ids:
             exec_cubit( f"delete volume {{ {i} }}" )
-        # found = False
-        # for j in [surf_map]:
-        #     if i in j.values:
-        #         exec_cubit( f"delete volume {{ {i} }}" )
-        # #for j in [cell_map,uni_map,latt_map]:
-        #     if i in j.values:
-        #         found = True
-        #         break
-        # if not found:
-        #     exec_cubit( f"delete volume {{ {i} }}" )
+    
     #Finalize
     exec_cubit("graphics flush\n")
     exec_cubit("set default autosize on\n")
