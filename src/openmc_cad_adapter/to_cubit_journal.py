@@ -155,11 +155,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             strt = body_id()
             inter_id = body_id()
-            for subnode in node:
-                s = surface_to_cubit_journal( subnode, w)
-                exec_cubit( f"intersect volume {{ {inter_id} }} {{ {s} }} keep" )
-                # exec_cubit( f"delete volume {{ {inter_id} }}" )
-                inter_id = body_id()
             try:
                 if len(inter_id) > 1:
                     for i in range(strt, inter_id[-1],1):
@@ -167,6 +162,12 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     inter_id = body_id()
             except:
                 pass
+            for subnode in node:
+                s = surface_to_cubit_journal( subnode, w)
+                exec_cubit( f"intersect volume {{ {inter_id} }} {{ {s} }} keep" )
+                # exec_cubit( f"delete volume {{ {inter_id} }}" )
+                inter_id = body_id()
+
             return np.array(range(strt, inter_id,1)).astype(int)
         elif isinstance(node, Union):
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
