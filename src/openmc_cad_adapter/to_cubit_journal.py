@@ -160,7 +160,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 exec_cubit( f"intersect volume {{ {inter_id} }} {{ {s} }} keep" )
                 exec_cubit( f"delete volume {{ {inter_id} }}" )
                 inter_id = body_id()
-            if strt != inter_id:
+            if strt != inter_id + 1:
                 for i in range(strt, inter_id,1):
                     exec_cubit( f"split body {i}" )
                 inter_id = body_id()
