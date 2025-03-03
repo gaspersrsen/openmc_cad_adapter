@@ -116,8 +116,8 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         print(f"{{ {' '.join( map(str, np.array(all_ids)) )} }}")
         
         #exec_cubit( f"intersect body {{ {ids} }} {{ {s} }} keep" )
-        # exec_cubit( f"intersect body {{ {' '.join( map(str, np.array(all_ids)) )} }} keep" )
-        # exec_cubit( f"delete body {{ {all_ids} }}" )
+        exec_cubit( f"intersect body {{ {' '.join( map(str, np.array(all_ids)) )} }} keep" )
+        exec_cubit( f"delete body {{ {all_ids} }}" )
         stp = body_id()
         if strt > stp:
             raise ValueError(f"Universe {node} trim unsuccessful")
@@ -150,7 +150,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             for subnode in node:
                 s = surface_to_cubit_journal( subnode, w)
                 exec_cubit( f"intersect body {{ {inter_id} }} {{ {s} }} keep" )
-                exec_cubit( f"delete body {{ {inter_id} }}" )
+                #exec_cubit( f"delete body {{ {inter_id} }}" )
                 inter_id = body_id()
             return inter_id
         elif isinstance(node, Union):
@@ -158,12 +158,12 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             union_id = body_id()
             first = surface_to_cubit_journal( node[0], w,  + 1, )
             exec_cubit( f"intersect body {{ {union_id} }} {{ {first} }} keep" )
-            exec_cubit( f"delete body {{ {union_id} }}" )
+            #exec_cubit( f"delete body {{ {union_id} }}" )
             union_id = body_id()
             for subnode in node[1:]:
                 s = surface_to_cubit_journal( subnode, w,  + 1, )
                 exec_cubit( f"unite body {{ {union_id} }} {{ {s} }} keep" )
-                exec_cubit( f"delete body {{ {union_id} }}" )
+                #exec_cubit( f"delete body {{ {union_id} }}" )
                 union_id = body_id()
             return union_id
         else:
