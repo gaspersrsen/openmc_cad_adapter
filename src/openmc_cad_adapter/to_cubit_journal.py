@@ -199,8 +199,9 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             ids = uni_map[node.id]
             exec_cubit( f" volume {' '.join( map(str, np.array(ids)) )} copy" )
             ids3 = body_id()
+            print(ids3)
             #ids3 = range(strt,stp,1)
-            exec_cubit( f"move volume {{ {' '.join( map(str, np.array(ids3)) )} }} midpoint location {midp(node)}" )
+            #exec_cubit( f"move volume {{ {' '.join( map(str, np.array(ids3)) )} }} midpoint location {midp(node)}" )
             ids_out = trim_uni(node, ids3, bb)
             return ids_out
         
