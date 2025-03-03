@@ -223,7 +223,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
                 # if node.id in cell_ids:
                 #     write_journal_file(f"{filename[:-4]}{node.id}.jou", surf_coms[start:], process_bb(node.bounding_box, w))
-                if cell.name is None:
+                if node.name is None:
                     exec_cubit( f'create group "cell_{node.id}"' )
                 else:
                     exec_cubit( f'create group "cell_{node.name}"' )
