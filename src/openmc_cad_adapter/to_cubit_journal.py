@@ -158,7 +158,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 s = surface_to_cubit_journal( subnode, w)
                 strt = body_id() + 1
                 exec_cubit( f"intersect volume {{ {inter_id} }} {{ {s} }} keep" )
-                print(body_id())
+                print(strt,body_id())
                 exec_cubit( f"split body {strt}" )
                 # exec_cubit( f"delete volume {{ {inter_id} }}" )
                 inter_id = body_id()
