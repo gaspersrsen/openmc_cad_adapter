@@ -230,10 +230,12 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
                 # if node.id in cell_ids:
                 #     write_journal_file(f"{filename[:-4]}{node.id}.jou", surf_coms[start:], process_bb(node.bounding_box, w))
-                # if node.name is None:
-                #     exec_cubit( f'create group "cell_{node.id}"' )
-                # else:
-                #     exec_cubit( f'create group "cell_{node.name}"' )
+                if node.name is None:
+                    #exec_cubit( f'create group "cell_{node.id}"' )
+                    pass
+                    #exec_cubit( f'create group "cell_{node.id}"' )
+                else:
+                    exec_cubit( f'body {{ {ids} }} Rename "cell_{node.name}"' )
                 cell_map[node.id] = ids
             return cell_map[node.id]
                 
