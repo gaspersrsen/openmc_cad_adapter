@@ -1,7 +1,7 @@
 import sys
 import cubit
 
-#cubit.init()
+cubit.init([])
 
 def exec_cubit(command):
     return cubit.cmd(command)
