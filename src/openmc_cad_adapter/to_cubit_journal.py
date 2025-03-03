@@ -154,13 +154,16 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         elif isinstance(node, Intersection):
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             inter_id = body_id()
-                        
             for subnode in node:
-                strt = body_id()
                 s = surface_to_cubit_journal( subnode, w)
+                strt = body_id()
                 exec_cubit( f"intersect volume {{ {inter_id} }} {{ {s} }} keep" )
-                if strt + 1 != body_id() +1:
+                try:
+                    body_id()[-1]
+                    #if strt + 1 != body_id() +1:
                     exec_cubit( f"split body {strt+1}" )
+                except:
+                    pass
                 # exec_cubit( f"delete volume {{ {inter_id} }}" )
                 inter_id = body_id()
 
