@@ -1,5 +1,6 @@
 import sys
 sys.path.append('/opt/cubit/bin')
+sys.path.append('/opt/Coreform-Cubit-2025.1/bin/')
 import cubit
 
 #cubit.init([])
