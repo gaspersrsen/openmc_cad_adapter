@@ -8,7 +8,6 @@ import openmc
 
 from .cubit_util import emit_get_last_id, lastid
 from .geom_util import move, rotate
-#from .to_cubit_journal import process_command
 from .conv_cubit_API import *
 
 
@@ -109,9 +108,9 @@ class CADXPlane(CADSurface, openmc.XPlane):
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         global surf_map
         if surf_id(node) not in surf_map:
-            process_command(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
+            exec_cubit(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
             ids_map = body_id()
-            process_command(f"section body {{ {ids_map} }} with xplane offset {self.coefficients['x0']} {self.reverse(node)}")
+            exec_cubit(f"section body {{ {ids_map} }} with xplane offset {self.coefficients['x0']} {self.reverse(node)}")
             surf_map[surf_id(node)] = ids_map
         return surf_map[surf_id(node)]
 
@@ -129,9 +128,9 @@ class CADYPlane(CADSurface, openmc.YPlane):
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         global surf_map
         if surf_id(node) not in surf_map:
-            process_command(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
+            exec_cubit(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
             id_map = body_id()
-            process_command(f"section body {{ {id_map} }} with yplane offset {self.coefficients['y0']} {self.reverse(node)}")
+            exec_cubit(f"section body {{ {id_map} }} with yplane offset {self.coefficients['y0']} {self.reverse(node)}")
             surf_map[surf_id(node)] = id_map
         return surf_map[surf_id(node)]
 
@@ -149,9 +148,9 @@ class CADZPlane(CADSurface, openmc.ZPlane):
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         global surf_map
         if surf_id(node) not in surf_map:
-            process_command(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
+            exec_cubit(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
             ids_map = body_id()
-            process_command(f"section body {{ {ids_map} }} with zplane offset {self.coefficients['z0']} {self.reverse(node)}")
+            exec_cubit(f"section body {{ {ids_map} }} with zplane offset {self.coefficients['z0']} {self.reverse(node)}")
             surf_map[surf_id(node)] = ids_map
         return surf_map[surf_id(node)]
 
@@ -165,22 +164,22 @@ class CADCylinder(CADSurface, openmc.Cylinder):
         print('XCADCylinder to cubit surface')
         cad_cmds = []
         h = inner_world[2] if inner_world else extents[2]
-        process_command(f"cylinder height {h} radius {self.r}")
+        exec_cubit(f"cylinder height {h} radius {self.r}")
         ids_map = emit_get_last_id(cmds=cad_cmds)
         if node.side != '-':
             wid_map = 0
             if inner_world:
                 if hex:
-                    process_command(f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2 ) }")
+                    exec_cubit(f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2 ) }")
                     wid_map = body_id()
-                    process_command(f"rotate body {{ {wid_map} }} about z angle 30")
+                    exec_cubit(f"rotate body {{ {wid_map} }} about z angle 30")
                 else:
-                    process_command(f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}")
+                    exec_cubit(f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}")
                     wid_map = body_id()
             else:
-                process_command( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
+                exec_cubit( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
                 wid_map = body_id()
-            process_command( f"subtract body {{ { ids_map } }} from body {{ { wid_map } }}" )
+            exec_cubit( f"subtract body {{ { ids_map } }} from body {{ { wid_map } }}" )
             rotate( wid_map, self.dx, self.dy, self.dz, cad_cmds)
             move( wid_map, self.x0, self.y0, self.z0, cad_cmds)
             return wid_map, cad_cmds
@@ -200,25 +199,25 @@ class CADXCylinder(CADSurface, openmc.XCylinder):
         if surf_id(node) not in surf_map:
             cad_cmds = []
             h = inner_world[0] if inner_world else extents[0]
-            process_command( f"cylinder height {h} radius {self.r}")
+            exec_cubit( f"cylinder height {h} radius {self.r}")
             ids_map = body_id()
-            process_command(f"rotate body {{ {ids_map} }} about y angle 90")
+            exec_cubit(f"rotate body {{ {ids_map} }} about y angle 90")
             if node.side != '-':
                 wid_map = 0
                 if inner_world:
                     if hex:
-                        process_command(f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2 ) }")
+                        exec_cubit(f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2 ) }")
                         wid_map = body_id()
-                        process_command(f"rotate body {{ {wid_map} }} about z angle 30")
-                        process_command(f"rotate body {{ {wid_map} }} about y angle 90")
+                        exec_cubit(f"rotate body {{ {wid_map} }} about z angle 30")
+                        exec_cubit(f"rotate body {{ {wid_map} }} about y angle 90")
                     else:
-                        process_command(f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}")
+                        exec_cubit(f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}")
                         wid_map = body_id()
                 else:
-                    process_command( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
+                    exec_cubit( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
                     wid_map = body_id()
-                process_command(f"subtract body {{ { ids_map } }} from body {{ { wid_map } }}")
-            process_command( move(wid_map, 0, self.y0, self.z0, cad_cmds) )
+                exec_cubit(f"subtract body {{ { ids_map } }} from body {{ { wid_map } }}")
+            exec_cubit( move(wid_map, 0, self.y0, self.z0, cad_cmds) )
             surf_map[surf_id(node)] = ids_map
         return surf_map[surf_id(node)]
 
@@ -234,25 +233,25 @@ class CADYCylinder(CADSurface, openmc.YCylinder):
         if surf_id(node) not in surf_map:
             cad_cmds = []
             h = inner_world[1] if inner_world else extents[1]
-            process_command( f"cylinder height {h} radius {self.r}")
+            exec_cubit( f"cylinder height {h} radius {self.r}")
             ids_map = body_id()
-            process_command(f"rotate body {{ {ids_map} }} about x angle 90")
+            exec_cubit(f"rotate body {{ {ids_map} }} about x angle 90")
             if node.side != '-':
                 wid_map = 0
                 if inner_world:
                     if hex:
-                        process_command(f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2 ) }")
+                        exec_cubit(f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2 ) }")
                         wid_map = body_id()
-                        process_command(f"rotate body {{ {wid_map} }} about z angle 30")
-                        process_command(f"rotate body {{ {wid_map} }} about x angle 90")
+                        exec_cubit(f"rotate body {{ {wid_map} }} about z angle 30")
+                        exec_cubit(f"rotate body {{ {wid_map} }} about x angle 90")
                     else:
-                        process_command(f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}")
+                        exec_cubit(f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}")
                         wid_map = body_id()
                 else:
-                    process_command( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
+                    exec_cubit( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
                     wid_map = body_id()
-                process_command(f"subtract body {{ { ids_map } }} from body {{ { wid_map } }}")
-            process_command( move(wid_map, self.x0, 0, self.z0) )
+                exec_cubit(f"subtract body {{ { ids_map } }} from body {{ { wid_map } }}")
+            exec_cubit( move(wid_map, self.x0, 0, self.z0) )
             surf_map[surf_id(node)] = ids_map
         return surf_map[surf_id(node)]
 
@@ -268,25 +267,25 @@ class CADZCylinder(CADSurface, openmc.ZCylinder):
         if surf_id(node) not in surf_map:
             cad_cmds = []
             h = inner_world[2] if inner_world else extents[2]
-            process_command(f"cylinder height {h} radius {self.r}")
+            exec_cubit(f"cylinder height {h} radius {self.r}")
             ids_map = body_id()
             if node.side != '-':
                 if inner_world:
                     if hex:
-                        process_command(f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2 ) }")
+                        exec_cubit(f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2 ) }")
                         wid_map = body_id()
-                        process_command(f"rotate body {{ {wid_map} }} about z angle 30")
+                        exec_cubit(f"rotate body {{ {wid_map} }} about z angle 30")
                     else:
-                        process_command(f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}")
+                        exec_cubit(f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}")
                         wid_map = body_id()
                 else:
-                    process_command( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
+                    exec_cubit( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
                     wid_map = body_id()
-                process_command(f"subtract body {{ { ids_map } }} from body {{ { wid_map } }} keep_tool")
+                exec_cubit(f"subtract body {{ { ids_map } }} from body {{ { wid_map } }} keep_tool")
                 ids_map = wid_map
             move_cmd = move(ids_map, self.x0, self.y0, 0)
             if move_cmd is not None:
-                process_command( move_cmd )
+                exec_cubit( move_cmd )
             surf_map[surf_id(node)] = ids_map
         return surf_map[surf_id(node)]
 
@@ -299,13 +298,13 @@ class CADSphere(CADSurface, openmc.Sphere):
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         cad_cmds = []
-        process_command( f"sphere radius {self.r}")
+        exec_cubit( f"sphere radius {self.r}")
         ids_map = body_id()
         move(ids_map, self.x0, self.y0, self.z0, cad_cmds)
         if node.side != '-':
-            process_command( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
+            exec_cubit( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
             wid_map = emit_get_last_id( ent_type , cad_cmds)
-            process_command(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
+            exec_cubit(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
             ids_map = wid_map
         return ids_map,cad_cmds
 
@@ -326,20 +325,20 @@ class CADXCone(CADSurface, openmc.XCone):
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         cad_cmds = []
-        process_command( f"create frustum height {extents[0]} radius {math.sqrt(self.coefficients['r2'])*extents[0]} top 0")
+        exec_cubit( f"create frustum height {extents[0]} radius {math.sqrt(self.coefficients['r2'])*extents[0]} top 0")
         ids_map = body_id()
-        process_command(f"body {{ {ids_map} }} move 0 0 -{extents[0]/2.0}")
-        process_command(f"body {{ {ids_map} }} copy reflect z")
+        exec_cubit(f"body {{ {ids_map} }} move 0 0 -{extents[0]/2.0}")
+        exec_cubit(f"body {{ {ids_map} }} copy reflect z")
         ids2 = body_id()
-        process_command(f"unite body {{ {ids_map} }}  {{ {ids2} }}")
-        process_command( f"rotate body {{ {ids_map} }} about y angle 90")
+        exec_cubit(f"unite body {{ {ids_map} }}  {{ {ids2} }}")
+        exec_cubit( f"rotate body {{ {ids_map} }} about y angle 90")
         x0, y0, z0 = self.coefficients['x0'], self.coefficients['y0'], self.coefficients['z0']
-        process_command(f"body {{ {ids_map} }} move {x0} {y0} {z0}")
+        exec_cubit(f"body {{ {ids_map} }} move {x0} {y0} {z0}")
 
         if node.side != '-':
-            process_command( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
+            exec_cubit( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
             wid_map = emit_get_last_id(ent_type , cad_cmds)
-            process_command(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
+            exec_cubit(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
             ids_map = wid_map
         return ids_map,cad_cmds
 
@@ -352,20 +351,20 @@ class CADYCone(CADSurface, openmc.YCone):
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         cad_cmds = []
-        process_command( f"create frustum height {extents[1]} radius {math.sqrt(self.coefficients['r2'])*extents[1]} top 0")
+        exec_cubit( f"create frustum height {extents[1]} radius {math.sqrt(self.coefficients['r2'])*extents[1]} top 0")
         ids_map = body_id()
-        process_command(f"body {{ {ids_map} }} move 0 0 -{extents[1]/2.0}")
-        process_command(f"body {{ {ids_map} }} copy reflect z")
+        exec_cubit(f"body {{ {ids_map} }} move 0 0 -{extents[1]/2.0}")
+        exec_cubit(f"body {{ {ids_map} }} copy reflect z")
         ids2 = body_id()
-        process_command(f"unite body {{ {ids_map} }}  {{ {ids2} }}")
-        process_command( f"rotate body {{ {ids_map} }} about x angle 90")
+        exec_cubit(f"unite body {{ {ids_map} }}  {{ {ids2} }}")
+        exec_cubit( f"rotate body {{ {ids_map} }} about x angle 90")
         x0, y0, z0 = self.coefficients['x0'], self.coefficients['y0'], self.coefficients['z0']
-        process_command(f"body {{ {ids_map} }} move {x0} {y0} {z0}")
+        exec_cubit(f"body {{ {ids_map} }} move {x0} {y0} {z0}")
 
         if node.side != '-':
-            process_command( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
+            exec_cubit( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
             wid_map = emit_get_last_id(ent_type , cad_cmds)
-            process_command(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
+            exec_cubit(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
             ids_map = wid_map
         return ids_map,cad_cmds
 
@@ -378,19 +377,19 @@ class CADZCone(CADSurface, openmc.ZCone):
 
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         cad_cmds = []
-        process_command( f"create frustum height {extents[2]} radius {math.sqrt(self.coefficients['r2'])*extents[2]} top 0")
+        exec_cubit( f"create frustum height {extents[2]} radius {math.sqrt(self.coefficients['r2'])*extents[2]} top 0")
         ids_map = body_id()
-        process_command(f"body {{ {ids_map} }} move 0 0 -{extents[2]/2.0}")
-        process_command(f"body {{ {ids_map} }} copy reflect z")
+        exec_cubit(f"body {{ {ids_map} }} move 0 0 -{extents[2]/2.0}")
+        exec_cubit(f"body {{ {ids_map} }} copy reflect z")
         ids2 = body_id()
-        process_command(f"unite body {{ {ids_map} }}  {{ {ids2} }}")
+        exec_cubit(f"unite body {{ {ids_map} }}  {{ {ids2} }}")
         x0, y0, z0 = self.coefficients['x0'], self.coefficients['y0'], self.coefficients['z0']
-        process_command(f"body {{ {ids_map} }} move {x0} {y0} {z0}")
+        exec_cubit(f"body {{ {ids_map} }} move {x0} {y0} {z0}")
 
         if node.side != '-':
-            process_command( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
+            exec_cubit( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
             wid_map = emit_get_last_id(ent_type , cad_cmds)
-            process_command(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
+            exec_cubit(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
             ids_map = wid_map
         return ids_map,cad_cmds
 
@@ -414,13 +413,13 @@ class CADXTorus(CADTorus, openmc.XTorus):
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         self.check_coeffs()
         cad_cmds = []
-        process_command( f"torus major radius {self.a} minor radius {self.b}" )
+        exec_cubit( f"torus major radius {self.a} minor radius {self.b}" )
         ids_map = body_id()
-        process_command( f"rotate body {{ {ids_map} }} about y angle 90")
+        exec_cubit( f"rotate body {{ {ids_map} }} about y angle 90")
         if node.side != '-':
-            process_command( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
+            exec_cubit( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
             wid_map = body_id()
-            process_command(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
+            exec_cubit(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
             move(wid_map, self.x0, self.y0, self.z0, cad_cmds)
             ids_map = wid_map
         else:
@@ -433,13 +432,13 @@ class CADYTorus(CADTorus, openmc.YTorus):
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         self.check_coeffs()
         cad_cmds = []
-        process_command( f"torus major radius {self.a} minor radius {self.b}" )
+        exec_cubit( f"torus major radius {self.a} minor radius {self.b}" )
         ids_map = body_id()
-        process_command( f"rotate body {{ {ids_map} }} about x angle 90")
+        exec_cubit( f"rotate body {{ {ids_map} }} about x angle 90")
         if node.side != '-':
-            process_command( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
+            exec_cubit( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
             wid_map = body_id()
-            process_command(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
+            exec_cubit(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
             move(wid_map, self.x0, self.y0, self.z0, cad_cmds)
             ids_map = wid_map
         else:
@@ -452,12 +451,12 @@ class CADZTorus(CADTorus, openmc.ZTorus):
     def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
         self.check_coeffs()
         cad_cmds = []
-        process_command( f"torus major radius {self.a} minor radius {self.b}" )
+        exec_cubit( f"torus major radius {self.a} minor radius {self.b}" )
         ids_map = body_id()
         if node.side != '-':
-            process_command( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
+            exec_cubit( f"brick x {extents[0]} y {extents[1]} z {extents[2]}" )
             wid_map = body_id()
-            process_command(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
+            exec_cubit(f"subtract body {{ {ids_map} }} from body {{ {wid_map} }}")
             move(wid_map, self.x0, self.y0, self.z0, cad_cmds)
             ids_map = wid_map
         else:

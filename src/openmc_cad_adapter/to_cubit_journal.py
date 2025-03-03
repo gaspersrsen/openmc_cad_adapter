@@ -61,7 +61,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
     """
     reset_cubit_ids()
-    global cell_ids, process_command, cmds
+    global cell_ids, cmds
 
     if not filename.endswith('.jou'):
         filename += '.jou'
@@ -91,12 +91,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     uni_map = {}
     latt_map = {}
     
-    def process_command(command):
-        if to_cubit:
-            exec_cubit(command)
-        else:
-            cmds.append(command)
-    
     def midp(node):
         return ' '.join( map(str, (node.bounding_box.upper_right+node.bounding_box.lower_left)/2) )
     
@@ -115,8 +109,8 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         #TODO fix move in surfaces, YCyl,.., remove cad_cmds
         s = surface_to_cubit_journal( node.region, w)
         strt = body_next()
-        process_command( f"intersect body {{ {ids} }} {{ {s} }} keep" )
-        process_command( f"delete body {{ {ids} }}" )
+        exec_cubit( f"intersect body {{ {ids} }} {{ {s} }} keep" )
+        exec_cubit( f"delete body {{ {ids} }}" )
         stp = body_id()
         if strt > stp:
             raise ValueError(f"Universe {node} trim unsuccessful")
@@ -135,30 +129,30 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     raise NotImplementedError(f"{surface.type} not implemented")
         elif isinstance(node, Complement):
             id = surface_to_cubit_journal(node.node, w)
-            process_command( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+            exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             wid = body_id()
-            process_command( f"subtract body {{ {id} }} from body {{ {wid} }} keep_tool" )
+            exec_cubit( f"subtract body {{ {id} }} from body {{ {wid} }} keep_tool" )
             return wid
         elif isinstance(node, Intersection):
-            process_command( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+            exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             inter_id = body_id()
             for subnode in node:
                 s = surface_to_cubit_journal( subnode, w)
-                process_command( f"intersect body {{ {inter_id} }} {{ {s} }} keep" )
-                process_command( f"delete body {{ {inter_id} }}" )
+                exec_cubit( f"intersect body {{ {inter_id} }} {{ {s} }} keep" )
+                exec_cubit( f"delete body {{ {inter_id} }}" )
                 inter_id = body_id()
             return inter_id
         elif isinstance(node, Union):
-            process_command( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+            exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             union_id = body_id()
             first = surface_to_cubit_journal( node[0], w,  + 1, )
-            process_command( f"intersect body {{ {union_id} }} {{ {first} }} keep" )
-            process_command( f"delete body {{ {union_id} }}" )
+            exec_cubit( f"intersect body {{ {union_id} }} {{ {first} }} keep" )
+            exec_cubit( f"delete body {{ {union_id} }}" )
             union_id = body_id()
             for subnode in node[1:]:
                 s = surface_to_cubit_journal( subnode, w,  + 1, )
-                process_command( f"unite body {{ {union_id} }} {{ {s} }} keep" )
-                process_command( f"delete body {{ {union_id} }}" )
+                exec_cubit( f"unite body {{ {union_id} }} {{ {s} }} keep" )
+                exec_cubit( f"delete body {{ {union_id} }}" )
                 union_id = body_id()
             return union_id
         else:
@@ -175,14 +169,14 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 for c in node._cells.values():
                     #ids = np.append(ids,np.array(process_node( c, process_bb(node.bounding_box, w) ))).astype(int)
                     ids = np.append(ids,np.array(process_node( c, bb))).astype(int)
-                process_command( f'create group "uni_{node.id}"' )
+                exec_cubit( f'create group "uni_{node.id}"' )
                 uni_map[node.id] = ids
             ids = uni_map[node.id]
             strt = body_next()
-            process_command( f" body {{ {' '.join( map(str, np.array(ids)) )} }} copy" )
+            exec_cubit( f" body {{ {' '.join( map(str, np.array(ids)) )} }} copy" )
             stp = body_id()
             ids3 = range(strt,stp,1)
-            process_command( f"move body {strt} to {stp} midpoint location {midp(node)}" )
+            exec_cubit( f"move body {strt} to {stp} midpoint location {midp(node)}" )
             trim_uni(node, ids3)
             return ids3
         
@@ -200,14 +194,14 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     if len(mat_identifier) > 32:
                         mat_identifier = mat_identifier[:32]
                         warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
-                    process_command( f'group \"{mat_identifier}\" add body {{ { s_ids } }} ' )
+                    exec_cubit( f'group \"{mat_identifier}\" add body {{ { s_ids } }} ' )
                     #print(s_ids,ids)
                     ids = np.append(ids,np.array(s_ids)).astype(int)
                 
                 elif node.fill is None:
                     #s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box, w))
                     s_ids = surface_to_cubit_journal(node.region, bb)
-                    process_command( f'group "mat:void" add body {{ { s_ids } }} ' )
+                    exec_cubit( f'group "mat:void" add body {{ { s_ids } }} ' )
                     ids = np.append(ids,np.array(s_ids)).astype(int)
                 
                 elif isinstance( node.fill, Iterable ):
@@ -221,7 +215,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
                 # if node.id in cell_ids:
                 #     write_journal_file(f"{filename[:-4]}{node.id}.jou", surf_coms[start:], process_bb(node.bounding_box, w))
-                process_command( f'create group "cell_{node.id}"' )
+                exec_cubit( f'create group "cell_{node.id}"' )
                 cell_map[node.id] = ids
             return cell_map[node.id]
                 
@@ -246,10 +240,10 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                                 if isinstance( id, list ):
                                     ids2 = ' '.join( map(str, id) )
                                 strt = body_next()
-                                process_command( f" body {{ {ids2} }} copy" )
+                                exec_cubit( f" body {{ {ids2} }} copy" )
                                 stp = body_id()
                                 ids3 = range(strt,stp,1)
-                                process_command( f"move body {strt} to {stp} midpoint location {x} {y} 0" )
+                                exec_cubit( f"move body {strt} to {stp} midpoint location {x} {y} 0" )
                                 ids = np.append(ids, np.array(ids3).astype(int)).astype(int)
                             j = j + 1
                         i = i + 1
@@ -264,9 +258,9 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         # r = flatten( results )
         # if len( r ) > 0:
         #     if node.name:
-        #         process_command( f"body {{ {r[0]} }} name \"{node.name}\"" )
+        #         exec_cubit( f"body {{ {r[0]} }} name \"{node.name}\"" )
         #     else:
-        #         process_command( f"body {{ {r[0]} }} name \"Cell_{node.id}\"" )
+        #         exec_cubit( f"body {{ {r[0]} }} name \"Cell_{node.id}\"" )
         # return r
 
     # def do_cell(cell, cell_ids: Iterable[int] = None):
