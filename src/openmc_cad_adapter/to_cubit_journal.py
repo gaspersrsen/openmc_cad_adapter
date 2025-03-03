@@ -160,6 +160,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
 
     def process_node( node, bb, surfs=None, lat_pos=None ):
+        print(node)
         # TODO handle uni move and region, copied body has to be trimmed
         global surf_coms, cell_ids
         # Universes contain cells and move internal cells to proper location
