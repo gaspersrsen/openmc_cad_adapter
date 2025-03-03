@@ -274,9 +274,13 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                                 strt = body_id() +1
                                 exec_cubit( f" volume {{ {ids2} }} copy" )
                                 stp = body_id()
+                                try:
+                                    stp = stp[-1]
+                                except:
+                                    pass
                                 ids3 = range(strt,stp,1)
-                                exec_cubit( f"move volume {{ {' '.join( map(str, stp) )} }} midpoint location {x} {y} 0" )
-                                ids = np.append(ids, np.array(stp).astype(int)).astype(int)
+                                exec_cubit( f"move volume {strt} to {stp} midpoint location {x} {y} 0" )
+                                ids = np.append(ids, np.array(ids3).astype(int)).astype(int)
                             j = j + 1
                         i = i + 1
                 else:
