@@ -8,7 +8,7 @@ import openmc
 
 from .cubit_util import emit_get_last_id, lastid
 from .geom_util import move, rotate
-from .to_cubit_journal import process_command
+#from .to_cubit_journal import process_command
 from .conv_cubit_API import *
 
 
