@@ -278,14 +278,14 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     #     do_cell( cell )
     process_node(geom.root_universe, w)
 
-    if filename:
-        write_journal_file(filename, surf_coms, world)
+    # if filename:
+    #     write_journal_file(filename, surf_coms, world)
 
-    if to_cubit:
-        cubit.cmd( "reset" )
-        for x in surf_coms:
-            cubit.cmd( x )
-            cubit.cmd(f"save as {filename[:-4]}.cub overwrite")
+    # if to_cubit:
+    #     cubit.cmd( "reset" )
+    #     for x in surf_coms:
+    #         cubit.cmd( x )
+    #         cubit.cmd(f"save as {filename[:-4]}.cub overwrite")
 
 
 def write_journal_file(filename, surf_coms, world, verbose_journal=False):
