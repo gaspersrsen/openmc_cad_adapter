@@ -183,7 +183,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 for c in node._cells.values():
                     #ids = np.append(ids,np.array(process_node( c, process_bb(node.bounding_box, w) ))).astype(int)
                     ids = np.append(ids,np.array(process_node( c, bb))).astype(int)
-                exec_cubit( f'create group "uni_{node.id}"' )
+                #exec_cubit( f'create group "uni_{node.id}"' )
                 uni_map[node.id] = ids
             ids = uni_map[node.id]
             strt = body_next()
@@ -208,14 +208,14 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     if len(mat_identifier) > 32:
                         mat_identifier = mat_identifier[:32]
                         warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
-                    exec_cubit( f'group \"{mat_identifier}\" add body {{ { s_ids } }} ' )
+                    #exec_cubit( f'group \"{mat_identifier}\" add body {{ { s_ids } }} ' )
                     #print(s_ids,ids)
                     ids = np.append(ids,np.array(s_ids)).astype(int)
                 
                 elif node.fill is None:
                     #s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box, w))
                     s_ids = surface_to_cubit_journal(node.region, bb)
-                    exec_cubit( f'group "mat:void" add body {{ { s_ids } }} ' )
+                    #exec_cubit( f'group "mat:void" add body {{ { s_ids } }} ' )
                     ids = np.append(ids,np.array(s_ids)).astype(int)
                 
                 elif isinstance( node.fill, Iterable ):
@@ -229,10 +229,10 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
                 # if node.id in cell_ids:
                 #     write_journal_file(f"{filename[:-4]}{node.id}.jou", surf_coms[start:], process_bb(node.bounding_box, w))
-                if node.name is None:
-                    exec_cubit( f'create group "cell_{node.id}"' )
-                else:
-                    exec_cubit( f'create group "cell_{node.name}"' )
+                # if node.name is None:
+                #     exec_cubit( f'create group "cell_{node.id}"' )
+                # else:
+                #     exec_cubit( f'create group "cell_{node.name}"' )
                 cell_map[node.id] = ids
             return cell_map[node.id]
                 
