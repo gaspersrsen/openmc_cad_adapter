@@ -303,10 +303,10 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     final_ids = process_node(geom.root_universe, w)
     
     # Cleanup
-    exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
-    for i in range(1,body_id()+1,1):
-        if i not in final_ids:
-            exec_cubit( f"delete volume {{ {i} }}" )
+    # exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
+    # for i in range(1,body_id()+1,1):
+    #     if i not in final_ids:
+    #         exec_cubit( f"delete volume {{ {i} }}" )
     
     #Finalize
     exec_cubit("graphics flush\n")
