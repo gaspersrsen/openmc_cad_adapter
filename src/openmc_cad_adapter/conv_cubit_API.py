@@ -1,6 +1,5 @@
 import sys
 import cubit
-#coreform_cubit as cubit
 
 #cubit.init()
 
