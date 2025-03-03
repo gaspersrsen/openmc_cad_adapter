@@ -122,7 +122,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         if strt > stp:
             raise ValueError(f"Universe {node} trim unsuccessful")
         trim_ids = range(strt, stp, 1)
-        return trim_ids
+        return all_ids
         
 
     def surface_to_cubit_journal(node, w, hex = False):
