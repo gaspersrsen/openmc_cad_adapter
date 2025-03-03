@@ -223,7 +223,10 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
                 # if node.id in cell_ids:
                 #     write_journal_file(f"{filename[:-4]}{node.id}.jou", surf_coms[start:], process_bb(node.bounding_box, w))
-                exec_cubit( f'create group "cell_{node.id}"' )
+                if cell.name is None:
+                    exec_cubit( f'create group "cell_{node.id}"' )
+                else:
+                    exec_cubit( f'create group "cell_{node.name}"' )
                 cell_map[node.id] = ids
             return cell_map[node.id]
                 
@@ -278,6 +281,13 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     #     do_cell( cell )
     
     # Initialize world
+    exec_cubit("set echo off\n")
+    exec_cubit("set info off\n")
+    exec_cubit("set warning off\n")
+    exec_cubit("graphics pause\n")
+    exec_cubit("set journal off\n")
+    exec_cubit("set default autosize off\n")
+    exec_cubit("undo off\n")
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
     # Process geometry
     process_node(geom.root_universe, w)
