@@ -1,5 +1,5 @@
 import sys
-import cubit
+import coreform_cubit as cubit
 
 cubit.init()
 
