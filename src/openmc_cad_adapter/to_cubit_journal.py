@@ -111,7 +111,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
         s = body_id()
         #s = surface_to_cubit_journal( node.region, w)
-        strt = body_id() +1
+        strt = body_next()
         #all_ids = np.append(np.array(ids), np.array(s))
         #print(f"{{ {' '.join( map(str, np.array(all_ids)) )} }}")
         
@@ -187,7 +187,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 #exec_cubit( f'create group "uni_{node.id}"' )
                 uni_map[node.id] = ids
             ids = uni_map[node.id]
-            strt = body_id() +1
+            strt = body_next()
             exec_cubit( f" body {{ {' '.join( map(str, np.array(ids)) )} }} copy" )
             stp = body_id()
             ids3 = range(strt,stp,1)
@@ -257,7 +257,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                                 ids2 = str( id )
                                 if isinstance( id, list ):
                                     ids2 = ' '.join( map(str, id) )
-                                strt = body_id() +1
+                                strt = body_next()
                                 exec_cubit( f" body {{ {ids2} }} copy" )
                                 stp = body_id()
                                 ids3 = range(strt,stp,1)
@@ -297,7 +297,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     final_ids = process_node(geom.root_universe, w)
     
     # Cleanup
-    for i in range(1,body_id() +1,1):
+    for i in range(1,body_next(),1):
         if i not in final_ids:
             exec_cubit( f"delete body {{ {i} }}" )
         # found = False
