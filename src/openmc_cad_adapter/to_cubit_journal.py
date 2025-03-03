@@ -129,7 +129,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         stp = body_id()
         if strt > stp:
             raise ValueError(f"Universe {node} trim unsuccessful")
-        trim_ids = range(strt, stp, 1)
+        trim_ids = range(strt, stp+1, 1)
         return trim_ids
         
 
@@ -164,7 +164,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 # exec_cubit( f"delete volume {{ {inter_id} }}" )
                 inter_id = body_id()
 
-            return np.array(range(strt, inter_id,1)).astype(int)
+            return np.array(range(strt, inter_id+1,1)).astype(int)
         elif isinstance(node, Union):
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             union_id = body_id()
@@ -202,7 +202,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             exec_cubit( f" volume {' '.join( map(str, np.array(ids)) )} copy" )
             stp = body_id()
             #print(ids3)
-            ids3 = range(strt,stp,1)
+            ids3 = range(strt,stp+1,1)
             #return ids3
             exec_cubit( f"move volume {{ {' '.join( map(str, np.array(ids3)) )} }} midpoint location {midp(node)}" )
             ids_out = trim_uni(node, ids3, bb)
@@ -268,7 +268,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                                 strt = body_id() + 1
                                 exec_cubit( f" volume {' '.join( map(str, np.array(ids2)) )} copy" )
                                 stp = body_id()
-                                ids3 = range(strt,stp,1)
+                                ids3 = range(strt,stp+1,1)
                                 exec_cubit( f"move volume {{ {' '.join( map(str, np.array(ids3)) )} }} midpoint location {x} {y} 0" )
                                 ids = np.append(ids, np.array(ids3).astype(int)).astype(int)
                             j = j + 1
