@@ -122,12 +122,15 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         print(node)
         global surf_coms, cell_ids
         if isinstance(node, Halfspace):
+            try:
                 surface = node.surface
-                if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
-                    cad_surface = cad_surface.from_openmc_surface(surface)
-                    return cad_surface.to_cubit_surface(node, w, hex)
-                else:
-                    raise NotImplementedError(f"{surface.type} not implemented")
+            except: 
+                surface = node._surface
+            if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
+                cad_surface = cad_surface.from_openmc_surface(surface)
+                return cad_surface.to_cubit_surface(node, w, hex)
+            else:
+                raise NotImplementedError(f"{surface.type} not implemented")
         elif isinstance(node, Complement):
             id = surface_to_cubit_journal(node.node, w)
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
