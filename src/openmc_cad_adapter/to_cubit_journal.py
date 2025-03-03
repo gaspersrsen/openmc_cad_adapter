@@ -112,17 +112,19 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         s = body_id()
         #s = surface_to_cubit_journal( node.region, w)
         strt = body_next()
-        all_ids = np.append(np.array(ids), np.array(s))
-        print(f"{{ {' '.join( map(str, np.array(all_ids)) )} }}")
+        #all_ids = np.append(np.array(ids), np.array(s))
+        #print(f"{{ {' '.join( map(str, np.array(all_ids)) )} }}")
         
         #exec_cubit( f"intersect body {{ {ids} }} {{ {s} }} keep" )
-        exec_cubit( f"intersect body {' '.join( map(str, np.array(all_ids)) )} keep" )
-        exec_cubit( f"delete body {{ {all_ids} }}" )
+        for id in ids:
+            inter_ids = np.append(np.array(id), np.array(s))
+            exec_cubit( f"intersect body {' '.join( map(str, np.array(inter_ids)) )} keep" )
+            exec_cubit( f"delete body {{ {id} }}" )
         stp = body_id()
         if strt > stp:
             raise ValueError(f"Universe {node} trim unsuccessful")
         trim_ids = range(strt, stp, 1)
-        return all_ids
+        return trim_ids
         
 
     def surface_to_cubit_journal(node, w, hex = False):
@@ -288,13 +290,15 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     #exec_cubit("undo off\n")
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
     # Process geometry
-    process_node(geom.root_universe, w)
+    final_ids = process_node(geom.root_universe, w)
     # Cleanup
     for i in range(1,body_next(),1):
-        found = False
-        for j in [surf_map]:
-            if i in j.values:
-                exec_cubit( f"delete body {{ {i} }}" )
+        if i not in final_ids:
+            exec_cubit( f"delete body {{ {i} }}" )
+        # found = False
+        # for j in [surf_map]:
+        #     if i in j.values:
+        #         exec_cubit( f"delete body {{ {i} }}" )
         # #for j in [cell_map,uni_map,latt_map]:
         #     if i in j.values:
         #         found = True
