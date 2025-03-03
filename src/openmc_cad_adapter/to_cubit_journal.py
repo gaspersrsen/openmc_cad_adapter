@@ -22,8 +22,12 @@ from openmc import XCone, YCone, ZCone, XTorus, YTorus, ZTorus
 
 from .gqs import *
 from .cubit_util import *
-#from .cubit_util import lastid, reset_cubit_ids, new_variable
-from .geom_util import rotate, move
+
+try:
+    sys.path.append('/opt/Coreform-Cubit-2025.1/bin/')
+    from .conv_cubit_API import *
+except ImportError:
+    raise ImportError("Cubit Python API not found. Please install Cubit to use this feature.")
 
 from .surfaces import _CAD_SURFACE_DICTIONARY, surf_map, surf_coms, surf_id
 
@@ -37,8 +41,7 @@ def flatten(S):
 def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                      cells: Iterable[int, openmc.Cell] = None,
                      filename: str = "openmc.jou",
-                     to_cubit: bool = False,
-                     seen: set = set()):
+                     to_cubit: bool = True):
     """Convert an OpenMC geometry to a Cubit journal.
 
     Parameters
@@ -55,12 +58,10 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         to_cubit : bool, optional
             Uses the cubit Python module to write the model as a .cub5 file.
             Defaults to False.
-        seen : set, optional
-            Internal parameter.
 
     """
     reset_cubit_ids()
-    global surf_coms, cell_ids
+    global cell_ids, process_command, cmds
 
     if not filename.endswith('.jou'):
         filename += '.jou'
@@ -73,11 +74,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     else:
         cell_ids = []
 
-    if to_cubit:
-        try:
-            import cubit
-        except ImportError:
-            raise ImportError("Cubit Python API not found. Please install Cubit to use this feature.")
 
     geom = geometry
 
@@ -91,6 +87,19 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         raise RuntimeError("Model extents could not be determined automatically and must be provided manually")
 
     w = world
+    cell_map = {}
+    uni_map = {}
+    latt_map = {}
+    
+    def process_command(command):
+        if to_cubit:
+            exec_cubit(command)
+        else:
+            cmds.append(command)
+    
+    def midp(node):
+        return ' '.join( map(str, (node.bounding_box.upper_right+node.bounding_box.lower_left)/2) )
+    
     def process_bb(bbox, w):
         w2 = np.abs(bbox.upper_right-bbox.lower_left)
         w_out = []
@@ -101,498 +110,171 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 w_out += [w[i]]
         return w_out
 
-    def surface_to_cubit_journal(node, w, indent = 0, inner_world = None,
-                                 hex = False, ent_type = "body", materials='group'):
+    def trim_uni(node, ids):
+        #TODO what if a whole cell is cut-off and _CUBIT_ID is not created
+        #TODO fix move in surfaces, YCyl,.., remove cad_cmds
+        s = surface_to_cubit_journal( node.region, w)
+        strt = body_next()
+        process_command( f"intersect body {{ {ids} }} {{ {s} }} keep" )
+        process_command( f"delete body {{ {ids} }}" )
+        stp = body_id()
+        if strt > stp:
+            raise ValueError(f"Universe {node} trim unsuccessful")
+        trim_ids = range(strt, stp, 1)
+        return trim_ids
+        
+
+    def surface_to_cubit_journal(node, w, hex = False):
         global surf_coms, cell_ids
-        def ind():
-            return ' ' * (2*indent)
         if isinstance(node, Halfspace):
                 surface = node.surface
                 if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                     cad_surface = cad_surface.from_openmc_surface(surface)
-                    return cad_surface.to_cubit_surface(ent_type, node, w, inner_world, hex)
-                if 0:
-                    #TODO quadric
-                    # elif surface._type == "quadric":
-                    #     (gq_type, A_, B_, C_, K_, translation, rotation_matrix) = characterize_general_quadratic(surface)
-
-                    #     def rotation_to_axis_angle( mat ):
-                    #         x = mat[2, 1]-mat[1, 2]
-                    #         y = mat[0, 2]-mat[2, 0]
-                    #         z = mat[1, 0]-mat[0, 1]
-                    #         r = math.hypot( x, math.hypot( y,z ))
-                    #         t = mat[0,0] + mat[1,1] + mat[2,2]
-                    #         theta = math.atan2(r,t-1)
-
-                    #         if abs(theta) <= np.finfo(np.float64).eps:
-                    #             return ( np.array([ 0, 0, 0 ]), 0 )
-                    #         elif abs( theta - math.pi ) <= np.finfo(np.float64).eps:
-                    #           # theta is pi (180 degrees) or extremely close to it
-                    #           # find the column of mat with the largest diagonal
-                    #           col = 0
-                    #           if mat[1,1] > mat[col,col]: col = 1
-                    #           if mat[2,2] > mat[col,col]: col = 2
-
-                    #           axis = np.array([ 0, 0, 0 ])
-
-                    #           axis[col] = math.sqrt( (mat[col,col]+1)/2 )
-                    #           denom = 2*axis[col]
-                    #           axis[(col+1)%3] = mat[col,(col+1)%3] / denom
-                    #           axis[(col+2)%3] = mat[col,(col+2)%3] / denom
-                    #           return ( axis, theta )
-                    #         else:
-                    #           axis = np.array([ x/r, y/r, z/r ])
-                    #           return ( axis, theta )
-                    #     (r_axis, r_theta ) = rotation_to_axis_angle( rotation_matrix )
-                    #     #compensate for cubits insertion of a negative
-                    #     r_degs = - math.degrees( r_theta )
-                    #     print( r_axis, math.degrees( r_theta ), r_degs )
-                    #     if gq_type == ELLIPSOID : #1
-                    #             r1 = math.sqrt( abs( -K_/A_ ) )
-                    #             r2 = math.sqrt( abs( -K_/B_ ) )
-                    #             r3 = math.sqrt( abs( -K_/C_ ) )
-                    #             surf_coms.append( f"sphere radius 1")
-                    #             ids = lastid()
-                    #             surf_coms.append( f"body {{ { ids } }} scale x { r1 } y { r2 } z { r3 }")
-                    #             move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                    #     elif gq_type == ELLIPTIC_CYLINDER : #7
-                    #         if A_ == 0:
-                    #             print( "X", gq_type, A_, B_, C_, K_, r_axis, r_degs )
-                    #             h = inner_world[0] if inner_world else w[0]
-                    #             r1 = math.sqrt( abs( K_/C_ ) )
-                    #             r2 = math.sqrt( abs( K_/B_ ) )
-                    #             surf_coms.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
-                    #             ids = lastid()
-                    #             surf_coms.append( f"rotate body {{ { ids } }} about y angle 90")
-                    #             if node.side != '-':
-                    #                 wid = 0
-                    #                 if inner_world:
-                    #                     if hex:
-                    #                         surf_coms.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
-                    #                         wid = lastid()
-                    #                         surf_coms.append( f"rotate body {{ {wid} }} about z angle 30" )
-                    #                         surf_coms.append( f"rotate body {{ {wid} }} about y angle 90")
-                    #                     else:
-                    #                         surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-                    #                         wid = lastid()
-                    #                 else:
-                    #                     surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-                    #                     wid = lastid()
-                    #                 surf_coms.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
-                    #                 surf_coms.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                    #                 move( wid, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                    #                 return wid
-                    #             surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                    #             move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                    #             return ids
-                    #         if B_ == 0:
-                    #             print( "Y", gq_type, A_, B_, C_, K_ )
-                    #             h = inner_world[1] if inner_world else w[1]
-                    #             r1 = math.sqrt( abs( K_/A_ ) )
-                    #             r2 = math.sqrt( abs( K_/C_ ) )
-                    #             surf_coms.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
-                    #             ids = lastid()
-                    #             surf_coms.append( f"rotate body {{ { ids } }} about x angle 90")
-                    #             if node.side != '-':
-                    #                 wid = 0
-                    #                 if inner_world:
-                    #                     if hex:
-                    #                         surf_coms.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
-                    #                         wid = lastid()
-                    #                         surf_coms.append( f"rotate body {{ {wid} }} about z angle 30" )
-                    #                         surf_coms.append( f"rotate body {{ {wid} }} about y angle 90")
-                    #                     else:
-                    #                         surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-                    #                         wid = lastid()
-                    #                 else:
-                    #                     surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-                    #                     wid = lastid()
-                    #                 surf_coms.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
-                    #                 surf_coms.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                    #                 move( wid, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                    #                 return wid
-                    #             surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                    #             move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                    #             return ids
-                    #         if C_ == 0:
-                    #             print( "Z", gq_type, A_, B_, C_, K_ )
-                    #             h = inner_world[2] if inner_world else w[2]
-                    #             r1 = math.sqrt( abs( K_/A_ ) )
-                    #             r2 = math.sqrt( abs( K_/B_ ) )
-                    #             surf_coms.append( f"cylinder height {h} Major Radius {r1} Minor Radius {r2}")
-                    #             ids = lastid()
-                    #             if node.side != '-':
-                    #                 wid = 0
-                    #                 if inner_world:
-                    #                     if hex:
-                    #                         surf_coms.append( f"create prism height {inner_world[2]} sides 6 radius { inner_world[0] / 2 } " )
-                    #                         wid = lastid()
-                    #                         surf_coms.append( f"rotate body {{ {wid} }} about z angle 30" )
-                    #                         surf_coms.append( f"rotate body {{ {wid} }} about y angle 90")
-                    #                     else:
-                    #                         surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-                    #                         wid = lastid()
-                    #                 else:
-                    #                     surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-                    #                     wid = lastid()
-                    #                 surf_coms.append( f"subtract body {{ { ids } }} from body {{ { wid } }}" )
-                    #                 surf_coms.append( f"Rotate body {{ {wid } }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                    #                 move( wid, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                    #                 return wid
-                    #             surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                    #             move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                    #             return ids
-                    #     elif gq_type == ELLIPTIC_CONE : #3
-                    #         if A_ == 0:
-                    #             h = inner_world[0] if inner_world else w[0]
-                    #             minor = math.sqrt( abs( -A_/C_ ) )
-                    #             major = math.sqrt( abs( -A_/B_ ) )
-                    #             rot_angle = - 90
-                    #             rot_axis = 1
-                    #             surf_coms.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
-                    #             ids = lastid()
-                    #             surf_coms.append( f"rotate body {{ { ids } }} about y angle -90")
-                    #             surf_coms.append( f"copy body {{ { ids } }}")
-                    #             mirror = lastid()
-                    #             surf_coms.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
-                    #             surf_coms.append( f"unit body {{ { ids } }} {{ { mirror } }}")
-                    #             surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                    #             move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                    #             return ids
-                    #         if B_ == 0:
-                    #             h = inner_world[1] if inner_world else w[1]
-                    #             minor = math.sqrt( abs( -B_/A_ ) )
-                    #             major = math.sqrt( abs( -B_/C_ ) )
-                    #             rot_angle = 90
-                    #             rot_axis = 0
-                    #             surf_coms.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
-                    #             ids = lastid()
-                    #             surf_coms.append( f"rotate body {{ { ids } }} about x angle 90")
-                    #             surf_coms.append( f"copy body {{ { ids } }}")
-                    #             mirror = lastid()
-                    #             surf_coms.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
-                    #             surf_coms.append( f"unit body {{ { ids } }} {{ { mirror } }}")
-                    #             surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                    #             move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                    #             return ids
-                    #         if C_ == 0:
-                    #             h = inner_world[2] if inner_world else w[2]
-                    #             minor = math.sqrt( abs( -C_/A_ ) )
-                    #             major = math.sqrt( abs( -C_/B_ ) )
-                    #             rot_angle = 180
-                    #             rot_axis = 0
-                    #             surf_coms.append( f"create frustum height {h} Major Radius {major} Minor Radius {minor} top 0")
-                    #             ids = lastid()
-                    #             surf_coms.append( f"copy body {{ { ids } }}")
-                    #             mirror = lastid()
-                    #             surf_coms.append( f"rotate body {{ { mirror } }} about 0 0 0 angle 180")
-                    #             surf_coms.append( f"unit body {{ { ids } }} {{ { mirror } }}")
-                    #             surf_coms.append( f"Rotate body {{ {ids} }} about 0 0 0 direction {r_axis[0]} {r_axis[1]} {r_axis[2]} Angle {r_degs}")
-                    #             move( ids, translation[0,0], translation[1,0], translation[2,0], surf_coms)
-                    #             return ids
-                        # else:
-                        #     raise NotImplementedError(f"{surface.type} not implemented")
-                    pass
+                    return cad_surface.to_cubit_surface(node, w, hex)
                 else:
                     raise NotImplementedError(f"{surface.type} not implemented")
         elif isinstance(node, Complement):
-            id = surface_to_cubit_journal(node.node, w, indent + 1, inner_world, ent_type = ent_type )
-            surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-            wid = lastid()
-            surf_coms.append( f"subtract body {{ {id} }} from body {{ {wid} }} keep_tool" )
+            id = surface_to_cubit_journal(node.node, w)
+            process_command( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+            wid = body_id()
+            process_command( f"subtract body {{ {id} }} from body {{ {wid} }} keep_tool" )
             return wid
         elif isinstance(node, Intersection):
-            if inner_world:
-                surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-            else:
-                surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-            inter_id = lastid()
+            process_command( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+            inter_id = body_id()
             for subnode in node:
-                s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world, ent_type = ent_type ,)
-                surf_coms.append( f"intersect {ent_type} {{ {inter_id} }} {{ {s} }} keep" )
-                surf_coms.append( f"delete {ent_type} {{ {inter_id} }}" )
-                inter_id = lastid()
+                s = surface_to_cubit_journal( subnode, w)
+                process_command( f"intersect body {{ {inter_id} }} {{ {s} }} keep" )
+                process_command( f"delete body {{ {inter_id} }}" )
+                inter_id = body_id()
             return inter_id
         elif isinstance(node, Union):
-            if inner_world:
-                surf_coms.append( f"brick x {inner_world[0]} y {inner_world[1]} z {inner_world[2]}" )
-            else:
-                surf_coms.append( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-            union_id = lastid()
-            first = surface_to_cubit_journal( node[0], w, indent + 1, inner_world)
-            surf_coms.append( f"intersect body {{ {union_id} }} {{ {first} }} keep" )
-            surf_coms.append( f"delete {ent_type} {{ {union_id} }}" )
-            union_id = lastid()
+            process_command( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+            union_id = body_id()
+            first = surface_to_cubit_journal( node[0], w,  + 1, )
+            process_command( f"intersect body {{ {union_id} }} {{ {first} }} keep" )
+            process_command( f"delete body {{ {union_id} }}" )
+            union_id = body_id()
             for subnode in node[1:]:
-                s = surface_to_cubit_journal( subnode, w, indent + 1, inner_world)
-                surf_coms.append( f"unite body {{ {union_id} }} {{ {s} }} keep" )
-                surf_coms.append( f"delete {ent_type} {{ {union_id} }}" )
-                union_id = lastid()
+                s = surface_to_cubit_journal( subnode, w,  + 1, )
+                process_command( f"unite body {{ {union_id} }} {{ {s} }} keep" )
+                process_command( f"delete body {{ {union_id} }}" )
+                union_id = body_id()
             return union_id
-        # elif isinstance(node, Quadric):
-        #     pass
         else:
             raise NotImplementedError(f"{node} not implemented")
 
 
     def process_node( node, bb, surfs=None, lat_pos=None ):
+        # TODO handle uni move and region, copied body has to be trimmed
         global surf_coms, cell_ids
-        start = len(surf_coms)
-        #print(type(node))
+        # Universes contain cells and move internal cells to proper location
+        if isinstance( node, Universe ): 
+            if node.id not in uni_map:
+                ids = np.array([])
+                for c in node._cells.values():
+                    #ids = np.append(ids,np.array(process_node( c, process_bb(node.bounding_box, w) ))).astype(int)
+                    ids = np.append(ids,np.array(process_node( c, bb))).astype(int)
+                process_command( f'create group "uni_{node.id}"' )
+                uni_map[node.id] = ids
+            ids = uni_map[node.id]
+            strt = body_next()
+            process_command( f" body {{ {' '.join( map(str, np.array(ids)) )} }} copy" )
+            stp = body_id()
+            ids3 = range(strt,stp,1)
+            process_command( f"move body {strt} to {stp} midpoint location {midp(node)}" )
+            trim_uni(node, ids3)
+            return ids3
         
-        if isinstance( node, Universe ): #Universes only contain cells, they are not added to cubit
-            ids = np.array([])
-            for c in node._cells.values():
-                ids = np.append(ids,np.array(process_node( c, process_bb(node.bounding_box, w) ))).astype(int)
-            return ids
-        
-        elif isinstance( node, Cell ):
-            ids = np.array([])
-            #TODO add bb, handle single cell conversions
-            if isinstance( node.fill, Material ):
-                s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box, w))
-                mat_identifier = f"mat:{node.fill.id}"
-                # use material names when possible
-                if node.fill.name is not None and node.fill.name:
-                    mat_identifier = f"mat:{node.fill.name}"
-                if len(mat_identifier) > 32:
-                    mat_identifier = mat_identifier[:32]
-                    warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
-                surf_coms.append( f'group \"{mat_identifier}\" add body {{ { s_ids } }} ' )
-                #print(s_ids,ids)
-                ids = np.append(ids,np.array(s_ids)).astype(int)
-            
-            elif node.fill is None:
-                s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box, w))
-                surf_coms.append( f'group "mat:void" add body {{ { s_ids } }} ' )
-                ids = np.append(ids,np.array(s_ids)).astype(int)
-            
-            elif isinstance( node.fill, Iterable ):
-                for uni in node.fill:
-                    ids = np.append(ids, np.array(process_node( uni, process_bb(node.bounding_box, w) ))).astype(int)
-            
-            else:
-                ids = np.append(ids, np.array(process_node( node.fill, process_bb(node.bounding_box, w) ))).astype(int)
+        elif isinstance( node, Cell ): # Cell instance that is moved to proper location by universe
+            if node.id not in cell_map:
+                ids = np.array([])
+                #TODO add bb, handle single cell conversions
+                if isinstance( node.fill, Material ):
+                    #s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box, w))
+                    s_ids = surface_to_cubit_journal(node.region, bb)
+                    mat_identifier = f"mat:{node.fill.id}"
+                    # use material names when possible
+                    if node.fill.name is not None and node.fill.name:
+                        mat_identifier = f"mat:{node.fill.name}"
+                    if len(mat_identifier) > 32:
+                        mat_identifier = mat_identifier[:32]
+                        warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
+                    process_command( f'group \"{mat_identifier}\" add body {{ { s_ids } }} ' )
+                    #print(s_ids,ids)
+                    ids = np.append(ids,np.array(s_ids)).astype(int)
+                
+                elif node.fill is None:
+                    #s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box, w))
+                    s_ids = surface_to_cubit_journal(node.region, bb)
+                    process_command( f'group "mat:void" add body {{ { s_ids } }} ' )
+                    ids = np.append(ids,np.array(s_ids)).astype(int)
+                
+                elif isinstance( node.fill, Iterable ):
+                    for uni in node.fill:
+                        #ids = np.append(ids, np.array(process_node( uni, process_bb(node.bounding_box, w) ))).astype(int)
+                        ids = np.append(ids, np.array(process_node( uni, bb ))).astype(int)
+                
+                else:
+                    #ids = np.append(ids, np.array(process_node( node.fill, process_bb(node.bounding_box, w) ))).astype(int)
+                    ids = np.append(ids, np.array(process_node( node.fill, bb ))).astype(int)
 
-            if node.id in cell_ids:
-                write_journal_file(f"{filename[:-4]}{cell.id}.jou", surf_coms[start:], process_bb(node.bounding_box, w))
-            
-            return ids
+                # if node.id in cell_ids:
+                #     write_journal_file(f"{filename[:-4]}{node.id}.jou", surf_coms[start:], process_bb(node.bounding_box, w))
+                process_command( f'create group "cell_{node.id}"' )
+                cell_map[node.id] = ids
+            return cell_map[node.id]
                 
         elif isinstance( node, RectLattice ):
-            ids = np.array([])
-            if node.ndim ==2:
-                pitch = node._pitch
-                ll = [ node.lower_left[0], node.lower_left[1] ]
-                ll[0] = ll[0] + pitch[0] / 2 # Center of cell
-                ll[1] = ll[1] + pitch[1] / 2
-                i = 0
-                for row in node.universes:
-                    j = 0
-                    for u in row:
-                        for cell in u._cells.values():
-                            x = ll[0] + j * pitch[0]
-                            y = ll[1] + i * pitch[1]
-                            #print(  ind(), "UCell:", n, cell )
-                            id = process_node( cell, [ w[0], w[1], w[2] ])
-                            ids2 = str( id )
-                            if isinstance( id, list ):
-                                ids2 = ' '.join( map(str, id) )
-                                #results.extend( id )
-                            else:
-                                #results.append( id )
-                                pass
-                            if ids2 != '':
-                                surf_coms.append( f"move body {{ {ids2} }} midpoint location {x} {y} 0 except z" )
-                            ids = np.append(ids, np.array(id).astype(int)).astype(int)
-                        j = j + 1
-                    i = i + 1
-            else:
-                raise NotImplementedError(f"{node} not implemented")
-            return ids
+            if node.id not in latt_map: #General lattice that has to be copied and moved
+                ids = np.array([])
+                if node.ndim == 2:
+                    ids = []
+                    pitch = node._pitch
+                    dx = pitch[0]
+                    dy = pitch[1]
+                    i = 0
+                    for row in node.universes:
+                        j = 0
+                        for u in row:
+                            for cell in u._cells.values():
+                                #TODO check if proper order i,j or j,i
+                                x = j * dx
+                                y = i * dy
+                                id = process_node( cell, [ dx, dy, w[2] ])
+                                ids2 = str( id )
+                                if isinstance( id, list ):
+                                    ids2 = ' '.join( map(str, id) )
+                                strt = body_next()
+                                process_command( f" body {{ {ids2} }} copy" )
+                                stp = body_id()
+                                ids3 = range(strt,stp,1)
+                                process_command( f"move body {strt} to {stp} midpoint location {x} {y} 0" )
+                                ids = np.append(ids, np.array(ids3).astype(int)).astype(int)
+                            j = j + 1
+                        i = i + 1
+                else:
+                    raise NotImplementedError(f"{node} not implemented")
+                latt_map[node.id] = ids
+            return latt_map[node.id]
             
             
     
-    def process_node_or_fill( node, w, indent = 0, offset = [0, 0], inner_world = None, outer_ll = None, ent_type = "body", hex = False ):
-        def ind():
-            return ' ' * (2*indent)
-        seen.add( node )
-        results = []
-        if hasattr( node, "region" ) and not ( hasattr( node, "fill" ) and isinstance(node.fill, Lattice) ):
-            if node.region != None:
-                id = surface_to_cubit_journal( node.region, w, indent, inner_world, hex = hex )
-                results.append( id )
-            elif hex:
-                surf_coms.append( f"create prism height {inner_world[2]} sides 6 radius { ( inner_world[0] / 2) }" )
-                wid = lastid()
-                surf_coms.append( f"rotate body {{ {wid} }} about z angle 30" )
-                results.append( wid )
+        # #FIXME rotate and tranlate
+        # r = flatten( results )
+        # if len( r ) > 0:
+        #     if node.name:
+        #         process_command( f"body {{ {r[0]} }} name \"{node.name}\"" )
+        #     else:
+        #         process_command( f"body {{ {r[0]} }} name \"Cell_{node.id}\"" )
+        # return r
 
-        if hasattr( node, "fill" ) and isinstance(node.fill, Lattice):
-            id = process_node_or_fill( node.fill, w, indent + 1, offset, inner_world )
-            results.append( id )
-            
-        if isinstance( node, HexLattice ):
-            pitch = node._pitch
-            three_d_hex_lattice = len( node._pitch ) > 1
-            #three_d_hex_lattice = len( node.center ) > 2
-            #3d hex lattice
-            if three_d_hex_lattice:
-                center = [ node.center[0], node.center[1], node.center[1] ]
-                ii = 0
-                for uss in node.universes:
-                    z = ii * pitch[1]
-                    j = 0
-                    for us in uss:
-                        k = 0
-                        ring_id = ( len( uss ) - j -1 )
-                        #print( "RING_ID", ring_id )
-                        def draw_hex_cell( n, cell, x, y ):
-                            #print( i, j, k, len( node.universes ), len( uss), len( us ), x, y )
-                            id = process_node_or_fill( cell, [ w[0], w[1], w[2] ], indent + 1, offset = [x,y,z], inner_world=[ pitch[0], pitch[0], pitch[1] ], outer_ll=outer_ll if outer_ll else [ node.center[0], node.center[1] ], hex = True )
-                            ids = str( id )
-                            if isinstance( id, list ):
-                                ids = ' '.join( map(str, id) )
-                            else:
-                                pass
-                            if ids != '':
-                                surf_coms.append( f"move body {{ {ids} }} midpoint location {x} {y} {z}" )
-                        side_to_side_diameter =  pitch[0]/2 * math.sqrt( 3 )
-                        center_to_mid_side_diameter = ( ( pitch[0] / 2 ) * math.sin( math.pi / 6 ) ) + pitch[0] / 2
-                        if ring_id < 2:
-                            for u in us:
-                                for n, cell in u._cells.items():
-                                    #print( n, cell )
-                                    theta = 2 * math.pi * -k / len( us ) + math.pi / 2
-                                    r = ( len( uss ) - j -1 ) * side_to_side_diameter
-                                    x = r * math.cos( theta )
-                                    y = r * math.sin( theta )
-                                    draw_hex_cell( n, cell, x, y )
-                                k = k + 1
-                        else:
-                            x = 0
-                            x_pos = 0
-                            y_pos = 0
-                            r = ring_id
-                            for i in range( r, 0, -1 ):
-                                x_pos = x * center_to_mid_side_diameter
-                                y_pos = ring_id * side_to_side_diameter - ( x ) * 0.5 * side_to_side_diameter
-                                for n, cell in us[k]._cells.items():
-                                    draw_hex_cell( n, cell, x_pos, y_pos )
-                                #print( r, k, x, x_pos, y_pos )
-                                k = k + 1
-                                x = x + 1
-                            y_pos = ring_id * side_to_side_diameter - ( x ) * 0.5 * side_to_side_diameter
-                            for i in range( r, 0, -1 ):
-                                x_pos = x * center_to_mid_side_diameter
-                                for n, cell in us[k]._cells.items():
-                                    draw_hex_cell( n, cell, x_pos, y_pos )
-                                #print( r, k, x, x_pos, y_pos )
-                                y_pos = y_pos - side_to_side_diameter
-                                k = k + 1
-                            for i in range( r, 0, -1 ):
-                                x_pos = x * center_to_mid_side_diameter
-                                y_pos = - ring_id * side_to_side_diameter + ( x ) * 0.5 * side_to_side_diameter
-                                for n, cell in us[k]._cells.items():
-                                    draw_hex_cell( n, cell, x_pos, y_pos )
-                                #print( r, k, x, x_pos, y_pos )
-                                k = k + 1
-                                x = x - 1
-                            for i in range( r, 0, -1 ):
-                                x_pos = x * center_to_mid_side_diameter
-                                y_pos = - ring_id * side_to_side_diameter - ( x ) * 0.5 * side_to_side_diameter
-                                for n, cell in us[k]._cells.items():
-                                    draw_hex_cell( n, cell, x_pos, y_pos )
-                                #print( r, k, x, x_pos, y_pos )
-                                k = k + 1
-                                x = x - 1
-                            y_pos = - ring_id * side_to_side_diameter - ( x ) * 0.5 * side_to_side_diameter
-                            for i in range( r, 0, -1 ):
-                                x_pos = x * center_to_mid_side_diameter
-                                for n, cell in us[k]._cells.items():
-                                    draw_hex_cell( n, cell, x_pos, y_pos )
-                                #print( r, k, x, x_pos, y_pos )
-                                y_pos = y_pos + side_to_side_diameter
-                                k = k + 1
-                            for i in range( r, 0, -1 ):
-                                x_pos = x * center_to_mid_side_diameter
-                                y_pos = ring_id * side_to_side_diameter + ( x ) * 0.5 * side_to_side_diameter
-                                for n, cell in us[k]._cells.items():
-                                    draw_hex_cell( n, cell, x_pos, y_pos )
-                                #print( r, k, x, x_pos, y_pos )
-                                k = k + 1
-                                x = x + 1
-                        j = j + 1
-                    ii = ii + 1
-            #2d hex lattice
-            else:
-                center = [ node.center[0], node.center[1] ]
-                i = 0
-                for us in node.universes:
-                    j = 0
-                    for u in us:
-                        for n, cell in u._cells.items():
-                                #print( n, cell )
-                                theta = 2 * math.pi * -j / len( us ) + math.pi / 2
-                                r = ( len( uss ) - i -1 ) * pitch[0]
-                                x = r * math.cos( theta )
-                                y = r * math.sin( theta )
-                                #print( n, i, j, k, len( node.universes ), len( uss), len( us ), x, y, theta )
-                                id = process_node_or_fill( cell, [ w[0], w[1], w[2] ], indent + 1, offset = [x,y], inner_world=[ pitch[0], pitch[0], pitch[1] ], outer_ll=outer_ll if outer_ll else [ node.center[0], node.center[1] ], hex = True )
-                                ids = str( id )
-                                if isinstance( id, list ):
-                                    ids = ' '.join( map(str, id) )
-                                    #results.extend( id )
-                                else:
-                                    #results.append( id )
-                                    pass
-                                if ids != '':
-                                    surf_coms.append( f"move body {{ {ids} }} midpoint location {x} {y} {z}" )
-                        j = j + 1
-                    i = i + 1
+    # def do_cell(cell, cell_ids: Iterable[int] = None):
+    #     process_node( cell, w )
 
-        elif isinstance( node, Lattice ):
-            pitch = node._pitch
-            ll = [ node.lower_left[0], node.lower_left[1] ]
-            if outer_ll:
-                ll = outer_ll
-            ll[0] = ll[0] + pitch[0] / 2
-            ll[1] = ll[1] + pitch[1] / 2
-            i = 0
-            for us in node.universes:
-                j = 0
-                for u in us:
-                    for n, cell in u._cells.items():
-                        x = ll[0] + j * pitch[0] + offset[0]
-                        y = ll[1] + i * pitch[1] + offset[1]
-                        #print(  ind(), "UCell:", n, cell )
-                        id = process_node_or_fill( cell, [ w[0], w[1], w[2] ], indent + 1, offset = [x,y], inner_world=[ pitch[0], pitch[1], w[2] ], outer_ll=outer_ll if outer_ll else [ node.lower_left[0], node.lower_left[1] ] )
-                        ids = str( id )
-                        if isinstance( id, list ):
-                            ids = ' '.join( map(str, id) )
-                            #results.extend( id )
-                        else:
-                            #results.append( id )
-                            pass
-                        if ids != '':
-                            surf_coms.append( f"move body {{ {ids} }} midpoint location {x} {y} 0 except z" )
-                    j = j + 1
-                i = i + 1
-                
-        #FIXME rotate and tranlate
-        r = flatten( results )
-        if len( r ) > 0:
-            if node.name:
-                surf_coms.append( f"body {{ {r[0]} }} name \"{node.name}\"" )
-            else:
-                surf_coms.append( f"body {{ {r[0]} }} name \"Cell_{node.id}\"" )
-        return r
-
-    def do_cell(cell, cell_ids: Iterable[int] = None):
-        process_node( cell, w )
-
-    for cell in geom.root_universe._cells.values():
-        do_cell( cell )
+    # for cell in geom.root_universe._cells.values():
+    #     do_cell( cell )
+    process_node(geom.root_universe, w)
 
     if filename:
         write_journal_file(filename, surf_coms, world)

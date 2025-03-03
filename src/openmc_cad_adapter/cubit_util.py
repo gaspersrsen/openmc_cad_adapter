@@ -14,6 +14,14 @@ def lastid():
         print(f"Processed {_CUBIT_ID} actions")
     return id_out
 
+def mul_id(n):
+    global _CUBIT_ID
+    id_out = _CUBIT_ID
+    _CUBIT_ID += n
+    if _CUBIT_ID % int(1e4) == 0:
+        print(f"Processed {_CUBIT_ID} actions")
+    return [id_out, _CUBIT_ID]
+
 
 def new_variable():
     idn = lastid()
