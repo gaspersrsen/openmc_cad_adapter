@@ -119,6 +119,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         
 
     def surface_to_cubit_journal(node, w, hex = False):
+        print(node)
         global surf_coms, cell_ids
         if isinstance(node, Halfspace):
                 surface = node.surface
