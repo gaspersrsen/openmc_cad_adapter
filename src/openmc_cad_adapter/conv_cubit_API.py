@@ -7,6 +7,7 @@ import cubit
 cubit.reset()
 
 def exec_cubit(command):
+    print(command)
     return cubit.cmd(command)
 
 def body_id():
