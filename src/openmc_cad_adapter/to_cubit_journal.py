@@ -107,7 +107,10 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     def trim_uni(node, ids):
         #TODO what if a whole cell is cut-off and _CUBIT_ID is not created
         #TODO fix move in surfaces, YCyl,.., remove cad_cmds
-        s = surface_to_cubit_journal( node.region, w)
+        w = process_bb(node.boudning_box, w)
+        exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+        s = body_id()
+        #s = surface_to_cubit_journal( node.region, w)
         strt = body_next()
         exec_cubit( f"intersect body {{ {ids} }} {{ {s} }} keep" )
         exec_cubit( f"delete body {{ {ids} }}" )
