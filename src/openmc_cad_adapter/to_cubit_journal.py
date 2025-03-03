@@ -159,7 +159,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 strt = body_id() + 1
                 exec_cubit( f"intersect volume {{ {inter_id} }} {{ {s} }} keep" )
                 print(body_id())
-                exec_cubit( f"split body {strt+1}" )
+                exec_cubit( f"split body {strt}" )
                 # exec_cubit( f"delete volume {{ {inter_id} }}" )
                 inter_id = body_id()
 
@@ -292,7 +292,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     # exec_cubit("set echo off\n")
     # exec_cubit("set info off\n")
     # exec_cubit("set warning off\n")
-    # exec_cubit("graphics pause\n")
+    exec_cubit("graphics pause\n")
     # #exec_cubit("set journal off\n")
     # exec_cubit("set default autosize off\n")
     exec_cubit("undo off\n")
