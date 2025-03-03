@@ -36,3 +36,4 @@ def emit_get_last_id(type="body", cmds=None):
     else:
         print('Warning: cmds is None')
     return ids
+
