@@ -120,6 +120,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             inter_ids = np.append(np.array(id), np.array(s))
             exec_cubit( f"intersect body {' '.join( map(str, np.array(inter_ids)) )} keep" )
             exec_cubit( f"delete body {{ {id} }}" )
+        exec_cubit( f"delete body {{ {s} }}" )
         stp = body_id()
         if strt > stp:
             raise ValueError(f"Universe {node} trim unsuccessful")
@@ -166,6 +167,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 exec_cubit( f"unite body {{ {union_id} }} {{ {s} }} keep" )
                 exec_cubit( f"delete body {{ {union_id} }}" )
                 union_id = body_id()
+            exec_cubit( f"delete body {{ {s} }}" )
             return union_id
         else:
             raise NotImplementedError(f"{node} not implemented")
