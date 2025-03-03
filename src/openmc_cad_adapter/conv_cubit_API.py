@@ -11,7 +11,7 @@ def exec_cubit(command):
     return cubit.cmd(command)
 
 def body_id():
-    return cubit.get_last_id("body")
+    return cubit.get_last_id("volume")
 
 def body_next():
     return cubit.get_next_block_id()
