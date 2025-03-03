@@ -290,10 +290,10 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     #exec_cubit("undo off\n")
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
     # Process geometry
-    final_ids = []
-    for cell in geom.root_universe._cells.values():
-        final_ids += process_node(cell, w)
-    #final_ids = process_node(geom.root_universe, w)
+    # final_ids = []
+    # for cell in geom.root_universe._cells.values():
+    #     final_ids += process_node(cell, w)
+    final_ids = process_node(geom.root_universe, w)
     
     # Cleanup
     for i in range(1,body_next(),1):
