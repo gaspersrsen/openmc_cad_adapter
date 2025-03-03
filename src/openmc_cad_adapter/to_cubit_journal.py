@@ -160,6 +160,10 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 exec_cubit( f"intersect volume {{ {inter_id} }} {{ {s} }} keep" )
                 exec_cubit( f"delete volume {{ {inter_id} }}" )
                 inter_id = body_id()
+            if strt != inter_id:
+                for i in range(strt, inter_id,1):
+                    exec_cubit( f"split body {i}" )
+                inter_id = body_id()
             return np.array(range(strt, inter_id,1)).astype(int)
         elif isinstance(node, Union):
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
@@ -241,7 +245,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     pass
                     #exec_cubit( f'create group "cell_{node.id}"' )
                 else:
-                    exec_cubit( f'body {{ {ids} }} Rename "cell_{node.name}"' )
+                    exec_cubit( f'volume {{ {ids} }} Rename "cell_{node.name}"' )
                 cell_map[node.id] = ids
             return cell_map[node.id]
                 
