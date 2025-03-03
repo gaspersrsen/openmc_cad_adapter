@@ -197,11 +197,13 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 #exec_cubit( f'create group "uni_{node.id}"' )
                 uni_map[node.id] = ids
             ids = uni_map[node.id]
+            exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
+            strt = body_id() + 1
             exec_cubit( f" volume {' '.join( map(str, np.array(ids)) )} copy" )
-            ids3 = body_id()
-            print(ids3)
-            #ids3 = range(strt,stp,1)
-            return ids3
+            stp = body_id()
+            #print(ids3)
+            ids3 = range(strt,stp,1)
+            #return ids3
             exec_cubit( f"move volume {{ {' '.join( map(str, np.array(ids3)) )} }} midpoint location {midp(node)}" )
             ids_out = trim_uni(node, ids3, bb)
             return ids_out
@@ -262,8 +264,11 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                                 x = j * dx
                                 y = i * dy
                                 ids2 = process_node( cell, [ dx, dy, w[2] ])
+                                exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
+                                strt = body_id() + 1
                                 exec_cubit( f" volume {' '.join( map(str, np.array(ids2)) )} copy" )
-                                ids3 = body_id()
+                                stp = body_id()
+                                ids3 = range(strt,stp,1)
                                 exec_cubit( f"move volume {{ {' '.join( map(str, np.array(ids3)) )} }} midpoint location {x} {y} 0" )
                                 ids = np.append(ids, np.array(ids3).astype(int)).astype(int)
                             j = j + 1
