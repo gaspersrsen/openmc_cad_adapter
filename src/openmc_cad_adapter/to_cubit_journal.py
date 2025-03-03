@@ -276,8 +276,21 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
 
     # for cell in geom.root_universe._cells.values():
     #     do_cell( cell )
+    
+    # Initialize world
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
+    # Process geometry
     process_node(geom.root_universe, w)
+    # Cleanup
+    for i in range(1,body_next(),1):
+        found = False
+        for j in [cell_map,uni_map,latt_map]:
+            if i in j.values:
+                found = True
+                break
+        if not found:
+            exec_cubit( f"delete body {{ {i} }}" )
+            
 
     # if filename:
     #     write_journal_file(filename, surf_coms, world)
