@@ -203,9 +203,9 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             exec_cubit( f" volume {{ {' '.join( map(str, np.array(ids)) )} }} copy" )
             ids3 = body_id()
             #ids3 = range(strt,stp,1)
-            exec_cubit( f"move volume {{ {' '.join( map(str, ids3) )} }} midpoint location {midp(node)}" )
-            trim_uni(node, ids3, bb)
-            return ids3
+            exec_cubit( f"move volume {{ {' '.join( map(str, np.array(ids3)) )} }} midpoint location {midp(node)}" )
+            ids_out = trim_uni(node, ids3, bb)
+            return ids_out
         
         elif isinstance( node, Cell ): # Cell instance that is moved to proper location by universe
             if node.id not in cell_map:
@@ -247,7 +247,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     pass
                     #exec_cubit( f'create group "cell_{node.id}"' )
                 else:
-                    exec_cubit( f'volume {{ {' '.join( map(str, ids) )} }} Rename "cell_{node.name}"' )
+                    exec_cubit( f'volume {{ {' '.join( map(str, np.array(ids)) )} }} Rename "cell_{node.name}"' )
                 cell_map[node.id] = ids
             return cell_map[node.id]
                 
@@ -267,19 +267,10 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                                 #TODO check if proper order i,j or j,i
                                 x = j * dx
                                 y = i * dy
-                                id = process_node( cell, [ dx, dy, w[2] ])
-                                ids2 = str( id )
-                                if isinstance( id, list ):
-                                    ids2 = ' '.join( map(str, id) )
-                                strt = body_id()
-                                exec_cubit( f" volume {{ {ids2} }} copy" )
-                                stp = body_id()
-                                try:
-                                    stp = stp[-1]
-                                except:
-                                    pass
-                                ids3 = range(strt,stp,1)
-                                exec_cubit( f"move volume {strt} to {stp} midpoint location {x} {y} 0" )
+                                ids2 = process_node( cell, [ dx, dy, w[2] ])
+                                exec_cubit( f" volume {{ {' '.join( map(str, np.array(ids2)) )} }} copy" )
+                                ids3 = body_id()
+                                exec_cubit( f"move volume {{ {' '.join( map(str, np.array(ids3)) )} }} midpoint location {x} {y} 0" )
                                 ids = np.append(ids, np.array(ids3).astype(int)).astype(int)
                             j = j + 1
                         i = i + 1
