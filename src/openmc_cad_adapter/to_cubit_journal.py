@@ -245,7 +245,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     pass
                     #exec_cubit( f'create group "cell_{node.id}"' )
                 else:
-                    exec_cubit( f'volume {{ {ids} }} Rename "cell_{node.name}"' )
+                    exec_cubit( f'volume {{ {' '.join( map(str, ids) )} }} Rename "cell_{node.name}"' )
                 cell_map[node.id] = ids
             return cell_map[node.id]
                 
