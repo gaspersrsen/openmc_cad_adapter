@@ -289,13 +289,13 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         # return r
     
     # Initialize world
-    exec_cubit("set echo off\n")
-    exec_cubit("set info off\n")
-    exec_cubit("set warning off\n")
-    exec_cubit("graphics pause\n")
-    #exec_cubit("set journal off\n")
-    exec_cubit("set default autosize off\n")
-    exec_cubit("undo off\n")
+    # exec_cubit("set echo off\n")
+    # exec_cubit("set info off\n")
+    # exec_cubit("set warning off\n")
+    # exec_cubit("graphics pause\n")
+    # #exec_cubit("set journal off\n")
+    # exec_cubit("set default autosize off\n")
+    # exec_cubit("undo off\n")
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
     # Process geometry
     # final_ids = []
