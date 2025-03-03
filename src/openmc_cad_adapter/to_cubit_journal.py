@@ -117,7 +117,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         
         #exec_cubit( f"intersect body {{ {ids} }} {{ {s} }} keep" )
         exec_cubit( f"intersect body {' '.join( map(str, np.array(all_ids)) )} keep" )
-        #exec_cubit( f"delete body {{ {all_ids} }}" )
+        exec_cubit( f"delete body {{ {all_ids} }}" )
         stp = body_id()
         if strt > stp:
             raise ValueError(f"Universe {node} trim unsuccessful")
@@ -150,7 +150,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             for subnode in node:
                 s = surface_to_cubit_journal( subnode, w)
                 exec_cubit( f"intersect body {{ {inter_id} }} {{ {s} }} keep" )
-                #exec_cubit( f"delete body {{ {inter_id} }}" )
+                exec_cubit( f"delete body {{ {inter_id} }}" )
                 inter_id = body_id()
             return inter_id
         elif isinstance(node, Union):
@@ -158,12 +158,12 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             union_id = body_id()
             first = surface_to_cubit_journal( node[0], w,  + 1, )
             exec_cubit( f"intersect body {{ {union_id} }} {{ {first} }} keep" )
-            #exec_cubit( f"delete body {{ {union_id} }}" )
+            exec_cubit( f"delete body {{ {union_id} }}" )
             union_id = body_id()
             for subnode in node[1:]:
                 s = surface_to_cubit_journal( subnode, w,  + 1, )
                 exec_cubit( f"unite body {{ {union_id} }} {{ {s} }} keep" )
-                #exec_cubit( f"delete body {{ {union_id} }}" )
+                exec_cubit( f"delete body {{ {union_id} }}" )
                 union_id = body_id()
             return union_id
         else:
@@ -277,12 +277,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         #     else:
         #         exec_cubit( f"body {{ {r[0]} }} name \"Cell_{node.id}\"" )
         # return r
-
-    # def do_cell(cell, cell_ids: Iterable[int] = None):
-    #     process_node( cell, w )
-
-    # for cell in geom.root_universe._cells.values():
-    #     do_cell( cell )
     
     # Initialize world
     #exec_cubit("set echo off\n")
@@ -298,22 +292,23 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     # Cleanup
     for i in range(1,body_next(),1):
         found = False
-        for j in [cell_map,uni_map,latt_map]:
+        for j in [surf_map]:
             if i in j.values:
-                found = True
-                break
-        if not found:
-            exec_cubit( f"delete body {{ {i} }}" )
-            
-
-    # if filename:
-    #     write_journal_file(filename, surf_coms, world)
-
-    # if to_cubit:
-    #     cubit.cmd( "reset" )
-    #     for x in surf_coms:
-    #         cubit.cmd( x )
-    #         cubit.cmd(f"save as {filename[:-4]}.cub overwrite")
+                exec_cubit( f"delete body {{ {i} }}" )
+        # #for j in [cell_map,uni_map,latt_map]:
+        #     if i in j.values:
+        #         found = True
+        #         break
+        # if not found:
+        #     exec_cubit( f"delete body {{ {i} }}" )
+    #Finalize
+    exec_cubit("graphics flush\n")
+    exec_cubit("set default autosize on\n")
+    exec_cubit("zoom reset\n")
+    exec_cubit("set echo on\n")
+    exec_cubit("set info on\n")
+    exec_cubit("set warning on\n")
+    exec_cubit("set journal on\n")
 
 
 def write_journal_file(filename, surf_coms, world, verbose_journal=False):
