@@ -1,4 +1,5 @@
 import sys
+sys.path.append('/opt/cubit/bin')
 import cubit
 
 #cubit.init([])
