@@ -109,17 +109,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
         return w_out
 
     def trim_uni(node, ids, w):
-        #TODO what if a whole cell is cut-off and _CUBIT_ID is not created
         #TODO fix move in surfaces, YCyl,.., remove cad_cmds
         w = process_bb(node.bounding_box, w)
         exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
         s = body_id()
-        #s = surface_to_cubit_journal( node.region, w)
         strt = body_id() + 1
-        #all_ids = np.append(np.array(ids), np.array(s))
-        #print(f"{{ {' '.join( map(str, np.array(all_ids)) )} }}")
-        
-        #exec_cubit( f"intersect volume {{ {ids} }} {{ {s} }} keep" )
         added = False
         for id in ids:
             inter_ids = np.append(np.array(id), np.array(s))
@@ -150,7 +144,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
         return trim_ids
     
     def trim_cell_like(node, ids, s_ids):
-        #TODO what if a whole cell is cut-off and _CUBIT_ID is not created
         #TODO fix move in surfaces, YCyl,.., remove cad_cmds
         exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
         s = body_id()
@@ -194,7 +187,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             for subnode in node:
                 s = surface_to_cubit_journal( subnode, w)
                 strt = body_id() + 1
-                exec_cubit( f"intersect volume {{ {inter_id} }} {{ {s} }} keep" )
+                exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
                 if strt != body_id():
                     exec_cubit( f"split body {strt}" )
                 # exec_cubit( f"delete volume {{ {inter_id} }}" )
@@ -205,7 +198,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             union_id = body_id()
             first = surface_to_cubit_journal( node[0], w,  + 1, )
-            exec_cubit( f"intersect volume {{ {union_id} }} {{ {first} }} keep" )
+            exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(union_id),np.array(first))) )} keep" )
             # exec_cubit( f"delete volume {{ {union_id} }}" )
             union_id = body_id()
             for subnode in node[1:]:
