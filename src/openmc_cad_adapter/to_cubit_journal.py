@@ -289,7 +289,8 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                                 #TODO check if proper order i,j or j,i
                                 x = j * dx
                                 y = i * dy
-                                ids2 = process_node( cell, [ dx, dy, w[2] ])
+                                #ids2 = process_node( cell, [ dx, dy, w[2] ])
+                                ids2 = process_node( cell, bb )
                                 exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
                                 strt = body_id() + 1
                                 exec_cubit( f" volume {' '.join( map(str, np.array(ids2)) )} copy" )
@@ -316,7 +317,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         # return r
     
     # Initialize world
-    # exec_cubit("set echo off\n")
+    exec_cubit("set echo off\n")
     # exec_cubit("set info off\n")
     # exec_cubit("set warning off\n")
     exec_cubit("graphics pause\n")
