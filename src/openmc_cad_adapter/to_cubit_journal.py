@@ -152,6 +152,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             exec_cubit( f"subtract volume {{ {id} }} from volume {{ {wid} }} keep_tool" )
             return wid
         elif isinstance(node, Intersection):
+            #TODO only one volume should be returned
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             inter_id = body_id()
             for subnode in node:
@@ -238,12 +239,13 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                 else:
                     ids = np.append(ids, np.array(process_node( node.fill, bb ))).astype(int)
 
-                # if node.name is None:
-                #     #exec_cubit( f'create group "cell_{node.id}"' )
-                #     pass
-                # else:
-                #     exec_cubit( f'volume {{ {' '.join( map(str, np.array(ids)) )} }} Rename "cell_{node.name}"' )
-                cell_map[node.id] = ids
+                if isinstance( node.fill, Material )  or node.fill is None:
+                    if node.name is None:
+                        #exec_cubit( f'create group "cell_{node.id}"' )
+                        pass
+                    else:
+                        exec_cubit( f'Volume {' '.join( map(str, np.array(ids)) )}  rename "cell_{node.name}"' )
+                    cell_map[node.id] = ids
             return cell_map[node.id]
                 
         elif isinstance( node, RectLattice ):
