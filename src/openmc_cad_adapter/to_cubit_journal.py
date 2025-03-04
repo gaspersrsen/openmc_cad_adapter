@@ -131,6 +131,26 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
             raise ValueError(f"Universe {node} trim unsuccessful")
         trim_ids = range(strt, stp+1, 1)
         return trim_ids
+    
+    def trim_cell_like(node, ids, s_ids):
+        #TODO what if a whole cell is cut-off and _CUBIT_ID is not created
+        #TODO fix move in surfaces, YCyl,.., remove cad_cmds
+        exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+        s = body_id()
+        strt = body_id() + 1
+        added = False
+        for id in ids:
+            inter_ids = np.append(np.array(id), np.array(s_ids))
+            exec_cubit( f"intersect volume {' '.join( map(str, np.array(inter_ids)) )} keep" )
+            if not added:
+                if body_id() != s:
+                    added = True
+                    strt = body_id()
+        stp = body_id()
+        if strt > stp:
+            raise ValueError(f"Universe {node} trim unsuccessful")
+        trim_ids = range(strt, stp+1, 1)
+        return trim_ids
         
 
     def surface_to_cubit_journal(node, w, hex = False):
@@ -233,11 +253,16 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     ids = np.append(ids,np.array(s_ids)).astype(int)
                 
                 elif isinstance( node.fill, Iterable ):
+                    s_ids = surface_to_cubit_journal(node.region, bb)
+                    ids2 = []
                     for uni in node.fill:
-                        ids = np.append(ids, np.array(process_node( uni, bb ))).astype(int)
-                
+                        ids2 = np.append(ids2, np.array(process_node( uni, bb ))).astype(int)
+                    ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
+                    
                 else:
-                    ids = np.append(ids, np.array(process_node( node.fill, bb ))).astype(int)
+                    ids2 = []
+                    ids2 = np.append(ids2, np.array(process_node( node.fill, bb ))).astype(int)
+                    ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
 
                 if isinstance( node.fill, Material )  or node.fill is None:
                     if node.name is None:
