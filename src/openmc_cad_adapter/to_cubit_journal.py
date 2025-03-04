@@ -265,7 +265,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     
                     #print(s_ids,ids)
                     ids = np.append(ids,np.array(s_ids)).astype(int)
-                    cell_map[id] = node.fill.name
+                    for id in ids:
+                        cell_mat[id] = node.fill.name
                     #process_mat(node.fill, ids)
                     #exec_cubit( f'block {mat_map[node.fill.id]} add volume {{ {' '.join( map(str, ids) )} }} ' )
                 
@@ -275,7 +276,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     #exec_cubit( f'group "mat_void" add volume {{ { s_ids } }} ' )
                     ids = np.append(ids,np.array(s_ids)).astype(int)
                     for id in ids:
-                        cell_map[id] = "void"
+                        cell_mat[id] = "void"
                     #exec_cubit( f'block 1 add volume {{ {' '.join( map(str, ids) )} }} ' )
                 
                 elif isinstance( node.fill, Iterable ):
