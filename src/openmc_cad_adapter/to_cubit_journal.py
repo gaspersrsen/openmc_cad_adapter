@@ -307,7 +307,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
     for i in range(1,body_id()+1,1):
         if i not in final_ids:
-            if i == 16 or i==327: pass
+            if i == 16 or i==327: continue
             exec_cubit( f"delete volume {{ {i} }}" )
     
     #Finalize
