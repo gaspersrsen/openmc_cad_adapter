@@ -371,6 +371,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             return propagate_mat(cell_mat[id])
       
     def process_mat(mat_n, ids):
+        print(mat_n, ids)
         if mat_n not in mat_map:
             exec_cubit( f'create material name "{mat_n}" ' )
             b_id = block_next()
