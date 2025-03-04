@@ -374,14 +374,16 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit( f'Block {mat_map[mat_n]} add volume {id}' )
         
     
-    # Initialize world
-    exec_cubit("set echo off\n")
-    exec_cubit("set info off\n")
+    # Initialize commands
+    #exec_cubit("set echo off\n")
+    #exec_cubit("set info off\n")
     # exec_cubit("set warning off\n")
     exec_cubit("graphics pause\n")
     # #exec_cubit("set journal off\n")
     # exec_cubit("set default autosize off\n")
     exec_cubit("undo off\n")
+    
+    # Initialize world
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
     
     # Initialize materials
