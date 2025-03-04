@@ -15,3 +15,6 @@ def body_id():
 
 def body_next():
     return cubit.get_next_block_id()
+
+def mat_id():
+    return cubit.get_last_id("material")

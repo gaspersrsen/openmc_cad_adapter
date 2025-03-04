@@ -38,7 +38,9 @@ def flatten(S):
         return flatten(S[0]) + flatten(S[1:])
     return S[:1] + flatten(S[1:])
 
-def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
+def to_cubit_journal(geometry : openmc.Geometry,
+                     materials : openmc.Materials,
+                     world : Iterable[Real] = None,
                      cells: Iterable[int, openmc.Cell] = None,
                      filename: str = "openmc.jou",
                      to_cubit: bool = True):
@@ -90,6 +92,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     cell_map = {}
     uni_map = {}
     latt_map = {}
+    mat_map = {}
     
     def midp(node):
         return ' '.join( map(str, (node.bounding_box.upper_right+node.bounding_box.lower_left)/2) )
@@ -152,7 +155,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         trim_ids = range(strt, stp+1, 1)
         return trim_ids
         
-
     def surface_to_cubit_journal(node, w, hex = False):
         global surf_coms, cell_ids
         if isinstance(node, Halfspace):
@@ -202,7 +204,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         else:
             raise NotImplementedError(f"{node} not implemented")
 
-
     def process_node( node, bb, surfs=None, lat_pos=None ):
         # TODO handle uni move and region, copied volume has to be trimmed
         global surf_coms, cell_ids
@@ -242,15 +243,17 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
                     # if len(mat_identifier) > 32:
                     #     mat_identifier = mat_identifier[:32]
                     #     warnings.warn(f'Truncating material name {mat_identifier} to 32 characters')
-                    # exec_cubit( f'group \"{mat_identifier}\" add volume {{ { s_ids } }} ' )
+                    
                     #print(s_ids,ids)
                     ids = np.append(ids,np.array(s_ids)).astype(int)
+                    exec_cubit( f'block {' '.join( map(str, ids) )} material "{node.fill.name}" ' )
                 
                 elif node.fill is None:
                     #s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box, w))
                     s_ids = surface_to_cubit_journal(node.region, bb)
                     #exec_cubit( f'group "mat_void" add volume {{ { s_ids } }} ' )
                     ids = np.append(ids,np.array(s_ids)).astype(int)
+                    exec_cubit( f'block {' '.join( map(str, ids) )} material "void" ' )
                 
                 elif isinstance( node.fill, Iterable ):
                     s_ids = surface_to_cubit_journal(node.region, bb)
@@ -316,6 +319,13 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
         #         exec_cubit( f"body {{ {r[0]} }} name \"Cell_{node.id}\"" )
         # return r
     
+    def process_materials():
+        for material in materials:
+            exec_cubit( f'create material "{material.name}" ' )
+            mat_map[material.id] = mat_id()
+        exec_cubit( f'create material "void" ' )
+        mat_map[0] = mat_id()
+    
     # Initialize world
     exec_cubit("set echo off\n")
     # exec_cubit("set info off\n")
@@ -369,7 +379,7 @@ def openmc_to_cad():
     if args.cubit_path is not None:
         sys.path.append(args.cubit_path)
 
-    to_cubit_journal(model.geometry, world=args.world_size, filename=args.output, cells=args.cells, to_cubit=args.to_cubit)
+    to_cubit_journal(model.geometry, model.materials, world=args.world_size, filename=args.output, cells=args.cells, to_cubit=args.to_cubit)
 
 
 __all__ = ['CADPlane', 'CADXPlane', 'CADYPlane', 'CADZPlane',
