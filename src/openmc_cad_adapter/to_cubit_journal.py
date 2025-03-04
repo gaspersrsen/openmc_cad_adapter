@@ -332,13 +332,13 @@ def to_cubit_journal(geometry : openmc.Geometry,
         #     exec_cubit( f'Block {b_id} add volume 1' )
         #     exec_cubit( f'Block {b_id} material "{material.name}"' )
         #     mat_map[material.id] = b_id
-        exec_cubit( f'create material "void" ' )
+        exec_cubit( f'create material name "void" ' )
         exec_cubit( f'Block 1 add volume 1' )
         exec_cubit( f'Block 1 material "void"' )
         
     def process_mat(mat, ids):
         if mat.id not in mat_map:
-            exec_cubit( f'create material "{mat.name}" ' )
+            exec_cubit( f'create material name "{mat.name}" ' )
             b_id = block_next()
             exec_cubit( f'Block {b_id} add volume {' '.join( map(str, np.array(ids)) )}' )
             exec_cubit( f'Block {b_id} material "{mat.name}"' )
