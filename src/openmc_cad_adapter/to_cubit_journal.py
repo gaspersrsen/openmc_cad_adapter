@@ -203,7 +203,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             union_id = body_id()
             for subnode in node[1:]:
                 s = surface_to_cubit_journal( subnode, w,  + 1, )
-                exec_cubit( f"unite volume {{ {union_id} }} {{ {s} }} keep" )
+                exec_cubit( f"unite volume {' '.join( map(str, np.append(np.array(union_id),np.array(s))) )} keep" )
                 # exec_cubit( f"delete volume {{ {union_id} }}" )
                 union_id = body_id()
             # exec_cubit( f"delete volume {{ {s} }}" )
