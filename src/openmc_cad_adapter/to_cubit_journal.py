@@ -333,7 +333,7 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
     for i in range(1,body_id()+1,1):
         if i not in final_ids:
-            if i in [16,59,327,414,415,416,417,443,487,491]: continue
+            #if i in [16,59,327,414,415,416,417,443,487,491]: continue
             exec_cubit( f"delete volume {{ {i} }}" )
     
     #Finalize
@@ -344,31 +344,6 @@ def to_cubit_journal(geometry : openmc.Geometry, world : Iterable[Real] = None,
     exec_cubit("set info on\n")
     exec_cubit("set warning on\n")
     exec_cubit("set journal on\n")
-
-
-def write_journal_file(filename, surf_coms, world, verbose_journal=False):
-    with open(filename, "w") as f:
-        if not verbose_journal:
-            f.write("set echo off\n")
-            f.write("set info off\n")
-            f.write("set warning off\n")
-            f.write("graphics pause\n")
-            f.write("set journal off\n")
-            f.write("set default autosize off\n")
-            f.write("undo off\n")
-            f.write(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
-            
-        for x in surf_coms:
-            f.write(x + "\n")
-        if not verbose_journal:
-            f.write("graphics flush\n")
-            f.write("set default autosize on\n")
-            f.write("zoom reset\n")
-            f.write("set echo on\n")
-            f.write("set info on\n")
-            f.write("set warning on\n")
-            f.write("set journal on\n")
-    print(surf_map)
 
 
 def openmc_to_cad():

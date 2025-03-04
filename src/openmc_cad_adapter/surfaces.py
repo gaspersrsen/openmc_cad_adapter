@@ -110,7 +110,7 @@ class CADXPlane(CADSurface, openmc.XPlane):
         if surf_id(node) not in surf_map:
             exec_cubit(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
             ids_map = body_id()
-            exec_cubit(f"section volume {{ {ids_map} }} with xplane offset {self.coefficients['x0']} {self.reverse(node)}")
+            exec_cubit(f"section volume {{ {ids_map} }} with xplane offset {self.coefficients['x0']-extents[0]/2} {self.reverse(node)}")
             surf_map[surf_id(node)] = ids_map
         return surf_map[surf_id(node)]
 
@@ -130,7 +130,7 @@ class CADYPlane(CADSurface, openmc.YPlane):
         if surf_id(node) not in surf_map:
             exec_cubit(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
             id_map = body_id()
-            exec_cubit(f"section volume {{ {id_map} }} with yplane offset {self.coefficients['y0']} {self.reverse(node)}")
+            exec_cubit(f"section volume {{ {id_map} }} with yplane offset {self.coefficients['y0']-extents[1]/2} {self.reverse(node)}")
             surf_map[surf_id(node)] = id_map
         return surf_map[surf_id(node)]
 
@@ -150,7 +150,7 @@ class CADZPlane(CADSurface, openmc.ZPlane):
         if surf_id(node) not in surf_map:
             exec_cubit(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
             ids_map = body_id()
-            exec_cubit(f"section volume {{ {ids_map} }} with zplane offset {self.coefficients['z0']} {self.reverse(node)}")
+            exec_cubit(f"section volume {{ {ids_map} }} with zplane offset {self.coefficients['z0']-extents[2]/2} {self.reverse(node)}")
             surf_map[surf_id(node)] = ids_map
         return surf_map[surf_id(node)]
 
