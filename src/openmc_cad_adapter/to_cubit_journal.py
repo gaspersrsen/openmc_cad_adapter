@@ -378,7 +378,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit( f'Block {b_id} material "{mat_n}"' )
             mat_map[mat_n] = b_id
         else:
-            exec_cubit( f'Block {mat_map[mat_n]} add volume {' '.join( map(str, np.array(id)) )}' )
+            exec_cubit( f'Block {mat_map[mat_n]} add volume {id}' )
         
     
     # Initialize world
