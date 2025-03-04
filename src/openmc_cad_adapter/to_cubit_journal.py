@@ -93,6 +93,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
     uni_map = {}
     latt_map = {}
     mat_map = {}
+    cell_mat = {}
     
     def midp(node):
         return ' '.join( map(str, (node.bounding_box.upper_right+node.bounding_box.lower_left)/2) )
@@ -122,11 +123,24 @@ def to_cubit_journal(geometry : openmc.Geometry,
         added = False
         for id in ids:
             inter_ids = np.append(np.array(id), np.array(s))
+            s1 = body_id()
             exec_cubit( f"intersect volume {' '.join( map(str, np.array(inter_ids)) )} keep" )
+            s2 = body_id()
             if not added:
                 if body_id() != s:
                     added = True
                     strt = body_id()
+            if s1 != s2:
+                try:
+                    for a in range(len(s2)):
+                        try:
+                            cell_mat[s2[a]] = cell_mat[id]
+                        except:
+                            pass
+                except:
+                    cell_mat[s2] = cell_mat[id]
+                    
+                    
             # exec_cubit( f"delete volume {{ {id} }}" )
         # exec_cubit( f"delete volume {{ {s} }}" )
         stp = body_id()
@@ -205,7 +219,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             raise NotImplementedError(f"{node} not implemented")
 
     def process_node( node, bb, surfs=None, lat_pos=None ):
-        # TODO handle uni move and region, copied volume has to be trimmed
+        # TODO propagate names, propagate materials
         global surf_coms, cell_ids
         
         # Universes contain cells and move internal cells to proper location
@@ -224,6 +238,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
             stp = body_id()
             #print(ids3)
             ids3 = range(strt,stp+1,1)
+            for a in range(len(ids3)):
+                try:
+                    cell_mat[ids3[a]] = cell_mat[ids[a]]
+                except:
+                    pass
             #return ids3
             exec_cubit( f"move volume {{ {' '.join( map(str, np.array(ids3)) )} }} midpoint location {midp(node)}" )
             ids_out = trim_uni(node, ids3, bb)
@@ -246,7 +265,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     
                     #print(s_ids,ids)
                     ids = np.append(ids,np.array(s_ids)).astype(int)
-                    process_mat(node.fill, ids)
+                    cell_map[id] = node.fill.name
+                    #process_mat(node.fill, ids)
                     #exec_cubit( f'block {mat_map[node.fill.id]} add volume {{ {' '.join( map(str, ids) )} }} ' )
                 
                 elif node.fill is None:
@@ -254,7 +274,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     s_ids = surface_to_cubit_journal(node.region, bb)
                     #exec_cubit( f'group "mat_void" add volume {{ { s_ids } }} ' )
                     ids = np.append(ids,np.array(s_ids)).astype(int)
-                    exec_cubit( f'block 1 add volume {{ {' '.join( map(str, ids) )} }} ' )
+                    for id in ids:
+                        cell_map[id] = "void"
+                    #exec_cubit( f'block 1 add volume {{ {' '.join( map(str, ids) )} }} ' )
                 
                 elif isinstance( node.fill, Iterable ):
                     s_ids = surface_to_cubit_journal(node.region, bb)
@@ -300,6 +322,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 exec_cubit( f" volume {' '.join( map(str, np.array(ids2)) )} copy" )
                                 stp = body_id()
                                 ids3 = range(strt,stp+1,1)
+                                for a in range(len(ids3)):
+                                    try:
+                                        cell_mat[ids3[a]] = cell_mat[ids2[a]]
+                                    except:
+                                        pass
                                 exec_cubit( f"move volume {{ {' '.join( map(str, np.array(ids3)) )} }} midpoint location {x} {y} 0" )
                                 ids = np.append(ids, np.array(ids3).astype(int)).astype(int)
                             j = j + 1
@@ -322,29 +349,35 @@ def to_cubit_journal(geometry : openmc.Geometry,
     
     def init_materials():
         for material in materials:
-            mat_map[material.id] = []
-        mat_map[0] = []
+            mat_map[material.id] = np.array([])
+        mat_map[0] = np.array([])
     
-    def process_materials():
-        # for material in materials:
-        #     exec_cubit( f'create material "{material.name}" ' )
-        #     b_id = block_next()
-        #     exec_cubit( f'Block {b_id} add volume 1' )
-        #     exec_cubit( f'Block {b_id} material "{material.name}"' )
-        #     mat_map[material.id] = b_id
-        exec_cubit( f'create material name "void" ' )
-        exec_cubit( f'Block 1 add volume 1' )
-        exec_cubit( f'Block 1 material "void"' )
-        
-    def process_mat(mat, ids):
-        if mat.id not in mat_map:
-            exec_cubit( f'create material name "{mat.name}" ' )
+    # def process_materials():
+    #     # for material in materials:
+    #     #     exec_cubit( f'create material "{material.name}" ' )
+    #     #     b_id = block_next()
+    #     #     exec_cubit( f'Block {b_id} add volume 1' )
+    #     #     exec_cubit( f'Block {b_id} material "{material.name}"' )
+    #     #     mat_map[material.id] = b_id
+    #     exec_cubit( f'create material name "void" ' )
+    #     exec_cubit( f'Block 1 add volume 1' )
+    #     exec_cubit( f'Block 1 material "void"' )
+    
+    def propagate_mat(id):
+        if isinstance(cell_mat[id], str):
+            return cell_mat[id]
+        else:
+            return propagate_mat(cell_mat[id])
+      
+    def process_mat(mat_n, ids):
+        if mat_n not in mat_map:
+            exec_cubit( f'create material name "{mat_n}" ' )
             b_id = block_next()
             exec_cubit( f'Block {b_id} add volume {' '.join( map(str, np.array(ids)) )}' )
-            exec_cubit( f'Block {b_id} material "{mat.name}"' )
-            mat_map[mat.id] = b_id
+            exec_cubit( f'Block {b_id} material "{mat_n}"' )
+            mat_map[mat_n] = b_id
         else:
-            exec_cubit( f'Block {mat_map[mat.id]} add volume {' '.join( map(str, np.array(ids)) )}' )
+            exec_cubit( f'Block {mat_map[mat_n]} add volume {' '.join( map(str, np.array(ids)) )}' )
         
     
     # Initialize world
@@ -358,10 +391,15 @@ def to_cubit_journal(geometry : openmc.Geometry,
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
     
     # Initialize materials
-    process_materials()
+    #process_materials()
     
     # Process geometry
     final_ids = process_node(geom.root_universe, w)
+    
+    # Process materials
+    for id in final_ids:
+        mat_n = propagate_mat(id)
+        process_mat(mat_n, id)
     
     # Cleanup
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
