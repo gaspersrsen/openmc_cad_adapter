@@ -246,14 +246,14 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     
                     #print(s_ids,ids)
                     ids = np.append(ids,np.array(s_ids)).astype(int)
-                    exec_cubit( f'block {' '.join( map(str, ids) )} material "{node.fill.name}" ' )
+                    exec_cubit( f'block {mat_map[node.fill.id]} add volume {{ {' '.join( map(str, ids) )} }} ' )
                 
                 elif node.fill is None:
                     #s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box, w))
                     s_ids = surface_to_cubit_journal(node.region, bb)
                     #exec_cubit( f'group "mat_void" add volume {{ { s_ids } }} ' )
                     ids = np.append(ids,np.array(s_ids)).astype(int)
-                    exec_cubit( f'block {' '.join( map(str, ids) )} material "void" ' )
+                    exec_cubit( f'block {mat_map[0]} add volume {{ {' '.join( map(str, ids) )} }} ' )
                 
                 elif isinstance( node.fill, Iterable ):
                     s_ids = surface_to_cubit_journal(node.region, bb)
@@ -322,19 +322,29 @@ def to_cubit_journal(geometry : openmc.Geometry,
     def process_materials():
         for material in materials:
             exec_cubit( f'create material "{material.name}" ' )
-            mat_map[material.id] = mat_id()
+            b_id = block_next()
+            exec_cubit( f'Block {b_id}' )
+            exec_cubit( f'Block {b_id} material "{material.name}"' )
+            mat_map[material.id] = b_id
         exec_cubit( f'create material "void" ' )
-        mat_map[0] = mat_id()
+        b_id = block_next()
+        exec_cubit( f'Block {b_id}' )
+        exec_cubit( f'Block {b_id} material "void"' )
+        mat_map[0] = b_id
+        
     
     # Initialize world
     exec_cubit("set echo off\n")
-    # exec_cubit("set info off\n")
+    exec_cubit("set info off\n")
     # exec_cubit("set warning off\n")
     exec_cubit("graphics pause\n")
     # #exec_cubit("set journal off\n")
     # exec_cubit("set default autosize off\n")
     exec_cubit("undo off\n")
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
+    
+    # Initialize materials
+    process_materials()
     
     # Process geometry
     final_ids = process_node(geom.root_universe, w)

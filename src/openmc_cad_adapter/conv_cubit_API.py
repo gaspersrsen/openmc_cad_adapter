@@ -13,7 +13,7 @@ def exec_cubit(command):
 def body_id():
     return cubit.get_last_id("volume")
 
-def body_next():
+def block_next():
     return cubit.get_next_block_id()
 
 def mat_id():
