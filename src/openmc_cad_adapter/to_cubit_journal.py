@@ -246,14 +246,15 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     
                     #print(s_ids,ids)
                     ids = np.append(ids,np.array(s_ids)).astype(int)
-                    exec_cubit( f'block {mat_map[node.fill.id]} add volume {{ {' '.join( map(str, ids) )} }} ' )
+                    process_mat(node.fill, ids)
+                    #exec_cubit( f'block {mat_map[node.fill.id]} add volume {{ {' '.join( map(str, ids) )} }} ' )
                 
                 elif node.fill is None:
                     #s_ids = surface_to_cubit_journal(node.region, process_bb(node.bounding_box, w))
                     s_ids = surface_to_cubit_journal(node.region, bb)
                     #exec_cubit( f'group "mat_void" add volume {{ { s_ids } }} ' )
                     ids = np.append(ids,np.array(s_ids)).astype(int)
-                    exec_cubit( f'block {mat_map[0]} add volume {{ {' '.join( map(str, ids) )} }} ' )
+                    exec_cubit( f'block 1 add volume {{ {' '.join( map(str, ids) )} }} ' )
                 
                 elif isinstance( node.fill, Iterable ):
                     s_ids = surface_to_cubit_journal(node.region, bb)
@@ -267,13 +268,13 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     ids2 = np.append(ids2, np.array(process_node( node.fill, bb ))).astype(int)
                     ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
 
-                if isinstance( node.fill, Material )  or node.fill is None:
+                if isinstance( node.fill, Material ) or node.fill is None:
                     if node.name is None:
                         #exec_cubit( f'create group "cell_{node.id}"' )
                         pass
                     else:
                         exec_cubit( f'Volume {' '.join( map(str, np.array(ids)) )}  rename "cell_{node.name}"' )
-                    cell_map[node.id] = ids
+                cell_map[node.id] = ids
             return cell_map[node.id]
                 
         elif isinstance( node, RectLattice ):
@@ -319,18 +320,31 @@ def to_cubit_journal(geometry : openmc.Geometry,
         #         exec_cubit( f"body {{ {r[0]} }} name \"Cell_{node.id}\"" )
         # return r
     
-    def process_materials():
+    def init_materials():
         for material in materials:
-            exec_cubit( f'create material "{material.name}" ' )
-            b_id = block_next()
-            exec_cubit( f'Block {b_id} add volume 1' )
-            exec_cubit( f'Block {b_id} material "{material.name}"' )
-            mat_map[material.id] = b_id
+            mat_map[material.id] = []
+        mat_map[0] = []
+    
+    def process_materials():
+        # for material in materials:
+        #     exec_cubit( f'create material "{material.name}" ' )
+        #     b_id = block_next()
+        #     exec_cubit( f'Block {b_id} add volume 1' )
+        #     exec_cubit( f'Block {b_id} material "{material.name}"' )
+        #     mat_map[material.id] = b_id
         exec_cubit( f'create material "void" ' )
-        b_id = block_next()
-        exec_cubit( f'Block {b_id} add volume 1' )
-        exec_cubit( f'Block {b_id} material "void"' )
-        mat_map[0] = b_id
+        exec_cubit( f'Block 1 add volume 1' )
+        exec_cubit( f'Block 1 material "void"' )
+        
+    def process_mat(mat, ids):
+        if mat.id not in mat_map:
+            exec_cubit( f'create material "{mat.name}" ' )
+            b_id = block_next()
+            exec_cubit( f'Block {b_id} add volume {' '.join( map(str, np.array(ids)) )}' )
+            exec_cubit( f'Block {b_id} material "{mat.name}"' )
+            mat_map[mat.id] = b_id
+        else:
+            exec_cubit( f'Block {mat_map[mat.id]} add volume {' '.join( map(str, np.array(ids)) )}' )
         
     
     # Initialize world
