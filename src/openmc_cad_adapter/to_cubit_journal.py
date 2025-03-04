@@ -323,7 +323,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         for material in materials:
             exec_cubit( f'create material "{material.name}" ' )
             b_id = block_next()
-            exec_cubit( f'Block {b_id}' )
+            exec_cubit( f'Block {b_id} add volume 1' )
             exec_cubit( f'Block {b_id} material "{material.name}"' )
             mat_map[material.id] = b_id
         exec_cubit( f'create material "void" ' )
