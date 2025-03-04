@@ -370,16 +370,15 @@ def to_cubit_journal(geometry : openmc.Geometry,
         else:
             return propagate_mat(cell_mat[id])
       
-    def process_mat(mat_n, ids):
-        print(mat_n, ids)
+    def process_mat(mat_n, id):
         if mat_n not in mat_map:
             exec_cubit( f'create material name "{mat_n}" ' )
             b_id = block_next()
-            exec_cubit( f'Block {b_id} add volume {' '.join( map(str, np.array(ids)) )}' )
+            exec_cubit( f'Block {b_id} add volume {id}' )
             exec_cubit( f'Block {b_id} material "{mat_n}"' )
             mat_map[mat_n] = b_id
         else:
-            exec_cubit( f'Block {mat_map[mat_n]} add volume {' '.join( map(str, np.array(ids)) )}' )
+            exec_cubit( f'Block {mat_map[mat_n]} add volume {' '.join( map(str, np.array(id)) )}' )
         
     
     # Initialize world
