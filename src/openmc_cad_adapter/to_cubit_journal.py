@@ -229,22 +229,27 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 inter_id = body_id()
             return np.array(inter_id).astype(int)
         elif isinstance(node, Union):
-            exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-            union_id = body_id()
-            first = surface_to_cubit_journal( node[0], w, bb )
-            max_id = np.max(np.append(union_id, first))
-            exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(union_id),np.array(first))) )} keep" )
-            if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
-                exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-            union_id = body_id()
-            for subnode in node[1:]:
+            out = np.array([])
+            for subnode in node:
                 s = surface_to_cubit_journal( subnode, w, bb )
-                max_id = np.max( np.append( np.array( union_id ),np.array(s) ) )
-                exec_cubit( f"unite volume {' '.join( map(str, np.append(np.array(union_id),np.array(s))) )} keep" )
-                if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
-                    exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-                union_id = body_id()
-            return np.array(union_id).astype(int)
+                out = np.append( out, np.array(surface_to_cubit_journal( subnode, w, bb )) )
+            return np.array(out).astype(int)
+            # exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
+            # union_id = body_id()
+            # first = surface_to_cubit_journal( node[0], w, bb )
+            # max_id = np.max(np.append(union_id, first))
+            # exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(union_id),np.array(first))) )} keep" )
+            # if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
+            #     exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
+            # union_id = body_id()
+            # for subnode in node[1:]:
+            #     s = surface_to_cubit_journal( subnode, w, bb )
+            #     max_id = np.max( np.append( np.array( union_id ),np.array(s) ) )
+            #     exec_cubit( f"unite volume {' '.join( map(str, np.append(np.array(union_id),np.array(s))) )} keep" )
+            #     if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
+            #         exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
+            #     union_id = body_id()
+            # return np.array(union_id).astype(int)
         else:
             raise NotImplementedError(f"{node} not implemented")
 
@@ -265,7 +270,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
             strt = body_id() + 1
             exec_cubit( f" volume { to_cubit_list(ids) } copy" )
-            stp = body_id()
+            stp = last_id(body_id())
             ids3 = range(strt,stp+1,1)
             for a in range(len(ids3)):
                 try:
@@ -333,7 +338,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
                                 strt = body_id() + 1
                                 exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
-                                stp = body_id()
+                                stp = last_id(body_id())
                                 ids3 = range(strt,stp+1,1)
                                 for a in range(len(ids3)):
                                     try:
