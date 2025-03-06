@@ -364,7 +364,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         
     
     # Initialize commands
-    #exec_cubit("set echo off\n")
+    exec_cubit("set echo off\n")
     #exec_cubit("set info off\n")
     # exec_cubit("set warning off\n")
     exec_cubit("graphics pause\n")
