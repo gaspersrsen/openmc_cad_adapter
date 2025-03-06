@@ -123,7 +123,14 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if not added:
                 if body_id() != s:
                     added = True
-                    strt = body_id()
+                    try:
+                        for a in range(len(s2)):
+                            try:
+                                strt = a
+                            except:
+                                pass
+                    except:
+                        strt = s2
             if s1 != s2:
                 try:
                     for a in range(len(s2)):
@@ -133,14 +140,16 @@ def to_cubit_journal(geometry : openmc.Geometry,
                             pass
                 except:
                     cell_mat[s2] = cell_mat[id]
-                    
-                    
-            # exec_cubit( f"delete volume {{ {id} }}" )
-        # exec_cubit( f"delete volume {{ {s} }}" )
-        stp = body_id()
-        if strt > stp:
-            raise ValueError(f"Universe {node} trim unsuccessful")
-        trim_ids = range(strt, stp+1, 1)
+        stp_arr = body_id()
+        try:
+            for a in range(len(stp_arr)):
+                try:
+                    stp = a
+                except:
+                    pass
+        except:
+            stp = stp_arr
+        trim_ids = range(strt, stp + 1, 1)
         return trim_ids
     
     def trim_cell_like(ids, s_ids):
