@@ -222,8 +222,10 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
                 if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
                     splt_bdy = mul_body_id()
+                    if type(splt_bdy) != int:
+                        splt_bdy = ' '.join( map(str, np.array(splt_bdy) ))
                     print(f"SPLITTING BODY {splt_bdy}")
-                    exec_cubit( f"split body {' '.join( map(str, [i for i in np.array(splt_bdy)] ))}" ) # Split the multivolume body
+                    exec_cubit( f"split body {splt_bdy}" ) # Split the multivolume body
                 inter_id = body_id()
             return np.array(inter_id).astype(int)
             #return np.array(range(strt, last_id(inter_id)+1,1)).astype(int)
@@ -235,8 +237,10 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(union_id),np.array(first))) )} keep" )
             if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
                 splt_bdy = mul_body_id()
+                if type(splt_bdy) != int:
+                    splt_bdy = ' '.join( map(str, np.array(splt_bdy) ))
                 print(f"SPLITTING BODY {splt_bdy}")
-                exec_cubit( f"split body {' '.join( map(str, [i for i in np.array(splt_bdy)] ))}" ) # Split the multivolume body
+                exec_cubit( f"split body {splt_bdy}" ) # Split the multivolume body
             union_id = body_id()
             for subnode in node[1:]:
                 s = surface_to_cubit_journal( subnode, w )
