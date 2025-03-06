@@ -95,6 +95,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
     mat_map = {}
     cell_mat = {}
     
+    def to_cubit_list(ids):
+        if type(ids) != int:
+            ids = ' '.join( map(str, np.array(ids) ))
+        return ids
+    
     def first_id(ids): # Returns the first id of input ids
         out = None
         try:
@@ -136,7 +141,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         for id in ids: 
             inter_ids = np.append(np.array(id), np.array(s))
             s1 = body_id()
-            exec_cubit( f"intersect volume {' '.join( map(str, np.array(inter_ids)) )} keep" )
+            exec_cubit( f"intersect volume {to_cubit_list(inter_ids)} keep" )
             if last_id(s1) + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
                     exec_cubit( f"split body {id+1}" ) # Split the multivolume body
             s2 = body_id() # Resulting intersection ids
@@ -167,7 +172,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         for id in ids:
             inter_ids = np.append(np.array(id), np.array(s_ids))
             s1 = body_id()
-            exec_cubit( f"intersect volume {' '.join( map(str, np.array(inter_ids)) )} keep" )
+            exec_cubit( f"intersect volume {to_cubit_list(inter_ids)} keep" )
             if last_id(s1) + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
                     exec_cubit( f"split body {id+1}" ) # Split the multivolume body
             s2 = body_id() # Resulting intersection ids
@@ -221,11 +226,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 max_id = np.max(np.append(inter_id,s))
                 exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
                 if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
-                    splt_bdy = mul_body_id()
-                    if type(splt_bdy) != int:
-                        splt_bdy = ' '.join( map(str, np.array(splt_bdy) ))
-                    print(f"SPLITTING BODY {splt_bdy}")
-                    exec_cubit( f"split body {splt_bdy}" ) # Split the multivolume body
+                    exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
                 inter_id = body_id()
             return np.array(inter_id).astype(int)
             #return np.array(range(strt, last_id(inter_id)+1,1)).astype(int)
@@ -236,11 +237,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             max_id = np.max(np.append(union_id, first))
             exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(union_id),np.array(first))) )} keep" )
             if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
-                splt_bdy = mul_body_id()
-                if type(splt_bdy) != int:
-                    splt_bdy = ' '.join( map(str, np.array(splt_bdy) ))
-                print(f"SPLITTING BODY {splt_bdy}")
-                exec_cubit( f"split body {splt_bdy}" ) # Split the multivolume body
+                exec_cubit( f"split body {to_cubit_list(mul_body_id)}" ) # Split the multivolume body
             union_id = body_id()
             for subnode in node[1:]:
                 s = surface_to_cubit_journal( subnode, w )
@@ -266,7 +263,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             ids = uni_map[node.id]
             exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
             strt = body_id() + 1
-            exec_cubit( f" volume {' '.join( map(str, np.array(ids)) )} copy" )
+            exec_cubit( f" volume { to_cubit_list(ids) } copy" )
             stp = body_id()
             ids3 = range(strt,stp+1,1)
             for a in range(len(ids3)):
@@ -274,7 +271,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     cell_mat[ids3[a]] = cell_mat[ids[a]]
                 except:
                     pass
-            exec_cubit( f"move volume {{ {' '.join( map(str, np.array(ids3)) )} }} midpoint location {midp(node)}" )
+            exec_cubit( f"move volume {{ {to_cubit_list(ids3)} }} midpoint location {midp(node)}" )
             ids_out = trim_uni(node, ids3, bb)
             return ids_out
         
@@ -311,7 +308,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         #exec_cubit( f'create group "cell_{node.id}"' )
                         pass
                     else:
-                        exec_cubit( f'Volume {' '.join( map(str, np.array(ids)) )}  rename "cell_{node.name}"' )
+                        exec_cubit( f'Volume {to_cubit_list(ids)}  rename "cell_{node.name}"' )
                 cell_map[node.id] = ids
             return cell_map[node.id]
                 
@@ -334,7 +331,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 ids2 = process_node( cell, bb )
                                 exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
                                 strt = body_id() + 1
-                                exec_cubit( f" volume {' '.join( map(str, np.array(ids2)) )} copy" )
+                                exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
                                 stp = body_id()
                                 ids3 = range(strt,stp+1,1)
                                 for a in range(len(ids3)):
@@ -342,7 +339,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                         cell_mat[ids3[a]] = cell_mat[ids2[a]]
                                     except:
                                         pass
-                                exec_cubit( f"move volume {{ {' '.join( map(str, np.array(ids3)) )} }} midpoint location {x} {y} 0" )
+                                exec_cubit( f"move volume {{ {to_cubit_list(ids3)} }} midpoint location {x} {y} 0" )
                                 ids = np.append(ids, np.array(ids3).astype(int)).astype(int)
                             j = j + 1
                         i = i + 1
@@ -380,8 +377,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
         
     
     # Initialize commands
-    #exec_cubit("set echo off\n")
-    #exec_cubit("set info off\n")
+    exec_cubit("set echo off\n")
+    exec_cubit("set info off\n")
     # exec_cubit("set warning off\n")
     exec_cubit("graphics pause\n")
     # #exec_cubit("set journal off\n")
