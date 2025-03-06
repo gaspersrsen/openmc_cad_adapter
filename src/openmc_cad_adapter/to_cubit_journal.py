@@ -199,7 +199,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         trim_ids = range(strt, stp + 1, 1)
         return trim_ids
         
-    def surface_to_cubit_journal(node, w, off_center, hex = False):
+    def surface_to_cubit_journal(node, w, bb, hex = False):
         global surf_coms, cell_ids
         if isinstance(node, Halfspace):
             try:
@@ -209,7 +209,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                 cad_surface = cad_surface.from_openmc_surface(surface)
                 print(f"off_center in halfspace: {off_center}")
-                return cad_surface.to_cubit_surface(type(node), node, w, inner_world=None, hex=hex, off_center=off_center)
+                return cad_surface.to_cubit_surface(type(node), node, w, inner_world=None, hex=hex, off_center=bb)
             else:
                 raise NotImplementedError(f"{surface.type} not implemented")
         elif isinstance(node, Complement):
