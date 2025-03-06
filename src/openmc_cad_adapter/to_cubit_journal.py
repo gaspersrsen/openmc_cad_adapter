@@ -388,7 +388,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
     
     # Process geometry
-    print(geom.root_universe)
+    print(midp(geom.root_universe))
     final_ids = process_node(geom.root_universe, w)
     
     # Process materials
