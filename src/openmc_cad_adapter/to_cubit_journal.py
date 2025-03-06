@@ -160,17 +160,32 @@ def to_cubit_journal(geometry : openmc.Geometry,
         return trim_ids
     
     def trim_cell_like(ids, s_ids):
-        s = last_id(body_id())
+        s = body_id()
         added = False
         for id in ids:
             inter_ids = np.append(np.array(id), np.array(s_ids))
+            s1 = body_id()
             exec_cubit( f"intersect volume {' '.join( map(str, np.array(inter_ids)) )} keep" )
-            if not added:
-                if body_id() != s:
+            s2 = body_id() # Resulting intersection ids
+            if not added: # Not all intersections return a volume 
+                if s2 != s: # catch the id of first created one to return
                     added = True
-                    strt = first_id(body_id())
-        stp = last_id(body_id())
-        trim_ids = range(strt, stp+1, 1)
+                    strt = first_id(s2)
+            if s1 != s2: # Link material to new volume
+                try:
+                    for a in range(len(s2)):
+                        try:
+                            cell_mat[s2[a]] = cell_mat[id]
+                        except:
+                            raise ValueError(f"Volume {id} has no material")
+                except:
+                    try:
+                        cell_mat[s2] = cell_mat[id]
+                    except:
+                        raise ValueError(f"Volume {id} has no material")
+                    
+        stp = last_id(s2)
+        trim_ids = range(strt, stp + 1, 1)
         return trim_ids
         
     def surface_to_cubit_journal(node, w, hex = False):
