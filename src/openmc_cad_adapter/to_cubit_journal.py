@@ -223,15 +223,12 @@ def to_cubit_journal(geometry : openmc.Geometry,
             inter_id = body_id()
             for subnode in node:
                 s = surface_to_cubit_journal( subnode, w )
-                strt = first_id(inter_id)
-                stp = last_id(inter_id)
                 max_id = np.max(np.append(inter_id,s))
                 exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
                 if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
                     exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
                 inter_id = body_id()
             return np.array(inter_id).astype(int)
-            #return np.array(range(strt, last_id(inter_id)+1,1)).astype(int)
         elif isinstance(node, Union):
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             union_id = body_id()
@@ -379,7 +376,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         
     
     # Initialize commands
-    exec_cubit("set echo off\n")
+    #exec_cubit("set echo off\n")
     exec_cubit("set info off\n")
     # exec_cubit("set warning off\n")
     exec_cubit("graphics pause\n")
