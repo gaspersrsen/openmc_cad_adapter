@@ -142,8 +142,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
             inter_ids = np.append(np.array(id), np.array(s))
             s1 = body_id()
             exec_cubit( f"intersect volume {to_cubit_list(inter_ids)} keep" )
-            if last_id(s1) + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
-                    exec_cubit( f"split body {id+1}" ) # Split the multivolume body
+            s_inter = body_id()
+            if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
+                    exec_cubit( f"split body {to_cubit_list(mul_body_id)}" ) # Split the multivolume body
             s2 = body_id() # Resulting intersection ids
             if not added: # Not all intersections return a volume 
                 if s2 != s: # catch the id of first created one to return
@@ -173,8 +174,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
             inter_ids = np.append(np.array(id), np.array(s_ids))
             s1 = body_id()
             exec_cubit( f"intersect volume {to_cubit_list(inter_ids)} keep" )
-            if last_id(s1) + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
-                    exec_cubit( f"split body {id+1}" ) # Split the multivolume body
+            s_inter = body_id()
+            if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
+                    exec_cubit( f"split body {to_cubit_list(mul_body_id)}" ) # Split the multivolume body
             s2 = body_id() # Resulting intersection ids
             if not added: # Not all intersections return a volume 
                 if s2 != s: # catch the id of first created one to return
