@@ -209,7 +209,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         else:
             raise NotImplementedError(f"{node} not implemented")
 
-    def process_node( node, bb, surfs=None, lat_pos=None ):
+    def process_node( node, bb ):
         # TODO propagate names, check if bb is centred in 0,0,0 or moved, FIXME in z0 move by half world
         # TODO fix geom_util and others
         global surf_coms, cell_ids
