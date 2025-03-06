@@ -21,7 +21,7 @@ from openmc import Plane, XPlane, YPlane, ZPlane, XCylinder, YCylinder, ZCylinde
 from openmc import XCone, YCone, ZCone, XTorus, YTorus, ZTorus
 
 from .gqs import *
-from .cubit_util import *
+#from .cubit_util import *
 
 try:
     sys.path.append('/opt/Coreform-Cubit-2025.1/bin/')
@@ -144,7 +144,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit( f"intersect volume {to_cubit_list(inter_ids)} keep" )
             s_inter = body_id()
             if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
-                    exec_cubit( f"split body {to_cubit_list(mul_body_id)}" ) # Split the multivolume body
+                    exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
             s2 = body_id() # Resulting intersection ids
             if not added: # Not all intersections return a volume 
                 if s2 != s: # catch the id of first created one to return
@@ -176,7 +176,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit( f"intersect volume {to_cubit_list(inter_ids)} keep" )
             s_inter = body_id()
             if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
-                    exec_cubit( f"split body {to_cubit_list(mul_body_id)}" ) # Split the multivolume body
+                    exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
             s2 = body_id() # Resulting intersection ids
             if not added: # Not all intersections return a volume 
                 if s2 != s: # catch the id of first created one to return
@@ -236,11 +236,14 @@ def to_cubit_journal(geometry : openmc.Geometry,
             max_id = np.max(np.append(union_id, first))
             exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(union_id),np.array(first))) )} keep" )
             if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
-                exec_cubit( f"split body {to_cubit_list(mul_body_id)}" ) # Split the multivolume body
+                exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
             union_id = body_id()
             for subnode in node[1:]:
                 s = surface_to_cubit_journal( subnode, w, bb )
+                max_id = np.max( np.append( np.array( union_id ),np.array(s) ) )
                 exec_cubit( f"unite volume {' '.join( map(str, np.append(np.array(union_id),np.array(s))) )} keep" )
+                if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
+                    exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
                 union_id = body_id()
             return np.array(union_id).astype(int)
         else:
@@ -388,7 +391,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
     
     # Process geometry
-    final_ids = process_node(geom.root_universe, w, midp(geom.root_universe.bounding_box))
+    #final_ids = process_node(geom.root_universe, w, midp(geom.root_universe.bounding_box))
+    final_ids = np.array([])
+    bb = midp(geom.root_universe.bounding_box)
+    for cell in geom.root_universe._cells.values():
+        final_ids = np.append(final_ids, np.array(process_node(cell, w, bb)))
     
     # Process materials
     for id in final_ids:
@@ -396,9 +403,10 @@ def to_cubit_journal(geometry : openmc.Geometry,
         process_mat(mat_n, id)
     
     # Cleanup
-    for i in range(1,last_id(final_ids)+1,1):
+    min_id = np.min(final_ids)
+    exec_cubit( f"delete volume 1 to {min_id-1}" )
+    for i in range(min_id,last_id(final_ids)+1,1):
         if i not in final_ids:
-            #if i in [16,59,327,414,415,416,417,443,487,491]: continue
             exec_cubit( f"delete volume {{ {i} }}" )
     
     #Finalize
