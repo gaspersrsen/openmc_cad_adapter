@@ -388,10 +388,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
     
     # Process geometry
-    if np.array(midp(geom.root_universe).split(" ")).astype(float) != np.array([0,0,0]).astype(float):
-        off_center = 1
-    else:
+    
+    if all(np.array(midp(geom.root_universe).split(" ")).astype(float) == 0):
         off_center = 0
+    else:
+        off_center = 1
     final_ids = process_node(geom.root_universe, w)
     
     # Process materials
