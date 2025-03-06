@@ -200,7 +200,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         return trim_ids
         
     def surface_to_cubit_journal(node, w, hex = False):
-        global surf_coms, cell_ids
+        global surf_coms, cell_ids, off_center
         if isinstance(node, Halfspace):
             try:
                 surface = node.surface
