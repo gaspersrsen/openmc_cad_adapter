@@ -58,7 +58,7 @@ class CADPlane(CADSurface, openmc.Plane):
     def lreverse(node):
         return "" if node.side == '-' else "reverse"
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_ceneter=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=0):
         cmds = []
         global surf_map
         if surf_id(node) not in surf_map:
