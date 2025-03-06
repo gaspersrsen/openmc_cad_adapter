@@ -62,7 +62,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
             Defaults to False.
 
     """
-    reset_cubit_ids()
     global cell_ids, cmds
 
     if not filename.endswith('.jou'):
