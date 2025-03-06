@@ -271,7 +271,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     cell_mat[ids3[a]] = cell_mat[ids[a]]
                 except:
                     pass
-            exec_cubit( f"move volume {{ {to_cubit_list(ids3)} }} midpoint location {midp(node)}" )
+            exec_cubit( f"move volume {to_cubit_list(ids3)} midpoint location {midp(node)}" )
             ids_out = trim_uni(node, ids3, bb)
             return ids_out
         
@@ -339,7 +339,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                         cell_mat[ids3[a]] = cell_mat[ids2[a]]
                                     except:
                                         pass
-                                exec_cubit( f"move volume {{ {to_cubit_list(ids3)} }} midpoint location {x} {y} 0" )
+                                exec_cubit( f"move volume {to_cubit_list(ids3)} midpoint location {x} {y} 0" )
                                 ids = np.append(ids, np.array(ids3).astype(int)).astype(int)
                             j = j + 1
                         i = i + 1
