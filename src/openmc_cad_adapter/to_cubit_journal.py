@@ -208,6 +208,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 surface = node._surface
             if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                 cad_surface = cad_surface.from_openmc_surface(surface)
+                print(f"off_center in halfspace: {off_center}")
                 return cad_surface.to_cubit_surface(type(node),node, w, False, hex, off_center)
             else:
                 raise NotImplementedError(f"{surface.type} not implemented")
@@ -393,6 +394,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         off_center = 0
     else:
         off_center = 1
+    print(f"off_center at geometry: {off_center}")
     final_ids = process_node(geom.root_universe, w)
     
     # Process materials
