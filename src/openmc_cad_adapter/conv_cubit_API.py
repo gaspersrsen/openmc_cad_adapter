@@ -7,7 +7,7 @@ import cubit
 cubit.reset()
 
 def exec_cubit(command):
-    #print(command)
+    print(command)
     return cubit.cmd(command)
 
 def body_id(): # Returns volume id of last selected or created volumes, single or multiple
