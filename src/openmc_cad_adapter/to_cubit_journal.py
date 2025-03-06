@@ -95,10 +95,29 @@ def to_cubit_journal(geometry : openmc.Geometry,
     mat_map = {}
     cell_mat = {}
     
-    def midp(node):
+    def first_id(ids): # Returns the first id of input ids
+        out = None
+        try:
+            for a in ids:
+                out = a
+                break
+        except:
+            out = ids
+        return out
+    
+    def last_id(ids): # Returns the last id of input ids
+        out = None
+        try:
+            for a in ids:
+                out = a
+        except:
+            out = ids
+        return out
+    
+    def midp(node): # Returns the midpoint of a bounding box
         return ' '.join( map(str, (node.bounding_box.upper_right+node.bounding_box.lower_left)/2) )
     
-    def process_bb(bbox, w):
+    def process_bb(bbox, w): # Returns array of x,y,z lengths of a bounding box object
         w2 = np.abs(bbox.upper_right-bbox.lower_left)
         w_out = []
         for i in range(3):
@@ -113,25 +132,17 @@ def to_cubit_journal(geometry : openmc.Geometry,
         w = process_bb(node.bounding_box, w)
         exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
         s = body_id()
-        strt = body_id() + 1
         added = False
-        for id in ids:
+        for id in ids: 
             inter_ids = np.append(np.array(id), np.array(s))
             s1 = body_id()
             exec_cubit( f"intersect volume {' '.join( map(str, np.array(inter_ids)) )} keep" )
-            s2 = body_id()
-            if not added:
-                if body_id() != s:
+            s2 = body_id() # Resulting intersection ids
+            if not added: # Not all intersections return a volume 
+                if s2 != s: # catch the id of first created one to return
                     added = True
-                    try:
-                        for a in range(len(s2)):
-                            try:
-                                strt = a
-                            except:
-                                pass
-                    except:
-                        strt = s2
-            if s1 != s2:
+                    strt = first_id(s2)
+            if s1 != s2: # Link material to new volume
                 try:
                     for a in range(len(s2)):
                         try:
@@ -140,23 +151,12 @@ def to_cubit_journal(geometry : openmc.Geometry,
                             pass
                 except:
                     cell_mat[s2] = cell_mat[id]
-        stp_arr = body_id()
-        try:
-            for a in range(len(stp_arr)):
-                try:
-                    stp = a
-                except:
-                    pass
-        except:
-            stp = stp_arr
+        stp = last_id(s2)
         trim_ids = range(strt, stp + 1, 1)
         return trim_ids
     
     def trim_cell_like(ids, s_ids):
-        #TODO fix move in surfaces, YCyl,.., remove cad_cmds
-        exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-        s = body_id()
-        strt = body_id() + 1
+        s = last_id(body_id())
         added = False
         for id in ids:
             inter_ids = np.append(np.array(id), np.array(s_ids))
@@ -164,8 +164,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if not added:
                 if body_id() != s:
                     added = True
-                    strt = body_id()
-        stp = body_id()
+                    strt = first_id(body_id())
+        stp = last_id(body_id())
         trim_ids = range(strt, stp+1, 1)
         return trim_ids
         
@@ -186,35 +186,32 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             wid = body_id()
             exec_cubit( f"subtract volume {{ {id} }} from volume {{ {wid} }} keep_tool" )
-            return wid
+            return np.array(body_id())
         elif isinstance(node, Intersection):
             #TODO only one volume should be returned
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             inter_id = body_id()
             for subnode in node:
-                s = surface_to_cubit_journal( subnode, w)
-                strt = body_id() + 1
+                s = surface_to_cubit_journal( subnode, w )
+                strt = first_id(inter_id)
+                stp = last_id(inter_id)
                 exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
-                if strt != body_id():
-                    exec_cubit( f"split body {strt}" )
-                # exec_cubit( f"delete volume {{ {inter_id} }}" )
+                if stp + 1 != body_id(): # If multiple volumes are created they are saves as a multivolume body
+                    exec_cubit( f"split body {strt}" ) # Split the multivolume body
                 inter_id = body_id()
-
-            return np.array(range(strt, inter_id+1,1)).astype(int)
+            return np.array(inter_id).astype(int)
+            #return np.array(range(strt, last_id(inter_id)+1,1)).astype(int)
         elif isinstance(node, Union):
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             union_id = body_id()
-            first = surface_to_cubit_journal( node[0], w,  + 1, )
+            first = surface_to_cubit_journal( node[0], w )
             exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(union_id),np.array(first))) )} keep" )
-            # exec_cubit( f"delete volume {{ {union_id} }}" )
             union_id = body_id()
             for subnode in node[1:]:
-                s = surface_to_cubit_journal( subnode, w,  + 1, )
+                s = surface_to_cubit_journal( subnode, w )
                 exec_cubit( f"unite volume {' '.join( map(str, np.append(np.array(union_id),np.array(s))) )} keep" )
-                # exec_cubit( f"delete volume {{ {union_id} }}" )
                 union_id = body_id()
-            # exec_cubit( f"delete volume {{ {s} }}" )
-            return union_id
+            return np.array(union_id).astype(int)
         else:
             raise NotImplementedError(f"{node} not implemented")
 
@@ -372,8 +369,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         process_mat(mat_n, id)
     
     # Cleanup
-    exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
-    for i in range(1,body_id()+1,1):
+    for i in range(1,last_id(final_ids)+1,1):
         if i not in final_ids:
             #if i in [16,59,327,414,415,416,417,443,487,491]: continue
             exec_cubit( f"delete volume {{ {i} }}" )
