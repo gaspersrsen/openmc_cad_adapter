@@ -199,8 +199,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
         trim_ids = range(strt, stp + 1, 1)
         return trim_ids
         
-    def surface_to_cubit_journal(node, w, bb, hex = False):
-        global surf_coms, cell_ids, off_center
+    def surface_to_cubit_journal(node, w, off_center, hex = False):
+        global surf_coms, cell_ids
         if isinstance(node, Halfspace):
             try:
                 surface = node.surface
@@ -209,7 +209,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                 cad_surface = cad_surface.from_openmc_surface(surface)
                 print(f"off_center in halfspace: {off_center}")
-                return cad_surface.to_cubit_surface(type(node), node, w, inner_world=None, hex=hex, off_center=midp(bb))
+                return cad_surface.to_cubit_surface(type(node), node, w, inner_world=None, hex=hex, off_center=off_center)
             else:
                 raise NotImplementedError(f"{surface.type} not implemented")
         elif isinstance(node, Complement):
@@ -271,7 +271,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     cell_mat[ids3[a]] = cell_mat[ids[a]]
                 except:
                     pass
-            exec_cubit( f"move volume {to_cubit_list(ids3)} midpoint location {to_cubit_list(midp(node))}" )
+            exec_cubit( f"move volume {to_cubit_list(ids3)} midpoint location {to_cubit_list(midp(node.bounding_box))}" )
             ids_out = trim_uni(node, ids3, bb)
             return ids_out
         
