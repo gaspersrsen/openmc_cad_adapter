@@ -383,8 +383,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
         
     
     # Initialize commands
-    exec_cubit("set echo off\n")
-    exec_cubit("set info off\n")
+    #exec_cubit("set echo off\n")
+    #exec_cubit("set info off\n")
     # exec_cubit("set warning off\n")
     exec_cubit("graphics pause\n")
     # #exec_cubit("set journal off\n")
@@ -399,7 +399,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
     final_ids = np.array([])
     bb = midp(geom.root_universe.bounding_box)
     for cell in geom.root_universe._cells.values():
-        final_ids = np.append(final_ids, np.array(process_node(cell, w, bb))).astype(int)
+        print(cell)
+        #final_ids = np.append(final_ids, np.array(process_node(cell, w, bb))).astype(int)
     
     # Process materials
     for id in final_ids:
