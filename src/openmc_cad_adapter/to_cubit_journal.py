@@ -395,12 +395,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
     
     # Process geometry
-    #final_ids = process_node(geom.root_universe, w, midp(geom.root_universe.bounding_box))
-    final_ids = np.array([])
-    bb = midp(geom.root_universe.bounding_box)
-    for cell in geom.root_universe._cells.values():
-        print(cell)
-        #final_ids = np.append(final_ids, np.array(process_node(cell, w, bb))).astype(int)
+    final_ids = process_node(geom.root_universe, w, midp(geom.root_universe.bounding_box))
+    # final_ids = np.array([])
+    # bb = midp(geom.root_universe.bounding_box)
+    # for cell in geom.root_universe._cells.values():
+    #     final_ids = np.append(final_ids, np.array(process_node(cell, w, bb))).astype(int)
     
     # Process materials
     for id in final_ids:
