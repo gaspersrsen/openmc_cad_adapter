@@ -7,6 +7,7 @@ import cubit
 cubit.reset()
 
 def exec_cubit(command): # Pass the command to cubit
+    if (body_id() > 100): exit()
     return cubit.cmd(command)
 
 def body_id(): # Returns volume id of last selected or created volumes, single or multiple
