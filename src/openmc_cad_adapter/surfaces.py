@@ -17,6 +17,7 @@ def indent(indent_size):
 
 surf_map = {}
 cmds = [] # All commands
+off_center = None
 
 def surf_id(node):
     return node.surface.id * (-1 if node.side == "-" else 1)
