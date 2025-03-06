@@ -148,7 +148,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         try:
                             cell_mat[s2[a]] = cell_mat[id]
                         except:
-                            pass
+                            raise ValueError(f"Volume {id} has no material")
                 except:
                     cell_mat[s2] = cell_mat[id]
         stp = last_id(s2)
@@ -296,7 +296,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 #TODO check if proper order i,j or j,i
                                 x = j * dx
                                 y = i * dy
-                                #ids2 = process_node( cell, [ dx, dy, w[2] ])
                                 ids2 = process_node( cell, bb )
                                 exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
                                 strt = body_id() + 1
