@@ -63,7 +63,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
 
     """
     reset_cubit_ids()
-    global cell_ids, cmds, off_center
+    global cell_ids, cmds
 
     if not filename.endswith('.jou'):
         filename += '.jou'
@@ -208,7 +208,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 surface = node._surface
             if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                 cad_surface = cad_surface.from_openmc_surface(surface)
-                print(f"off_center in halfspace: {off_center}")
                 return cad_surface.to_cubit_surface(type(node), node, w, inner_world=None, hex=hex, off_center=bb)
             else:
                 raise NotImplementedError(f"{surface.type} not implemented")
