@@ -120,7 +120,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         return out
     
     def midp(node): # Returns the midpoint of a bounding box
-        return ' '.join( map(str, (node.bounding_box.upper_right+node.bounding_box.lower_left)/2) )
+        return (node.bounding_box.upper_right + node.bounding_box.lower_left)/2
     
     def process_bb(bbox, w): # Returns array of x,y,z lengths of a bounding box object
         w2 = np.abs(bbox.upper_right-bbox.lower_left)
@@ -199,7 +199,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         trim_ids = range(strt, stp + 1, 1)
         return trim_ids
         
-    def surface_to_cubit_journal(node, w, hex = False):
+    def surface_to_cubit_journal(node, w, bb, hex = False):
         global surf_coms, cell_ids, off_center
         if isinstance(node, Halfspace):
             try:
@@ -209,11 +209,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                 cad_surface = cad_surface.from_openmc_surface(surface)
                 print(f"off_center in halfspace: {off_center}")
-                return cad_surface.to_cubit_surface(type(node), node, w, inner_world=None, hex=hex, off_center=off_center)
+                return cad_surface.to_cubit_surface(type(node), node, w, inner_world=None, hex=hex, off_center=midp(bb))
             else:
                 raise NotImplementedError(f"{surface.type} not implemented")
         elif isinstance(node, Complement):
-            id = surface_to_cubit_journal(node.node, w)
+            id = surface_to_cubit_journal(node.node, w, bb)
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             wid = body_id()
             exec_cubit( f"subtract volume {{ {id} }} from volume {{ {wid} }} keep_tool" )
@@ -223,7 +223,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             inter_id = body_id()
             for subnode in node:
-                s = surface_to_cubit_journal( subnode, w )
+                s = surface_to_cubit_journal( subnode, w, bb )
                 max_id = np.max(np.append(inter_id,s))
                 exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
                 if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
@@ -233,21 +233,21 @@ def to_cubit_journal(geometry : openmc.Geometry,
         elif isinstance(node, Union):
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             union_id = body_id()
-            first = surface_to_cubit_journal( node[0], w )
+            first = surface_to_cubit_journal( node[0], w, bb )
             max_id = np.max(np.append(union_id, first))
             exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(union_id),np.array(first))) )} keep" )
             if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
                 exec_cubit( f"split body {to_cubit_list(mul_body_id)}" ) # Split the multivolume body
             union_id = body_id()
             for subnode in node[1:]:
-                s = surface_to_cubit_journal( subnode, w )
+                s = surface_to_cubit_journal( subnode, w, bb )
                 exec_cubit( f"unite volume {' '.join( map(str, np.append(np.array(union_id),np.array(s))) )} keep" )
                 union_id = body_id()
             return np.array(union_id).astype(int)
         else:
             raise NotImplementedError(f"{node} not implemented")
 
-    def process_node( node, bb ):
+    def process_node( node, w, bb ):
         # TODO propagate names, check if bb is centred in 0,0,0 or moved, FIXME in z0 move by half world
         # TODO fix geom_util and others
         global surf_coms, cell_ids
@@ -257,7 +257,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if node.id not in uni_map:
                 ids = np.array([])
                 for c in node._cells.values():
-                    ids = np.append(ids,np.array(process_node( c, bb))).astype(int)
+                    ids = np.append(ids,np.array(process_node( c, w, midp(node.bounding_box)))).astype(int)
                 #exec_cubit( f'create group "uni_{node.id}"' )
                 uni_map[node.id] = ids
             ids = uni_map[node.id]
@@ -271,7 +271,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     cell_mat[ids3[a]] = cell_mat[ids[a]]
                 except:
                     pass
-            exec_cubit( f"move volume {to_cubit_list(ids3)} midpoint location {midp(node)}" )
+            exec_cubit( f"move volume {to_cubit_list(ids3)} midpoint location {to_cubit_list(midp(node))}" )
             ids_out = trim_uni(node, ids3, bb)
             return ids_out
         
@@ -280,27 +280,27 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 ids = np.array([])
                 #TODO handle single cell conversions
                 if isinstance( node.fill, Material ):
-                    s_ids = surface_to_cubit_journal(node.region, bb)
+                    s_ids = surface_to_cubit_journal(node.region, w, bb)
                     ids = np.append(ids,np.array(s_ids)).astype(int)
                     for id in ids:
                         cell_mat[id] = node.fill.name
                     
                 elif node.fill is None:
-                    s_ids = surface_to_cubit_journal(node.region, bb)
+                    s_ids = surface_to_cubit_journal(node.region, w, bb)
                     ids = np.append(ids,np.array(s_ids)).astype(int)
                     for id in ids:
                         cell_mat[id] = "void"
                 
                 elif isinstance( node.fill, Iterable ):
-                    s_ids = surface_to_cubit_journal(node.region, bb)
+                    s_ids = surface_to_cubit_journal(node.region, w, bb)
                     ids2 = []
                     for uni in node.fill:
-                        ids2 = np.append(ids2, np.array(process_node( uni, bb ))).astype(int)
+                        ids2 = np.append(ids2, np.array(process_node( uni, w, bb ))).astype(int)
                     ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
                     
                 else:
-                    s_ids = surface_to_cubit_journal(node.region, bb)
-                    ids2 = np.array(process_node( node.fill, bb )).astype(int)
+                    s_ids = surface_to_cubit_journal(node.region, w, bb)
+                    ids2 = np.array(process_node( node.fill, w, bb )).astype(int)
                     ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
 
                 if isinstance( node.fill, Material ) or node.fill is None:
@@ -328,7 +328,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 #TODO check if proper order i,j or j,i
                                 x = j * dx
                                 y = i * dy
-                                ids2 = process_node( cell, bb )
+                                ids2 = process_node( cell, w, midp(node.bounding_box) )
                                 exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
                                 strt = body_id() + 1
                                 exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
@@ -389,13 +389,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
     
     # Process geometry
-    
-    if all(np.array(midp(geom.root_universe).split(" ")).astype(float) == 0):
-        off_center = 0
-    else:
-        off_center = 1
-    print(f"off_center at geometry: {off_center}")
-    final_ids = process_node(geom.root_universe, w)
+    final_ids = process_node(geom.root_universe, w, midp(geom.root_universe.bounding_box))
     
     # Process materials
     for id in final_ids:
