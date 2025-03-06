@@ -24,14 +24,14 @@ def surf_id(node):
 
 class CADSurface(ABC):
 
-    def to_cubit_surface(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         ids_map = self.to_cubit_surface_inner(ent_type, node, extents, inner_world, hex)
         # TODO: Add boundary condition to the correct surface(s)
         # cmds += self.boundary_condition(ids)
         return ids_map
 
     @abstractmethod
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         raise NotImplementedError
 
     def boundary_condition(self, cad_surface_ids):
@@ -59,7 +59,7 @@ class CADPlane(CADSurface, openmc.Plane):
     def lreverse(node):
         return "" if node.side == '-' else "reverse"
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_ceneter=False):
         cmds = []
         global surf_map
         if surf_id(node) not in surf_map:
@@ -106,7 +106,7 @@ class CADXPlane(CADSurface, openmc.XPlane):
     def reverse(node):
         return "reverse" if node.side == '-' else ""
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         global surf_map
         if surf_id(node) not in surf_map:
             exec_cubit(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
@@ -126,7 +126,7 @@ class CADYPlane(CADSurface, openmc.YPlane):
     def reverse(node):
         return "reverse" if node.side == '-' else ""
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         global surf_map
         if surf_id(node) not in surf_map:
             exec_cubit(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
@@ -146,7 +146,7 @@ class CADZPlane(CADSurface, openmc.ZPlane):
     def reverse(node):
         return "reverse" if node.side == '-' else ""
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         global surf_map
         if surf_id(node) not in surf_map:
             exec_cubit(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
@@ -161,7 +161,7 @@ class CADZPlane(CADSurface, openmc.ZPlane):
 
 class CADCylinder(CADSurface, openmc.Cylinder):
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         print('XCADCylinder to cubit surface')
         cad_cmds = []
         h = inner_world[2] if inner_world else extents[2]
@@ -195,7 +195,7 @@ class CADCylinder(CADSurface, openmc.Cylinder):
 
 class CADXCylinder(CADSurface, openmc.XCylinder):
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         global surf_map
         if surf_id(node) not in surf_map:
             cad_cmds = []
@@ -229,7 +229,7 @@ class CADXCylinder(CADSurface, openmc.XCylinder):
 
 class CADYCylinder(CADSurface, openmc.YCylinder):
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         global surf_map
         if surf_id(node) not in surf_map:
             cad_cmds = []
@@ -263,7 +263,7 @@ class CADYCylinder(CADSurface, openmc.YCylinder):
 
 class CADZCylinder(CADSurface, openmc.ZCylinder):
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         global surf_map
         if surf_id(node) not in surf_map:
             cad_cmds = []
@@ -297,7 +297,7 @@ class CADZCylinder(CADSurface, openmc.ZCylinder):
 
 class CADSphere(CADSurface, openmc.Sphere):
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         cad_cmds = []
         exec_cubit( f"sphere radius {self.r}")
         ids_map = body_id()
@@ -315,7 +315,7 @@ class CADSphere(CADSurface, openmc.Sphere):
 
 class CADCone(CADSurface):
 
-    def to_cubit_surface(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         raise NotImplementedError('General Cones are not yet supported')
 
     @classmethod
@@ -324,7 +324,7 @@ class CADCone(CADSurface):
 
 class CADXCone(CADSurface, openmc.XCone):
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         cad_cmds = []
         exec_cubit( f"create frustum height {extents[0]} radius {math.sqrt(self.coefficients['r2'])*extents[0]} top 0")
         ids_map = body_id()
@@ -350,7 +350,7 @@ class CADXCone(CADSurface, openmc.XCone):
 
 class CADYCone(CADSurface, openmc.YCone):
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         cad_cmds = []
         exec_cubit( f"create frustum height {extents[1]} radius {math.sqrt(self.coefficients['r2'])*extents[1]} top 0")
         ids_map = body_id()
@@ -376,7 +376,7 @@ class CADYCone(CADSurface, openmc.YCone):
 
 class CADZCone(CADSurface, openmc.ZCone):
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         cad_cmds = []
         exec_cubit( f"create frustum height {extents[2]} radius {math.sqrt(self.coefficients['r2'])*extents[2]} top 0")
         ids_map = body_id()
@@ -411,7 +411,7 @@ class CADTorus(CADSurface):
 
 class CADXTorus(CADTorus, openmc.XTorus):
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         self.check_coeffs()
         cad_cmds = []
         exec_cubit( f"torus major radius {self.a} minor radius {self.b}" )
@@ -430,7 +430,7 @@ class CADXTorus(CADTorus, openmc.XTorus):
 
 class CADYTorus(CADTorus, openmc.YTorus):
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         self.check_coeffs()
         cad_cmds = []
         exec_cubit( f"torus major radius {self.a} minor radius {self.b}" )
@@ -449,7 +449,7 @@ class CADYTorus(CADTorus, openmc.YTorus):
 
 class CADZTorus(CADTorus, openmc.ZTorus):
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
         self.check_coeffs()
         cad_cmds = []
         exec_cubit( f"torus major radius {self.a} minor radius {self.b}" )

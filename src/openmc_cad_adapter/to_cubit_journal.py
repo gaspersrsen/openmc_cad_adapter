@@ -208,7 +208,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 surface = node._surface
             if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                 cad_surface = cad_surface.from_openmc_surface(surface)
-                return cad_surface.to_cubit_surface(type(node),node, w, hex)
+                return cad_surface.to_cubit_surface(type(node),node, w, False, hex, off_center)
             else:
                 raise NotImplementedError(f"{surface.type} not implemented")
         elif isinstance(node, Complement):
