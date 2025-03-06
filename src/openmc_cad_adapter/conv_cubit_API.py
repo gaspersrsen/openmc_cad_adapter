@@ -7,6 +7,7 @@ import cubit
 cubit.reset()
 
 def exec_cubit(command): # Pass the command to cubit
+    print(command)
     if (body_id() > 100): exit()
     return cubit.cmd(command)
 
