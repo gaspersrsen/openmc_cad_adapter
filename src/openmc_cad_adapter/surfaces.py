@@ -145,11 +145,12 @@ class CADZPlane(CADSurface, openmc.ZPlane):
     def reverse(node):
         return "reverse" if node.side == '-' else ""
 
-    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=False):
+    def to_cubit_surface_inner(self, ent_type, node, extents, inner_world=None, hex=False, off_center=0):
         global surf_map
         if surf_id(node) not in surf_map:
             exec_cubit(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
             ids_map = body_id()
+            print(off_center)
             exec_cubit(f"section volume {{ {ids_map} }} with zplane offset {self.coefficients['z0']-extents[2]/2*off_center} {self.reverse(node)}")
             surf_map[surf_id(node)] = ids_map
         return surf_map[surf_id(node)]
