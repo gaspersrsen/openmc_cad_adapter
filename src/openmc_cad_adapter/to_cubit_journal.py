@@ -209,7 +209,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                 cad_surface = cad_surface.from_openmc_surface(surface)
                 print(f"off_center in halfspace: {off_center}")
-                return cad_surface.to_cubit_surface(type(node),node, w, False, hex, off_center)
+                return cad_surface.to_cubit_surface(type(node),node, w, False, hex, off_center=off_center)
             else:
                 raise NotImplementedError(f"{surface.type} not implemented")
         elif isinstance(node, Complement):
