@@ -13,6 +13,9 @@ def exec_cubit(command):
 def body_id(): # Returns volume id of last selected or created volumes, single or multiple
     return cubit.get_last_id("volume")
 
+def mul_body_id(): # Returns volume id of last selected or created multiple volume bodies, single or multiple
+    return cubit.get_last_id("body")
+
 def block_next():
     return cubit.get_next_block_id()
 
