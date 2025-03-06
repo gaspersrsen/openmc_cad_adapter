@@ -29,7 +29,7 @@ try:
 except ImportError:
     raise ImportError("Cubit Python API not found. Please install Cubit to use this feature.")
 
-from .surfaces import _CAD_SURFACE_DICTIONARY, surf_map, off_center
+from .surfaces import _CAD_SURFACE_DICTIONARY, surf_map
 
 def flatten(S):
     if S == []:
