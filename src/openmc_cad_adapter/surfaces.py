@@ -150,7 +150,8 @@ class CADZPlane(CADSurface, openmc.ZPlane):
         if surf_id(node) not in surf_map:
             exec_cubit(f"brick x {extents[0]} y {extents[1]} z {extents[2]}")
             ids_map = body_id()
-            print(self, ent_type, node, extents, inner_world, hex, off_center)
+            #print(self, ent_type, node, extents, inner_world, hex, off_center)
+            print(off_center)
             exec_cubit(f"section volume {{ {ids_map} }} with zplane offset {self.coefficients['z0']-extents[2]/2*off_center} {self.reverse(node)}")
             surf_map[surf_id(node)] = ids_map
         return surf_map[surf_id(node)]
