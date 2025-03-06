@@ -63,7 +63,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
 
     """
     reset_cubit_ids()
-    global cell_ids, cmds
+    global cell_ids, cmds, off_center
 
     if not filename.endswith('.jou'):
         filename += '.jou'
@@ -387,10 +387,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
     # Initialize world
     exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
     
-    # Initialize materials
-    #process_materials()
-    
     # Process geometry
+    print(geom.root_universe)
     final_ids = process_node(geom.root_universe, w)
     
     # Process materials
