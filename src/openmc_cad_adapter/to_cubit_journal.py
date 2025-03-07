@@ -253,10 +253,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
                         exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
                     stp = last_id(body_id())
-                    print(strt,stp)
                     next_ids = np.array(range(strt,stp+1,1))
                 inter_id = np.array(next_ids).astype(int)
-                print(inter_id)
             return np.array(inter_id).astype(int)
         elif isinstance(node, Union):
             out = np.array([])
@@ -414,8 +412,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
         
     
     # Initialize commands
-    # exec_cubit("set echo off\n")
-    # exec_cubit("set info off\n")
+    exec_cubit("set echo off\n")
+    exec_cubit("set info off\n")
     # exec_cubit("set warning off\n")
     exec_cubit("graphics pause\n")
     # #exec_cubit("set journal off\n")
