@@ -383,14 +383,14 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit( f'Block {mat_map[mat_n]} add volume {id}' )
         
     def p_m(ids):
-        
-        all_mat = set(cell_map.values())
-        for mat in all_mat:
-            mat_ids = [k for k,v in cell_map.items() if v==mat and k in ids]
-            exec_cubit( f'create material name "{mat}" ' )
-            b_id = block_next()
-            exec_cubit( f'Block {b_id} add volume {mat_ids}' )
-            exec_cubit( f'Block {b_id} material "{mat}"' )
+        print(cell_mat)
+        # all_mat = set(cell_map.values())
+        # for mat in all_mat:
+        #     mat_ids = [k for k,v in cell_map.items() if v==mat and k in ids]
+        #     exec_cubit( f'create material name "{mat}" ' )
+        #     b_id = block_next()
+        #     exec_cubit( f'Block {b_id} add volume {mat_ids}' )
+        #     exec_cubit( f'Block {b_id} material "{mat}"' )
             
     # Initialize commands
     # exec_cubit("set echo off\n")
@@ -417,14 +417,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
     p_m(final_ids)
     
     # Cleanup
-    min_id = np.min(final_ids)
-    exec_cubit( f"delete volume 1 to {min_id-1}" )
     del_ids = np.array([])
-    for i in range(min_id,last_id(final_ids)+1,1):
+    for i in range(1,np.max(final_ids)+1,1):
         if i not in final_ids:
             del_ids = np.append(del_ids, i)
     exec_cubit( f"delete volume {{ {to_cubit_list(del_ids)} }}" )
-    print(latt_map)
     
     #Finalize
     exec_cubit("graphics flush\n")
