@@ -199,7 +199,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         return trim_ids
         
     def surface_to_cubit_journal(node, w, bb, hex = False):
-        global surf_coms, cell_ids
+        global surf_coms, cell_ids, center_world
         if isinstance(node, Halfspace):
             try:
                 surface = node.surface
@@ -207,7 +207,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 surface = node._surface
             if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                 cad_surface = cad_surface.from_openmc_surface(surface)
-                return cad_surface.to_cubit_surface(type(node), node, w)#, inner_world=None, hex=hex, off_center=bb)
+                return cad_surface.to_cubit_surface(type(node), node, w, inner_world=None, hex=hex, off_center=center_world-bb)
             else:
                 raise NotImplementedError(f"{surface.type} not implemented")
         elif isinstance(node, Complement):
@@ -361,6 +361,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         for u in row:
                             for cell in u._cells.values():
                                 #TODO check if proper order i,j or j,i
+                                #TODO chceck proper movement, is it center or lower left
                                 x = j * dx
                                 y = i * dy
                                 ids2 = process_node( cell, w, midp(node.bounding_box) )
@@ -424,7 +425,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
     exec_cubit(f"brick x {2*world[0]} y {2*world[1]} z {2*world[2]}\n")
     
     # Process geometry
-    final_ids = process_node(geom.root_universe, w, midp(geom.root_universe.bounding_box))
+    center_world = midp(geom.root_universe.bounding_box)
+    final_ids = process_node(geom.root_universe, w, center_world)
     # final_ids = np.array([])
     # bb = midp(geom.root_universe.bounding_box)
     # for cell in geom.root_universe._cells.values():
