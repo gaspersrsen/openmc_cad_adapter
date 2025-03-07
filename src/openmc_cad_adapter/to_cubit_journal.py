@@ -235,7 +235,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 s = surface_to_cubit_journal( subnode, w, bb )
                 if type(s) != int:
                     raise ValueError(f"surface id {s} is not int")
-                print(inter_id, type(inter_id))
                 if inter_id.size > 1:
                     next_ids = np.array([])
                     for id in inter_id:
@@ -253,6 +252,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
                         exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
                     stp = last_id(body_id())
+                    print(strt,stp)
                     next_ids = np.array(range(strt,stp+1,1))
                 inter_id = np.array(next_ids).astype(int)
                 print(inter_id)
