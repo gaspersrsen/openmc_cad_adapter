@@ -391,6 +391,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 u_vals += [val]
         for mat in u_vals:
             print(mat == "fuel25", mat)
+            print(type(mat))
             mat_ids = [k for (k,v) in cell_map.items() if v is mat]# and k in ids]
             # print([k for k,v in cell_map.items()])
             # print([k for k,v in cell_map.items() if k in ids])
