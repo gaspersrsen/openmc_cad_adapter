@@ -148,7 +148,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 if s2 != s: # catch the id of first created one to return
                     added = True
                     strt = s_inter + 1
-            if s1 != s2: # Link material to new volume
+            if s1 != s2: # Link materials to new volumes
                 try:
                     for a in range(len(s2)):
                         try:
@@ -180,7 +180,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 if s2 != s: # catch the id of first created one to return
                     added = True
                     strt = first_id(s2)
-            if s1 != s2: # Link material to new volume
+            if s1 != s2: # Link materials to new volumes
                 try:
                     for a in range(len(s2)):
                         try:
@@ -221,8 +221,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
             strt = volume_id() + 1
             for subnode in node:
                 s = surface_to_cubit_journal( subnode, w, bb )
-                if type(s) != int:
-                    raise ValueError(f"surface id {s} is not int")
+                # if type(s) != int:
+                #     raise ValueError(f"surface id {s} is not int")
                 if inter_id.size > 1:
                     next_ids = np.array([])
                     for id in inter_id:
@@ -262,7 +262,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 ids = np.array([])
                 for c in node._cells.values():
                     ids = np.append(ids,np.array(process_node( c, w, midp(node.bounding_box)-center_world))).astype(int)
-                #exec_cubit( f'create group "uni_{node.id}"' )
                 uni_map[node.id] = ids
             ids = uni_map[node.id]
             exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
@@ -308,7 +307,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
 
                 if isinstance( node.fill, Material ) or node.fill is None:
                     if node.name is None:
-                        #exec_cubit( f'create group "cell_{node.id}"' )
                         pass
                     else:
                         exec_cubit( f'Volume {to_cubit_list(ids)}  rename "cell_{node.name}"' )
@@ -351,17 +349,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     raise NotImplementedError(f"{node} not implemented")
                 latt_map[node.id] = ids
             return latt_map[node.id]
-            
-            
-    
-        # #FIXME rotate and tranlate
-        # r = flatten( results )
-        # if len( r ) > 0:
-        #     if node.name:
-        #         exec_cubit( f"body {{ {r[0]} }} name \"{node.name}\"" )
-        #     else:
-        #         exec_cubit( f"body {{ {r[0]} }} name \"Cell_{node.id}\"" )
-        # return r
     
     def propagate_mat(id):
         if isinstance(cell_mat[id], str):
