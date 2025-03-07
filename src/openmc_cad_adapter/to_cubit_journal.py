@@ -62,7 +62,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             Defaults to False.
 
     """
-    global cell_ids, cmds
+    global cell_ids, cmds, center_world
 
     if not filename.endswith('.jou'):
         filename += '.jou'
