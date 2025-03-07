@@ -246,14 +246,15 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         stp = last_id(body_id())
                         next_ids = np.apend(next_ids,np.array(range(strt,stp+1,1)))
                 except:
-                    s = surface_to_cubit_journal( subnode, w, bb )
-                    max_id = np.max(np.append(inter_id,s))
-                    strt = max_id + 1
-                    exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
-                    if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
-                        exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-                    stp = last_id(body_id())
-                    next_ids = np.array(range(strt,stp+1,1))
+                    raise NotImplementedError(f"{subnode} not implemented at {inter_id}")
+                    # s = surface_to_cubit_journal( subnode, w, bb )
+                    # max_id = np.max(np.append(inter_id,s))
+                    # strt = max_id + 1
+                    # exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
+                    # if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
+                    #     exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
+                    # stp = last_id(body_id())
+                    # next_ids = np.array(range(strt,stp+1,1))
                 inter_id = next_ids
             return np.array(inter_id).astype(int)
         elif isinstance(node, Union):
