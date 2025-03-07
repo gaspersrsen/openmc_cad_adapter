@@ -220,14 +220,25 @@ def to_cubit_journal(geometry : openmc.Geometry,
             #TODO only one volume should be returned
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             inter_id = body_id()
+            strt = body_id() + 1
+            surfs = np.array([])
             for subnode in node:
-                s = surface_to_cubit_journal( subnode, w, bb )
-                max_id = np.max(np.append(inter_id,s))
-                exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
-                if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
-                    exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-                inter_id = body_id()
-            return np.array(inter_id).astype(int)
+                surfs = np.append(surfs,np.array(surface_to_cubit_journal( subnode, w, bb )))
+            max_id = np.max(np.append(inter_id,surfs))
+            exec_cubit( f"intersect volume {' '.join( map(str, np.append(inter_id,surfs)) )} keep" )
+            if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
+                exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
+            stp = last_id(body_id)
+            out_ids = range(strt,stp+1,1)
+            return np.array(out_ids)
+            # for subnode in node:
+            #     s = surface_to_cubit_journal( subnode, w, bb )
+            #     max_id = np.max(np.append(inter_id,s))
+            #     exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
+            #     if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
+            #         exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
+            #     inter_id = body_id()
+            # return np.array(inter_id).astype(int)
         elif isinstance(node, Union):
             out = np.array([])
             for subnode in node:
