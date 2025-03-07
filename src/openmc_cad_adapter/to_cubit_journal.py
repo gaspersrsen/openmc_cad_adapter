@@ -391,7 +391,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 u_vals += [val]
         for mat in u_vals:
             mat_ids = [k for (k,v) in cell_mat.items() if v is mat and k in ids]
-            print(mat, mat_ids)
+            #print(mat, mat_ids)
             exec_cubit( f'create material name "{mat}" ' )
             b_id = block_next()
             exec_cubit( f'Block {b_id} add volume {to_cubit_list(mat_ids)}' )
@@ -417,7 +417,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
     
     # Process materials
     for id in final_ids:
-        mat_n = propagate_mat(id)
+        propagate_mat(id)
         #process_mat(mat_n, id)
     p_m(final_ids)
     
@@ -426,7 +426,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
     for i in range(1,np.max(final_ids)+1,1):
         if i not in final_ids:
             del_ids = np.append(del_ids, i)
-    exec_cubit( f"delete volume {{ {to_cubit_list(del_ids)} }}" )
+    exec_cubit( f"delete volume {{ {to_cubit_list(del_ids.astype(int))} }}" )
     
     #Finalize
     exec_cubit("graphics flush\n")
