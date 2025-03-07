@@ -236,7 +236,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 if type(s) != int:
                     raise ValueError(f"surface id {s} is not int")
                 print(inter_id, type(inter_id))
-                if len(inter_id) > 1:
+                if inter_id.size > 1:
                     next_ids = np.array([])
                     for id in inter_id:
                         max_id = np.max(np.append(np.append(inter_id,s),next_ids))
