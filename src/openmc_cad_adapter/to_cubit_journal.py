@@ -371,18 +371,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
         else:
             cell_mat[id] = propagate_mat(cell_mat[id])
             return cell_mat[id]
-      
-    def process_mat(mat_n, id):
-        if mat_n not in mat_map:
-            exec_cubit( f'create material name "{mat_n}" ' )
-            b_id = block_next()
-            exec_cubit( f'Block {b_id} add volume {id}' )
-            exec_cubit( f'Block {b_id} material "{mat_n}"' )
-            mat_map[mat_n] = b_id
-        else:
-            exec_cubit( f'Block {mat_map[mat_n]} add volume {id}' )
         
-    def p_m(ids):
+    def process_materials(ids):
         #print(cell_mat.items())
         vals = cell_mat.values()
         u_vals = []
@@ -410,24 +400,18 @@ def to_cubit_journal(geometry : openmc.Geometry,
     # Process geometry
     center_world = midp(geom.root_universe.bounding_box)
     final_ids = process_node(geom.root_universe, w, center_world)
-    # final_ids = np.array([])
-    # bb = midp(geom.root_universe.bounding_box)
-    # for cell in geom.root_universe._cells.values():
-    #     final_ids = np.append(final_ids, np.array(process_node(cell, w, bb))).astype(int)
     
     # Process materials
     for id in final_ids:
         propagate_mat(id)
         #process_mat(mat_n, id)
-    p_m(final_ids)
+    process_materials(final_ids)
     
     # Cleanup
     del_ids = np.array([])
     for i in range(1,np.max(final_ids)+1,1):
         if i not in final_ids:
             del_ids = np.append(del_ids, i)
-    print(del_ids.astype(int))
-    print(( f"delete volume {{ {to_cubit_list(del_ids.astype(int))} }}" ))
     exec_cubit( f"delete volume  {to_cubit_list(del_ids.astype(int))} " )
     
     #Finalize
