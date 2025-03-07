@@ -321,6 +321,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     pitch = node._pitch
                     dx = pitch[0]
                     dy = pitch[1]
+                    [nx, ny] = node.shape
+                    x0 = -nx/2 * dx
+                    y0 = -ny/2 * dy
                     i = 0
                     for row in node.universes:
                         j = 0
@@ -341,7 +344,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                         cell_mat[ids3[a]] = cell_mat[ids2[a]]
                                     except:
                                         pass
-                                exec_cubit( f"volume {to_cubit_list(ids3)} move {x} {y} 0" )
+                                exec_cubit( f"volume {to_cubit_list(ids3)} move {x-x0} {y-y0} 0" )
                                 ids = np.append(ids, np.array(ids3).astype(int)).astype(int)
                             j = j + 1
                         i = i + 1
@@ -369,7 +372,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
     
     # Initialize commands
     # exec_cubit("set echo off\n")
-    exec_cubit("set info off\n")
+    # exec_cubit("set info off\n")
     # exec_cubit("set warning off\n")
     exec_cubit("graphics pause\n")
     exec_cubit("undo off\n")
