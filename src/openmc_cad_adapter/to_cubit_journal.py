@@ -208,7 +208,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 surface = node._surface
             if cad_surface := _CAD_SURFACE_DICTIONARY.get(surface._type):
                 cad_surface = cad_surface.from_openmc_surface(surface)
-                return cad_surface.to_cubit_surface(type(node), node, w, inner_world=None, hex=hex, off_center=center_world)
+                return cad_surface.to_cubit_surface(type(node), node, w)#, inner_world=None, hex=hex, off_center=center_world)
             else:
                 raise NotImplementedError(f"{surface.type} not implemented")
         elif isinstance(node, Complement):
@@ -293,7 +293,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if node.id not in uni_map:
                 ids = np.array([])
                 for c in node._cells.values():
-                    ids = np.append(ids,np.array(process_node( c, w, midp(node.bounding_box)-center_world))).astype(int)
+                    ids = np.append(ids,np.array(process_node( c, w, midp(node.bounding_box)))).astype(int)
                 #exec_cubit( f'create group "uni_{node.id}"' )
                 uni_map[node.id] = ids
             ids = uni_map[node.id]
@@ -307,7 +307,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     cell_mat[ids3[a]] = cell_mat[ids[a]]
                 except:
                     pass
-            exec_cubit( f"volume {to_cubit_list(ids3)} move {to_cubit_list(center_world-midp(node.bounding_box))}" )
+            exec_cubit( f"volume {to_cubit_list(ids3)} move {to_cubit_list(-1*midp(node.bounding_box))}" )
             ids_out = trim_uni(node, ids3, bb)
             return ids_out
         
