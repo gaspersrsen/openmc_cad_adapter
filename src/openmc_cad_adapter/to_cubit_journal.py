@@ -330,7 +330,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 #TODO chceck proper movement, is it center or lower left
                                 x = j * dx
                                 y = i * dy
-                                ids2 = process_node( cell, w, midp(node.bounding_box) )
+                                ids2 = process_node( cell, w, bb )#midp(node.bounding_box) )
                                 #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
                                 strt = last_id(volume_id()) + 1
                                 exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
