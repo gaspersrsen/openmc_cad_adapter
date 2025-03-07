@@ -369,7 +369,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
         if isinstance(cell_mat[id], str):
             return cell_mat[id]
         else:
-            return propagate_mat(cell_mat[id])
+            cell_mat[id] = propagate_mat(cell_mat[id])
+            return cell_mat[id]
       
     def process_mat(mat_n, id):
         if mat_n not in mat_map:
@@ -381,7 +382,15 @@ def to_cubit_journal(geometry : openmc.Geometry,
         else:
             exec_cubit( f'Block {mat_map[mat_n]} add volume {id}' )
         
-    
+    def p_m(ids):
+        all_mat = set(mat_map.values())
+        for mat in all_mat:
+            mat_ids = [k for k,v in mat_map.items() if v==mat and k in ids]
+            exec_cubit( f'create material name "{mat}" ' )
+            b_id = block_next()
+            exec_cubit( f'Block {b_id} add volume {mat_ids}' )
+            exec_cubit( f'Block {b_id} material "{mat}"' )
+            
     # Initialize commands
     # exec_cubit("set echo off\n")
     # exec_cubit("set info off\n")
@@ -403,7 +412,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
     # Process materials
     for id in final_ids:
         mat_n = propagate_mat(id)
-        process_mat(mat_n, id)
+        #process_mat(mat_n, id)
+    p_m(final_ids)
     
     # Cleanup
     min_id = np.min(final_ids)
