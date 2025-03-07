@@ -353,7 +353,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     raise NotImplementedError(f"{node} not implemented")
                 exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                 wid = volume_id()
-                strt = last_id(volume_id()) + 1
+                strt = last_id(volume_id())
                 exec_cubit( f"subtract volume {{ {ids} }} from volume {{ {wid} }} keep_tool" )
                 stp = last_id(volume_id())
                 if strt >= stp:
