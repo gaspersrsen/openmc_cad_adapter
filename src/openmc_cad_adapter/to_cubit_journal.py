@@ -21,7 +21,6 @@ from openmc import Plane, XPlane, YPlane, ZPlane, XCylinder, YCylinder, ZCylinde
 from openmc import XCone, YCone, ZCone, XTorus, YTorus, ZTorus
 
 from .gqs import *
-#from .cubit_util import *
 
 try:
     sys.path.append('/opt/Coreform-Cubit-2025.1/bin/')
@@ -133,19 +132,18 @@ def to_cubit_journal(geometry : openmc.Geometry,
         return w_out
 
     def trim_uni(node, ids, w):
-        #TODO fix move in surfaces, YCyl,..
         w = process_bb(node.bounding_box, w)
         exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-        s = body_id()
+        s = volume_id()
         added = False
         for id in ids: 
             inter_ids = np.append(np.array(id), np.array(s))
-            s1 = body_id()
+            s1 = volume_id()
             exec_cubit( f"intersect volume {to_cubit_list(inter_ids)} keep" )
-            s_inter = body_id()
+            s_inter = volume_id()
             if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
                     exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-            s2 = body_id() # Resulting intersection ids
+            s2 = volume_id() # Resulting intersection ids
             if not added: # Not all intersections return a volume 
                 if s2 != s: # catch the id of first created one to return
                     added = True
@@ -168,16 +166,16 @@ def to_cubit_journal(geometry : openmc.Geometry,
         return trim_ids
     
     def trim_cell_like(ids, s_ids):
-        s = body_id()
+        s = volume_id()
         added = False
         for id in ids:
             inter_ids = np.append(np.array(id), np.array(s_ids))
-            s1 = body_id()
+            s1 = volume_id()
             exec_cubit( f"intersect volume {to_cubit_list(inter_ids)} keep" )
-            s_inter = body_id()
+            s_inter = volume_id()
             if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
                     exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-            s2 = body_id() # Resulting intersection ids
+            s2 = volume_id() # Resulting intersection ids
             if not added: # Not all intersections return a volume 
                 if s2 != s: # catch the id of first created one to return
                     added = True
@@ -214,24 +212,13 @@ def to_cubit_journal(geometry : openmc.Geometry,
         elif isinstance(node, Complement):
             id = surface_to_cubit_journal(node.node, w, bb)
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-            wid = body_id()
+            wid = volume_id()
             exec_cubit( f"subtract volume {{ {id} }} from volume {{ {wid} }} keep_tool" )
-            return np.array(body_id())
+            return np.array(volume_id())
         elif isinstance(node, Intersection):
-            #TODO only one volume should be returned
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-            inter_id = np.array(body_id()).astype(int)
-            strt = body_id() + 1
-            # surfs = np.array([])
-            # for subnode in node:
-            #     surfs = np.append(surfs,np.array(surface_to_cubit_journal( subnode, w, bb )))
-            # max_id = np.max(np.append(inter_id,surfs))
-            # exec_cubit( f"intersect volume {' '.join( map(str, np.append(inter_id,surfs)) )} keep" )
-            # if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
-            #     exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-            # stp = last_id(body_id())
-            # out_ids = range(strt,stp+1,1)
-            # return np.array(out_ids)
+            inter_id = np.array(volume_id()).astype(int)
+            strt = volume_id() + 1
             for subnode in node:
                 s = surface_to_cubit_journal( subnode, w, bb )
                 if type(s) != int:
@@ -242,17 +229,17 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         max_id = np.max(np.append(np.append(inter_id,s),next_ids))
                         strt = int(max_id + 1)
                         exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(id),np.array(s))) )} keep" )
-                        if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
+                        if max_id + 1 != last_id(volume_id()): # If multiple volumes are created they are saves as a multivolume body
                             exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-                        stp = last_id(body_id())
+                        stp = last_id(volume_id())
                         next_ids = np.append(next_ids,np.array(range(strt,stp+1,1))).astype(int)
                 else:
                     max_id = np.max(np.append(inter_id,s))
                     strt = int(max_id + 1)
                     exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
-                    if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
+                    if max_id + 1 != last_id(volume_id()): # If multiple volumes are created they are saves as a multivolume body
                         exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-                    stp = last_id(body_id())
+                    stp = last_id(volume_id())
                     next_ids = np.array(range(strt,stp+1,1))
                 inter_id = np.array(next_ids).astype(int)
             return np.array(inter_id).astype(int)
@@ -262,28 +249,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 s = surface_to_cubit_journal( subnode, w, bb )
                 out = np.append( out, np.array(surface_to_cubit_journal( subnode, w, bb )) )
             return np.array(out).astype(int)
-            # exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-            # union_id = body_id()
-            # first = surface_to_cubit_journal( node[0], w, bb )
-            # max_id = np.max(np.append(union_id, first))
-            # exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(union_id),np.array(first))) )} keep" )
-            # if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
-            #     exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-            # union_id = body_id()
-            # for subnode in node[1:]:
-            #     s = surface_to_cubit_journal( subnode, w, bb )
-            #     max_id = np.max( np.append( np.array( union_id ),np.array(s) ) )
-            #     exec_cubit( f"unite volume {' '.join( map(str, np.append(np.array(union_id),np.array(s))) )} keep" )
-            #     if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
-            #         exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-            #     union_id = body_id()
-            # return np.array(union_id).astype(int)
         else:
             raise NotImplementedError(f"{node} not implemented")
 
     def process_node( node, w, bb ):
-        # TODO propagate names, check if bb is centred in 0,0,0 or moved, FIXME in z0 move by half world
-        # TODO fix geom_util and others
+        # TODO propagate names, check if bb is centred in 0,0,0 or moved
         global surf_coms, cell_ids, center_world
         
         # Universes contain cells and move internal cells to proper location
@@ -296,9 +266,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 uni_map[node.id] = ids
             ids = uni_map[node.id]
             exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
-            strt = body_id() + 1
+            strt = volume_id() + 1
             exec_cubit( f" volume { to_cubit_list(ids) } copy" )
-            stp = last_id(body_id())
+            stp = last_id(volume_id())
             ids3 = range(strt,stp+1,1)
             for a in range(len(ids3)):
                 try:
@@ -312,7 +282,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
         elif isinstance( node, Cell ): # Cell instance that is moved to proper location by universe
             if node.id not in cell_map:
                 ids = np.array([])
-                #TODO handle single cell conversions
                 if isinstance( node.fill, Material ):
                     s_ids = surface_to_cubit_journal(node.region, w, bb)
                     ids = np.append(ids,np.array(s_ids)).astype(int)
@@ -365,9 +334,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 y = i * dy
                                 ids2 = process_node( cell, w, midp(node.bounding_box) )
                                 #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
-                                strt = last_id(body_id()) + 1
+                                strt = last_id(volume_id()) + 1
                                 exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
-                                stp = last_id(body_id())
+                                stp = last_id(volume_id())
                                 ids3 = range(strt,stp+1,1)
                                 for a in range(len(ids3)):
                                     try:
@@ -412,12 +381,10 @@ def to_cubit_journal(geometry : openmc.Geometry,
         
     
     # Initialize commands
-    exec_cubit("set echo off\n")
-    exec_cubit("set info off\n")
+    # exec_cubit("set echo off\n")
+    # exec_cubit("set info off\n")
     # exec_cubit("set warning off\n")
     exec_cubit("graphics pause\n")
-    # #exec_cubit("set journal off\n")
-    # exec_cubit("set default autosize off\n")
     exec_cubit("undo off\n")
     
     # Initialize world
@@ -445,7 +412,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
     
     #Finalize
     exec_cubit("graphics flush\n")
-    exec_cubit("set default autosize on\n")
     exec_cubit("zoom reset\n")
     exec_cubit("set echo on\n")
     exec_cubit("set info on\n")

@@ -10,7 +10,7 @@ def exec_cubit(command): # Pass the command to cubit
     #print(command)
     return cubit.cmd(command)
 
-def body_id(): # Returns volume id of last selected or created volumes, single or multiple
+def volume_id(): # Returns volume id of last selected or created volumes, single or multiple
     return cubit.get_last_id("volume")
 
 def mul_body_id(): # Returns volume id of last selected or created multiple volume bodies, single or multiple
