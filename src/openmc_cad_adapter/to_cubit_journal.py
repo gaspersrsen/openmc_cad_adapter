@@ -88,6 +88,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         raise RuntimeError("Model extents could not be determined automatically and must be provided manually")
 
     w = world
+    center_world = [0,0,0] # Init, changed later
     cell_map = {}
     uni_map = {}
     latt_map = {}
