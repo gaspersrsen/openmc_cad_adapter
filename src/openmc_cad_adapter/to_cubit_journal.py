@@ -335,8 +335,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 x = j * dx
                                 y = i * dy
                                 ids2 = process_node( cell, w, midp(node.bounding_box) )
-                                exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
-                                strt = body_id() + 1
+                                #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
+                                strt = last_id(body_id()) + 1
                                 exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
                                 stp = last_id(body_id())
                                 ids3 = range(strt,stp+1,1)
