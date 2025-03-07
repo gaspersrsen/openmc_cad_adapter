@@ -322,8 +322,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     dx = pitch[0]
                     dy = pitch[1]
                     [nx, ny] = node.shape
-                    x0 = -nx/2 * dx
-                    y0 = -ny/2 * dy
+                    x0 = -(nx-1)/2 * dx
+                    y0 = -(ny-1)/2 * dy
                     
                     exec_cubit(f"brick x {dx} y {dy} z {w[2]}\n")
                     base_rect = volume_id()
@@ -346,7 +346,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     cell_mat[ids3[a]] = cell_mat[ids2[a]]
                                 ids4 = trim_cell_like(ids3, base_rect)
                                 exec_cubit( f"volume {to_cubit_list(ids4)} move {x-x0} {y-y0} 0" )
-                                ids = np.append(ids, np.array(ids4).astype(int)).astype(int)
+                                ids = np.append(ids, np.array(ids4)).astype(int)
                             j = j + 1
                         i = i + 1
                 else:
