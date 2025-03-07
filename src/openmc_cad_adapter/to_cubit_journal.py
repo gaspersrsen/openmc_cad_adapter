@@ -358,8 +358,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 exec_cubit( f"subtract volume {{ {ids} }} from volume {{ {wid} }} keep_tool" )
                 stp = last_id(volume_id())
                 ids5 = range(strt,stp+1,1)
-                for a in range(len(ids5)):
-                    cell_mat[ids5[a]] = node.outer._cells.values()[0].fill.name #TODO fix outer, which can be other than material
+                for a in range(len(ids5)): #TODO fix outer, which can be other than material
+                    outer_cell_mat = [cell.fill.name for cell in node.outer._cells.values()]
+                    cell_mat[ids5[a]] = outer_cell_mat[0]
                 ids = np.append(ids, np.array(ids5)).astype(int)
                 latt_map[node.id] = ids
             return latt_map[node.id]
