@@ -359,7 +359,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 stp = last_id(volume_id())
                 ids5 = range(strt,stp+1,1)
                 for a in range(len(ids5)):
-                    cell_mat[ids5[a]] = ids.outer.fill.name #TODO fix outer, which can be other than material
+                    cell_mat[ids5[a]] = node.outer.fill.name #TODO fix outer, which can be other than material
                 ids = np.append(ids, np.array(ids5)).astype(int)
                 latt_map[node.id] = ids
             return latt_map[node.id]
