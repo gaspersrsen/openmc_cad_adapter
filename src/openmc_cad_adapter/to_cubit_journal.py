@@ -351,16 +351,16 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         i = i + 1
                 else:
                     raise NotImplementedError(f"{node} not implemented")
+                # ADD OUTER WORLD
                 exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                 wid = volume_id()
-                strt = last_id(volume_id())
+                strt = wid
                 exec_cubit( f"subtract volume {{ {ids} }} from volume {{ {wid} }} keep_tool" )
                 stp = last_id(volume_id())
-                if strt >= stp:
-                    ids5 = range(strt,stp+1,1)
-                    for a in range(len(ids5)):
-                        cell_mat[ids5[a]] = ids.outer.fill.name #TODO fix outer, which can be other than material
-                    ids = np.append(ids, np.array(ids5)).astype(int)
+                ids5 = range(strt,stp+1,1)
+                for a in range(len(ids5)):
+                    cell_mat[ids5[a]] = ids.outer.fill.name #TODO fix outer, which can be other than material
+                ids = np.append(ids, np.array(ids5)).astype(int)
                 latt_map[node.id] = ids
             return latt_map[node.id]
     
