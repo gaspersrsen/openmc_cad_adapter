@@ -286,14 +286,14 @@ def to_cubit_journal(geometry : openmc.Geometry,
     def process_node( node, w, bb ):
         # TODO propagate names, check if bb is centred in 0,0,0 or moved, FIXME in z0 move by half world
         # TODO fix geom_util and others
-        global surf_coms, cell_ids
+        global surf_coms, cell_ids, center_world
         
         # Universes contain cells and move internal cells to proper location
         if isinstance( node, Universe ): 
             if node.id not in uni_map:
                 ids = np.array([])
                 for c in node._cells.values():
-                    ids = np.append(ids,np.array(process_node( c, w, midp(node.bounding_box)))).astype(int)
+                    ids = np.append(ids,np.array(process_node( c, w, midp(node.bounding_box)-center_world))).astype(int)
                 #exec_cubit( f'create group "uni_{node.id}"' )
                 uni_map[node.id] = ids
             ids = uni_map[node.id]
