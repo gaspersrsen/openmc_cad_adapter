@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from .conv_cubit_API import *
 
 def vector_to_euler_xyz(v):
     v = np.asarray(v)
@@ -25,14 +26,9 @@ def vector_to_euler_xyz(v):
 
 def rotate(id, x, y, z):
     if nonzero(x, y, z):
-        cmds = []
         phi, theta, psi = vector_to_euler_xyz((x, y, z))
-        cmds.append(f"body {{ {id} }} rotate {theta} about Y")
-        cmds.append(f"body {{ {id} }} rotate {phi} about Z")
-        # cmds.append(f"body {{ {id} }} rotate {phi} about Z")
-        # cmds.append(f"body {{ {id} }} rotate {theta} about Y")
-        # cmds.append(f"body {{ {id} }} rotate {psi} about X")
-        return cmds
+        exec_cubit(f"volume {{ {id} }} rotate {theta} about Y")
+        exec_cubit(f"volume {{ {id} }} rotate {phi} about Z")
 
 
 def nonzero(*args):
@@ -41,6 +37,4 @@ def nonzero(*args):
 
 def move( id, x, y, z):
     if nonzero( x, y, z ):
-        return f"body {{ {id} }} move {x} {y} {z}"
-    else:
-        return None
+        exec_cubit(f"volume {{ {id} }} move {x} {y} {z}")

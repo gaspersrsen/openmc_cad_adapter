@@ -62,7 +62,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             Defaults to False.
 
     """
-    global cell_ids, cmds, center_world
+    global center_world
 
     if not filename.endswith('.jou'):
         filename += '.jou'
@@ -133,7 +133,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         return w_out
 
     def trim_uni(node, ids, w):
-        #TODO fix move in surfaces, YCyl,.., remove cad_cmds
+        #TODO fix move in surfaces, YCyl,..
         w = process_bb(node.bounding_box, w)
         exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
         s = body_id()
