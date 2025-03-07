@@ -408,9 +408,12 @@ def to_cubit_journal(geometry : openmc.Geometry,
     # Cleanup
     min_id = np.min(final_ids)
     exec_cubit( f"delete volume 1 to {min_id-1}" )
+    del_ids = np.array([])
     for i in range(min_id,last_id(final_ids)+1,1):
         if i not in final_ids:
-            exec_cubit( f"delete volume {{ {i} }}" )
+            del_ids = np.append(del_ids, i)
+    exec_cubit( f"delete volume {{ {del_ids} }}" )
+    print(latt_map)
     
     #Finalize
     exec_cubit("graphics flush\n")
