@@ -390,7 +390,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if val not in u_vals:
                 u_vals += [val]
         for mat in u_vals:
-            print(mat == "fuel25")
+            print(mat == "fuel25", mat)
             mat_ids = [k for (k,v) in cell_map.items() if v is mat]# and k in ids]
             # print([k for k,v in cell_map.items()])
             # print([k for k,v in cell_map.items() if k in ids])
