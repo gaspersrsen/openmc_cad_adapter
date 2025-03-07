@@ -428,7 +428,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             del_ids = np.append(del_ids, i)
     print(del_ids.astype(int))
     print(( f"delete volume {{ {to_cubit_list(del_ids.astype(int))} }}" ))
-    exec_cubit( f"delete volume {{ {to_cubit_list(del_ids.astype(int))} }}" )
+    exec_cubit( f"delete volume  {to_cubit_list(del_ids.astype(int))} " )
     
     #Finalize
     exec_cubit("graphics flush\n")
