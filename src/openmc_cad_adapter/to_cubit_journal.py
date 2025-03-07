@@ -219,7 +219,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         elif isinstance(node, Intersection):
             #TODO only one volume should be returned
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
-            inter_id = np.array(body_id())
+            inter_id = np.array(body_id()).astype(int)
             strt = body_id() + 1
             # surfs = np.array([])
             # for subnode in node:
@@ -235,28 +235,25 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 s = surface_to_cubit_journal( subnode, w, bb )
                 if type(s) != int:
                     raise ValueError(f"surface id {s} is not int")
-                #try:
                 next_ids = np.array([])
-                for id in inter_id:
-                    max_id = np.max(np.append(np.append(inter_id,s),next_ids))
+                if type(inter_id) != int:
+                    for id in inter_id:
+                        max_id = np.max(np.append(np.append(inter_id,s),next_ids))
+                        strt = max_id + 1
+                        exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(id),np.array(s))) )} keep" )
+                        if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
+                            exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
+                        stp = last_id(body_id())
+                        next_ids = np.apend(next_ids,np.array(range(strt,stp+1,1)))
+                else:
+                    max_id = np.max(np.append(inter_id,s))
                     strt = max_id + 1
-                    exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(id),np.array(s))) )} keep" )
+                    exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
                     if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
                         exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
                     stp = last_id(body_id())
-                    next_ids = np.apend(next_ids,np.array(range(strt,stp+1,1)))
-                # except:
-                #     if type(inter_id) != int:
-                #         print(inter_id, inter_id)
-                #         raise NotImplementedError(f"{subnode} not implemented at {inter_id}")
-                #     max_id = np.max(np.append(inter_id,s))
-                #     strt = max_id + 1
-                #     exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
-                #     if max_id + 1 != last_id(body_id()): # If multiple volumes are created they are saves as a multivolume body
-                #         exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-                #     stp = last_id(body_id())
-                #     next_ids = np.array(range(strt,stp+1,1))
-                inter_id = next_ids
+                    next_ids = np.array(range(strt,stp+1,1))
+                inter_id = np.array(next_ids).astype(int)
                 print(inter_id)
             return np.array(inter_id).astype(int)
         elif isinstance(node, Union):
