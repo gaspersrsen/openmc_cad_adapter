@@ -383,14 +383,15 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit( f'Block {mat_map[mat_n]} add volume {id}' )
         
     def p_m(ids):
-        print(cell_mat)
-        # all_mat = set(cell_map.values())
-        # for mat in all_mat:
-        #     mat_ids = [k for k,v in cell_map.items() if v==mat and k in ids]
-        #     exec_cubit( f'create material name "{mat}" ' )
-        #     b_id = block_next()
-        #     exec_cubit( f'Block {b_id} add volume {mat_ids}' )
-        #     exec_cubit( f'Block {b_id} material "{mat}"' )
+        #print(cell_mat)
+        all_mat = set(cell_map.values())
+        print(all_mat)
+        for mat in all_mat:
+            mat_ids = [k for k,v in cell_map.items() if v==mat and k in ids]
+            exec_cubit( f'create material name "{mat}" ' )
+            b_id = block_next()
+            exec_cubit( f'Block {b_id} add volume {mat_ids}' )
+            exec_cubit( f'Block {b_id} material "{mat}"' )
             
     # Initialize commands
     # exec_cubit("set echo off\n")
