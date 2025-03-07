@@ -389,7 +389,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if val not in u_vals:
                 u_vals += [val]
         for mat in u_vals:
-            mat_ids = [k for k,v in cell_map.items() if v=mat and k in ids]
+            mat_ids = [k for k,v in cell_map.items() if v is mat and k in ids]
             exec_cubit( f'create material name "{mat}" ' )
             b_id = block_next()
             exec_cubit( f'Block {b_id} add volume {mat_ids}' )
