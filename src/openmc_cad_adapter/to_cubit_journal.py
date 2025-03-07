@@ -246,8 +246,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         stp = last_id(body_id())
                         next_ids = np.apend(next_ids,np.array(range(strt,stp+1,1)))
                 except:
-                    #raise NotImplementedError(f"{subnode} not implemented at {inter_id}")
-                    s = surface_to_cubit_journal( subnode, w, bb )
+                    if type(inter_id) != int:
+                        raise NotImplementedError(f"{subnode} not implemented at {inter_id}")
                     max_id = np.max(np.append(inter_id,s))
                     strt = max_id + 1
                     exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
