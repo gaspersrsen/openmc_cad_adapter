@@ -324,6 +324,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     [nx, ny] = node.shape
                     x0 = -nx/2 * dx
                     y0 = -ny/2 * dy
+                    
+                    exec_cubit(f"brick x {dx} y {dy} z {w[2]}\n")
+                    base_rect = volume_id()
                     i = 0
                     for row in node.universes:
                         j = 0
@@ -334,18 +337,16 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 x = j * dx
                                 y = i * dy
                                 ids2 = process_node( cell, w, bb )#midp(node.bounding_box) )
-                                #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
+                                
                                 strt = last_id(volume_id()) + 1
                                 exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
                                 stp = last_id(volume_id())
                                 ids3 = range(strt,stp+1,1)
                                 for a in range(len(ids3)):
-                                    try:
-                                        cell_mat[ids3[a]] = cell_mat[ids2[a]]
-                                    except:
-                                        pass
-                                exec_cubit( f"volume {to_cubit_list(ids3)} move {x-x0} {y-y0} 0" )
-                                ids = np.append(ids, np.array(ids3).astype(int)).astype(int)
+                                    cell_mat[ids3[a]] = cell_mat[ids2[a]]
+                                ids4 = trim_cell_like(ids3, base_rect)
+                                exec_cubit( f"volume {to_cubit_list(ids4)} move {x-x0} {y-y0} 0" )
+                                ids = np.append(ids, np.array(ids4).astype(int)).astype(int)
                             j = j + 1
                         i = i + 1
                 else:
