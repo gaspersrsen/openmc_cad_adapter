@@ -345,7 +345,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 for a in range(len(ids3)):
                                     cell_mat[ids3[a]] = cell_mat[ids2[a]]
                                 ids4 = trim_cell_like(ids3, base_rect)
-                                exec_cubit( f"volume {to_cubit_list(ids4)} move {x-x0} {y-y0} 0" )
+                                exec_cubit( f"volume {to_cubit_list(ids4)} move {x+x0} {y+y0} 0" )
                                 ids = np.append(ids, np.array(ids4)).astype(int)
                             j = j + 1
                         i = i + 1
