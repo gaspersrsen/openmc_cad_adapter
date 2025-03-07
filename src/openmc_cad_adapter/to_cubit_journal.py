@@ -412,7 +412,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
     for i in range(min_id,last_id(final_ids)+1,1):
         if i not in final_ids:
             del_ids = np.append(del_ids, i)
-    exec_cubit( f"delete volume {{ {del_ids} }}" )
+    exec_cubit( f"delete volume {{ {to_cubit_list(del_ids)} }}" )
     print(latt_map)
     
     #Finalize
