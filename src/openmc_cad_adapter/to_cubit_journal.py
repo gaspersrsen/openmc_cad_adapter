@@ -176,6 +176,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
                     exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
             s2 = volume_id() # Resulting intersection ids
+            print(s2)
             if not added: # Not all intersections return a volume 
                 if s2 != s: # catch the id of first created one to return
                     added = True
