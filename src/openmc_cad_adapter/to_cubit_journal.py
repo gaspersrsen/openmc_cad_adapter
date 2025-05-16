@@ -223,7 +223,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit( f"subtract volume {{ {id} }} from volume {{ {wid} }} keep_tool" )
             return np.array(volume_id())
         elif isinstance(node, Intersection):
-            if node.id not in inter_map:
+            print(node)
+            print(node.region)
+            if node not in inter_map:
                 exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                 inter_id = np.array(volume_id()).astype(int)
                 strt = volume_id() + 1
