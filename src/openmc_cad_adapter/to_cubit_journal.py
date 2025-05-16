@@ -283,6 +283,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         
         elif isinstance( node, Cell ): # Cell instance that is moved to proper location by universe
             if node.id not in cell_map:
+                print("Creating node")
                 ids = np.array([])
                 if isinstance( node.fill, Material ):
                     s_ids = surface_to_cubit_journal(node.region, w, bb)
@@ -314,6 +315,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     else:
                         exec_cubit( f'Volume {to_cubit_list(ids)}  rename "cell_{node.name}"' )
                 cell_map[node.id] = ids
+            print(cell_map[node.id])
             return cell_map[node.id]
                 
         elif isinstance( node, RectLattice ):
