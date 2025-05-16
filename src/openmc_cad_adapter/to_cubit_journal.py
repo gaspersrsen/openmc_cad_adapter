@@ -288,7 +288,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 if isinstance( node.fill, Material ):
                     s_ids = surface_to_cubit_journal(node.region, w, bb)
                     ids = np.append(ids,np.array(s_ids)).astype(int)
-                    print(node.id,ids)
+                    print(node.id,ids,node.region,type(node.region))
                     for id in ids:
                         cell_mat[int(id)] = node.fill.name
                     
