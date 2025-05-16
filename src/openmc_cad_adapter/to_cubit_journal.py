@@ -342,7 +342,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 if len(ids2) == 0:
                                     ValueError(f"Cell {cell} is empty, type:{type(cell)},cell:{str(cell)}")
                                 
-                                strt = last_id(volume_id())# + 1
+                                strt = last_id(volume_id()) + 1
                                 exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
                                 stp = last_id(volume_id())
                                 if strt == stp+1:
