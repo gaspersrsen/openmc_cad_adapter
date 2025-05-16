@@ -313,11 +313,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         s_ids = surface_to_cubit_journal(node.region, w, bb)
                         ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
 
-                if isinstance( node.fill, Material ) or node.fill is None:
-                    if node.name is None:
-                        pass
-                    else:
-                        exec_cubit( f'Volume {to_cubit_list(ids)}  rename "cell_{node.name}"' )
+                # if isinstance( node.fill, Material ) or node.fill is None:
+                #     if node.name is None:
+                #         pass
+                #     else:
+                #         exec_cubit( f'Volume {to_cubit_list(ids)}  rename "cell_{node.name}"' )
                 cell_map[node.id] = ids
             return cell_map[node.id]
                 
