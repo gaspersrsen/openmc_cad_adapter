@@ -342,6 +342,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 x = j * dx
                                 y = i * dy
                                 ids2 = process_node( cell, w, bb )#midp(node.bounding_box) )
+                                if ids2.size == 0:
+                                    continue
                                 print(cell)
                                 #ids2 = process_node( cell, world, bbox_world )#midp(node.bounding_box) )
                                 print(cell)
