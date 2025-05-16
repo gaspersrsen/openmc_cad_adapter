@@ -259,7 +259,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 out = np.append( out, np.array(surface_to_cubit_journal( subnode, w, bb )) )
             strt= volume_id() + 1
             exec_cubit( f"unite volume {to_cubit_list(out)} keep" )
-            return np.array(out).astype(int)
+            end = volume_id()
+            return np.array(end).astype(int)
+            #return np.array(out).astype(int)
         else:
             raise NotImplementedError(f"{node} not implemented")
 
