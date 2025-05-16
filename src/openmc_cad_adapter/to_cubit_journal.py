@@ -166,6 +166,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
         return trim_ids
     
     def trim_cell_like(ids, s_ids):
+        if not ids:
+            raise ValueError(f"Ids {ids} is empty") 
         s = volume_id()
         added = False
         for id in ids:
@@ -192,8 +194,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     try:
                         cell_mat[s2] = cell_mat[id]
                     except:
-                        raise ValueError(f"Volume {id} has no material")
-                    
+                        raise ValueError(f"Volume {id} has no material")           
         stp = last_id(s2)
         trim_ids = range(strt, stp + 1, 1)
         return trim_ids

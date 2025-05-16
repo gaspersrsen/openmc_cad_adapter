@@ -10,6 +10,7 @@ readme = "README.md"
 authors = [
   { name = "Kevin Tew", email = "kevin@coreform.com" },
   {  name = "Patrick Shriwise", email = "pshriwise@gmail.com"}
+  {  name = "Gasper Srsen", email = "gasper.srsen@gmail.com"}
 ]
 license = { file = "LICENSE" }
 requires-python = ">=3.7"
