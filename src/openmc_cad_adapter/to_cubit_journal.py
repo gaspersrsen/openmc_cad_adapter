@@ -329,6 +329,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
                     
                 else:
+                    print("STERT")
                     ids2 = np.array(process_node( node.fill, w, bb )).astype(int)
                     print(ids)
                     if ids.size != 0:
@@ -395,8 +396,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     cell_mat[ids5[a]] = outer_cell_mat[0]
                 ids = np.append(ids, np.array(ids5)).astype(int)
                 latt_map[node.id] = ids
-                print(latt_map[node.id])
-            return latt_map[node.id]
+            return np.array(latt_map[node.id])
     
     def propagate_mat(id):
         if isinstance(cell_mat[id], str):
