@@ -341,8 +341,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 y = i * dy
                                 ids2 = process_node( cell, w, bb )#midp(node.bounding_box) )
                                 print(cell)
-                                if ids2 == []:
-                                    ValueError(f"Cell {cell} is empty, type:{type(cell)},cell:{str(cell)}")
+                                # if ids2 == []:
+                                #     ValueError(f"Cell {cell} is empty, type:{type(cell)},cell:{str(cell)}")
                                 print(ids2)
                                 if len(ids2) == 0:
                                     ValueError(f"Cell {cell} is empty, type:{type(cell)},cell:{str(cell)}")
