@@ -208,6 +208,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         raise ValueError(f"Volume {id} has no material")           
         stp = last_id(s2)
         trim_ids = range(strt, stp + 1, 1)
+        print(trim_ids,"trim")
         return trim_ids
         
     def surface_to_cubit_journal(node, w, bb, hex = False):
@@ -322,7 +323,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         cell_mat[id] = "void"
                 
                 elif isinstance( node.fill, Iterable ):
-                    print("ITERABLE")
                     s_ids = surface_to_cubit_journal(node.region, w, bb)
                     ids2 = []
                     for uni in node.fill:
@@ -332,7 +332,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 else:
                     print("STERT")
                     ids2 = np.array(process_node( node.fill, w, bb )).astype(int)
-                    print(ids)
                     if ids.size != 0:
                         s_ids = surface_to_cubit_journal(node.region, w, bb)
                         ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
