@@ -88,6 +88,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         raise RuntimeError("Model extents could not be determined automatically and must be provided manually")
 
     w = world
+    bbox_world = geometry.bounding_box
     center_world = [0,0,0] # Init, changed later
     cell_map = {}
     uni_map = {}
@@ -340,7 +341,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 #TODO chceck proper movement, is it center or lower left
                                 x = j * dx
                                 y = i * dy
-                                ids2 = process_node( cell, w, bb )#midp(node.bounding_box) )
+                                #ids2 = process_node( cell, w, bb )#midp(node.bounding_box) )
+                                ids2 = process_node( cell, world, bbox_world )#midp(node.bounding_box) )
                                 print(cell)
                                 # if ids2 == []:
                                 #     ValueError(f"Cell {cell} is empty, type:{type(cell)},cell:{str(cell)}")
