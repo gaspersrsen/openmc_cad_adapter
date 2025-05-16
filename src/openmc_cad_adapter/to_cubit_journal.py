@@ -322,6 +322,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         cell_mat[id] = "void"
                 
                 elif isinstance( node.fill, Iterable ):
+                    print("ITERABLE")
                     s_ids = surface_to_cubit_journal(node.region, w, bb)
                     ids2 = []
                     for uni in node.fill:
