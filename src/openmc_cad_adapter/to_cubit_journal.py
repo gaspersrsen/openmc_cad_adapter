@@ -253,8 +253,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                             stp = last_id(volume_id())
                             next_ids = np.append(next_ids,np.array(range(strt,stp+1,1))).astype(int)
                     else:
-                        # max_id = np.max(np.append(inter_id,s))
-                        # strt = int(max_id + 1)
+                        max_id = np.max(np.append(inter_id,s))
+                        strt = int(max_id + 1)
                         exec_cubit( f"intersect volume {' '.join( map(str, np.append(np.array(inter_id),np.array(s))) )} keep" )
                         if strt_in == last_id(volume_id()) + 1:
                             continue
