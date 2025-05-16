@@ -138,6 +138,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
         s = volume_id()
         added = False
+        strt=-1
         for id in ids: 
             inter_ids = np.append(np.array(id), np.array(s))
             s1 = volume_id()
@@ -162,7 +163,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         cell_mat[s2] = cell_mat[id]
                     except:
                         raise ValueError(f"Volume {id} has no material")
-                    
+        if strt ==-1:
+            return []
         stp = last_id(s2)
         trim_ids = range(strt, stp + 1, 1)
         return trim_ids
