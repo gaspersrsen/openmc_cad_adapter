@@ -202,7 +202,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         return trim_ids
         
     def surface_to_cubit_journal(node, w, bb, hex = False):
-        global surf_coms, cell_ids, center_world, world, bbox_world
+        global surf_coms, cell_ids, center_world
         if isinstance(node, Halfspace):
             try:
                 surface = node.surface
@@ -223,14 +223,12 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             inter_id = np.array(volume_id()).astype(int)
             strt = volume_id() + 1
-            next_ids = np.array([])
             for subnode in node:
                 s = surface_to_cubit_journal( subnode, w, bb )
                 # if type(s) != int:
                 #     raise ValueError(f"surface id {s} is not int")
                 if inter_id.size > 1:
-                    raise ValueError(f"intersection {inter_id},{inter_id.size} is twopart")
-                    #next_ids = np.array([])
+                    next_ids = np.array([])
                     for id in inter_id:
                         max_id = np.max(np.append(np.append(inter_id,s),next_ids))
                         strt = int(max_id + 1)
@@ -260,7 +258,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
 
     def process_node( node, w, bb ):
         # TODO propagate names, check if bb is centred in 0,0,0 or moved
-        global surf_coms, cell_ids, center_world
+        global surf_coms, cell_ids, center_world, world, bbox_world
         
         # Universes contain cells and move internal cells to proper location
         if isinstance( node, Universe ): 
