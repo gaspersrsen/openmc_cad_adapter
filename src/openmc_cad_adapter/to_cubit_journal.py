@@ -122,7 +122,12 @@ def to_cubit_journal(geometry : openmc.Geometry,
         return out
     
     def midp(bb): # Returns the midpoint of a bounding box
-        return (bb.upper_right + bb.lower_left)/2
+        global center_world
+        if np.isfinite((bb.upper_right + bb.lower_left)/2):
+            return (bb.upper_right + bb.lower_left)/2
+        else:
+            return center_world
+        
     
     def process_bb(bbox, w): # Returns array of x,y,z lengths of a bounding box object
         w2 = np.abs(bbox.upper_right-bbox.lower_left)
