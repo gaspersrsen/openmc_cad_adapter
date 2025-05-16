@@ -229,7 +229,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 # if type(s) != int:
                 #     raise ValueError(f"surface id {s} is not int")
                 if inter_id.size > 1:
-                    raise ValueError(f"intersection {s} is twopart")
+                    raise ValueError(f"intersection {inter_id},{inter_id.size} is twopart")
                     #next_ids = np.array([])
                     for id in inter_id:
                         max_id = np.max(np.append(np.append(inter_id,s),next_ids))
