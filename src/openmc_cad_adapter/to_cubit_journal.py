@@ -234,7 +234,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if str(node) not in inter_map:
                 exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                 inter_id = np.array(volume_id()).astype(int)
-                #TODO not needed can itersect first node with second
+                #TODO not needed can itersect first node with second, check null intersection, else return null
                 strt = volume_id() + 1
                 for subnode in node:
                     s = surface_to_cubit_journal( subnode, w, bb )
@@ -386,7 +386,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                 wid = volume_id()
                 strt = wid
-                exec_cubit( f"subtract volume {{ {ids} }} from volume {{ {wid} }} keep_tool" )
+                exec_cubit( f"subtract volume {{ {to_cubit_list(ids)} }} from volume {{ {wid} }} keep_tool" )
                 stp = last_id(volume_id())
                 ids5 = range(strt,stp+1,1)
                 for a in range(len(ids5)): #TODO fix outer, which can be other than material
