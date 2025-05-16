@@ -123,7 +123,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
     
     def midp(bb): # Returns the midpoint of a bounding box
         global center_world
-        if np.isfinite((bb.upper_right + bb.lower_left)/2):
+        if all(np.isfinite((bb.upper_right + bb.lower_left)/2)):
             return (bb.upper_right + bb.lower_left)/2
         else:
             return center_world
