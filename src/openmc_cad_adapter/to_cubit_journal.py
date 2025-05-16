@@ -212,6 +212,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         
     def surface_to_cubit_journal(node, w, bb, hex = False):
         global surf_coms, cell_ids, center_world
+        print(node)
         if isinstance(node, Halfspace):
             try:
                 surface = node.surface
@@ -223,6 +224,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             else:
                 raise NotImplementedError(f"{surface.type} not implemented")
         elif isinstance(node, Complement):
+            #TODO ADD DICT
             id = surface_to_cubit_journal(node.node, w, bb)
             exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
             wid = volume_id()
