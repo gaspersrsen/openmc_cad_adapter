@@ -340,6 +340,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 x = j * dx
                                 y = i * dy
                                 ids2 = process_node( cell, w, bb )#midp(node.bounding_box) )
+                                print(cell)
+                                if ids2 == []:
+                                    ValueError(f"Cell {cell} is empty, type:{type(cell)},cell:{str(cell)}")
                                 print(ids2)
                                 if len(ids2) == 0:
                                     ValueError(f"Cell {cell} is empty, type:{type(cell)},cell:{str(cell)}")
@@ -348,12 +351,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
                                 stp = last_id(volume_id())
                                 ids3 = list(range(strt,stp+1,1))
-                                old_ids= copy.copy(ids3)
-                                if strt == (stp+1):
-                                    ValueError(f"No volume copied, {cell} is empty, type:{type(cell)},cell:{str(cell)}")
                                 for a in range(len(ids3)):
                                     cell_mat[ids3[a]] = cell_mat[ids2[a]]
-                                print(old_ids, ids3,strt,stp,strt == (stp+1))
                                 ids4 = trim_cell_like(ids3, base_rect)
                                 exec_cubit( f"volume {to_cubit_list(ids4)} move {x+x0} {y+y0} 0" )
                                 ids = np.append(ids, np.array(ids4)).astype(int)
