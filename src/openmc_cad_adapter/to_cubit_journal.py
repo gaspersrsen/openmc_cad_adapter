@@ -224,7 +224,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             return np.array(volume_id())
         elif isinstance(node, Intersection):
             print(node)
-            print(node.region)
+            print(node.nodes)
             if node not in inter_map:
                 exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                 inter_id = np.array(volume_id()).astype(int)
