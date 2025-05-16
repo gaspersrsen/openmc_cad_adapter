@@ -293,7 +293,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     cell_mat[ids3[a]] = cell_mat[ids[a]]
                 except:
                     pass
-            exec_cubit( f"volume {to_cubit_list(ids3)} move {to_cubit_list(center_world-midp(node.bounding_box))}" )
+            move_vec = center_world-midp(node.bounding_box)
+            if any(move_vec != 0):
+                exec_cubit( f"volume {to_cubit_list(ids3)} move {to_cubit_list(move_vec)}" )
             ids_out = trim_uni(node, ids3, bb)
             return ids_out
         
