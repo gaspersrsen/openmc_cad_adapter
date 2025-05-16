@@ -385,7 +385,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 # ADD OUTER WORLD
                 exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                 wid = volume_id()
-                print(wid)
+                print(wid, f"subtract volume {{ {to_cubit_list(ids)} }} from volume {{ {wid} }} keep_tool")
                 strt = wid
                 exec_cubit( f"subtract volume {{ {to_cubit_list(ids)} }} from volume {{ {wid} }} keep_tool" )
                 stp = last_id(volume_id())
