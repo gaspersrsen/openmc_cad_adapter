@@ -346,7 +346,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
                                 stp = last_id(volume_id())
                                 ids3 = range(strt,stp+1,1)
-                                if len(np.array(*ids3))==0:
+                                if strt == (stp+1):
                                     ValueError(f"No volume copied, {cell} is empty, type:{type(cell)},cell:{str(cell)}")
                                 for a in range(len(ids3)):
                                     cell_mat[ids3[a]] = cell_mat[ids2[a]]
