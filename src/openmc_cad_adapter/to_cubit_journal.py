@@ -308,9 +308,10 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
                     
                 else:
-                    s_ids = surface_to_cubit_journal(node.region, w, bb)
                     ids2 = np.array(process_node( node.fill, w, bb )).astype(int)
-                    ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
+                    if ids.size != 0:
+                        s_ids = surface_to_cubit_journal(node.region, w, bb)
+                        ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
 
                 if isinstance( node.fill, Material ) or node.fill is None:
                     if node.name is None:
