@@ -194,7 +194,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if s1 != s2: # Link materials to new volumes
                 if not added: # Not all intersections return a volume, catch the id of first created one to return
                     added = True
-                    strt = first_id(s_inter) #TODO WIERD
+                    strt = np.min([first_id(s2),first_id(s_inter)]) #TODO WIERD
                 try:
                     for a in range(len(s2)):
                         try:
