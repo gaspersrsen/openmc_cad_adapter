@@ -190,11 +190,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
             s2 = volume_id() # Resulting intersection ids
             print(s2)
-            if not added: # Not all intersections return a volume 
-                if s2 != s: # catch the id of first created one to return
+
+            if s1 != s2: # Link materials to new volumes
+                if not added: # Not all intersections return a volume, catch the id of first created one to return
                     added = True
                     strt = first_id(s_inter) #TODO WIERD
-            if s1 != s2: # Link materials to new volumes
                 try:
                     for a in range(len(s2)):
                         try:
