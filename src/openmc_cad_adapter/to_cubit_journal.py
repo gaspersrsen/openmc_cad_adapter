@@ -211,7 +211,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
             trim_ids = range(strt, stp + 1, 1)
             return trim_ids
         except:
-            raise ValueError(f"All cells have been trimmed:\n cells {ids} \n surfaces {s_ids}")
+            warnings.warn(f"All cells have been trimmed:\n cells {ids} \n surfaces {s_ids}")
+            return np.array([])
         
     def surface_to_cubit_journal(node, w, bb, hex = False):
         global surf_coms, cell_ids, center_world
