@@ -389,10 +389,10 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 # ADD OUTER WORLD
                 exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                 wid = volume_id()
-                strt = wid+1
+                #strt = wid+1
                 exec_cubit( f"subtract volume {to_cubit_list(ids)} from volume {wid} keep_tool" )
-                stp = last_id(volume_id())
-                ids5 = range(strt,stp+1,1)
+                #stp = last_id(volume_id())
+                ids5 = volume_id()#range(strt,stp+1,1)
                 for a in range(len(ids5)): #TODO fix outer, which can be other than material
                     outer_cell_mat = [cell.fill.name for cell in node.outer._cells.values()]
                     cell_mat[ids5[a]] = outer_cell_mat[0]
