@@ -5,11 +5,11 @@ sys.path.append('/home/sharef8/Documents/Coreform-Cubit-2025.3/bin/')
 import cubit
 
 #cubit.init([])
-cubit.init(['cubit','-nojournal','-nographics'])#,'-nogui'])
+cubit.init(['cubit','-nojournal','-nographics','-noecho'])#,'-nogui'])
 #cubit.reset()
 
 def exec_cubit(command): # Pass the command to cubit
-    #print(command)
+    print(command)
     return cubit.cmd(command)
 
 def volume_id(): # Returns volume id of last selected or created volumes, single or multiple
