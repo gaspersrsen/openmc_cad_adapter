@@ -440,11 +440,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
     # process_materials(final_ids)
     
     # Cleanup
-    del_ids = np.array([])
-    for i in range(1,np.max(final_ids)+1,1):
-        if i not in final_ids:
-            del_ids = np.append(del_ids, i)
-    exec_cubit( f"delete volume  {to_cubit_list(del_ids.astype(int))} " )
+    # del_ids = np.array([])
+    # for i in range(1,np.max(final_ids)+1,1):
+    #     if i not in final_ids:
+    #         del_ids = np.append(del_ids, i)
+    # exec_cubit( f"delete volume  {to_cubit_list(del_ids.astype(int))} " )
     
     #Finalize
     exec_cubit("graphics flush\n")
