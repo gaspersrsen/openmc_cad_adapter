@@ -4,7 +4,8 @@ sys.path.append('/opt/Coreform-Cubit-2025.1/bin/')
 import cubit
 
 #cubit.init([])
-cubit.reset()
+cubit.init(['cubit','-nojournal','-nographics','-nogui'])
+#cubit.reset()
 
 def exec_cubit(command): # Pass the command to cubit
     #print(command)

@@ -129,7 +129,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
         else:
             return center_world
         
-    
     def process_bb(bbox, w): # Returns array of x,y,z lengths of a bounding box object
         w2 = np.abs(bbox.upper_right-bbox.lower_left)
         w_out = []
@@ -140,7 +139,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 w_out += [w[i]]
         return w_out
 
-    def trim_uni(node, ids, w):
+    def trim_uni(node, ids, w): #TODO too time consuming
         w = process_bb(node.bounding_box, w)
         exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
         s = volume_id()
@@ -176,7 +175,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         trim_ids = range(strt, stp + 1, 1)
         return trim_ids
     
-    def trim_cell_like(ids, s_ids):
+    def trim_cell_like(ids, s_ids): #TODO this is too time consuming
         if len(ids) == 0:
             raise ValueError(f"Ids {ids} is empty") 
         s = volume_id()
@@ -358,7 +357,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     x0 = -(nx-1)/2 * dx
                     y0 = -(ny-1)/2 * dy
                     
-                    exec_cubit(f"brick x {dx} y {dy} z {w[2]}\n")
+                    exec_cubit(f"brick x {dx} y {dy} z {w[2]}")
                     base_rect = volume_id()
                     i = 0
                     for row in node.universes:
