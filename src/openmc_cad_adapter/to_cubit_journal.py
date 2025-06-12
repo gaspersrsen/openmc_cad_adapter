@@ -453,7 +453,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
     exec_cubit("set info on\n")
     exec_cubit("set warning on\n")
     exec_cubit("set journal on\n")
-    exec_cubit("Save cub5 'cubit_model.cub5' Overwrite On")
+    exec_cubit("Save cub5 'cubit_model.cub5' Overwrite")
 
 
 def openmc_to_cad():
