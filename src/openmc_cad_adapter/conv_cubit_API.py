@@ -5,7 +5,7 @@ sys.path.append('/home/sharef8/Documents/Coreform-Cubit-2025.3/bin/')
 import cubit
 
 #cubit.init([])
-cubit.init(['cubit','-nojournal','-nographics','-noecho'])#,'-nogui'])
+cubit.init(['cubit','-nographics'])#,'-nojournal','-noecho'])#,'-nogui'])
 #cubit.reset()
 
 def exec_cubit(command): # Pass the command to cubit
