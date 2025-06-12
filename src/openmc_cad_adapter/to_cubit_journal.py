@@ -199,12 +199,12 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         try:
                             cell_mat[s2[a]] = cell_mat[id]
                         except:
-                            raise ValueError(f"Volume {id} has no material")
+                            raise ValueError(f"INNER Volume {id} has no material")
                 except:
                     try:
                         cell_mat[s2] = cell_mat[id]
                     except:
-                        raise ValueError(f"Volume {id} has no material")           
+                        raise ValueError(f"OUTER Volume {id} has no material")           
         stp = last_id(s2)
         try:
             trim_ids = range(strt, stp + 1, 1)
