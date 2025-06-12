@@ -306,8 +306,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
             move_vec = center_world-midp(node.bounding_box)
             if any(move_vec != 0):
                 exec_cubit( f"volume {to_cubit_list(ids3)} move {to_cubit_list(move_vec)}" )
-            ids_out = trim_uni(node, ids3, bb)
-            return ids_out
+            return ids3
+            # ids_out = trim_uni(node, ids3, bb)
+            # return ids_out
         
         elif isinstance( node, Cell ): # Cell instance that is moved to proper location by universe
             if node.id not in cell_map:
