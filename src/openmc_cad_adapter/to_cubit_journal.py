@@ -397,7 +397,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     if ids2.size == 0:
                                         continue
                                     #TODO what if the last id is trimmed???
-                                    newest_id = int(np.max([newest_id,last_id(volume_id()),np.max(ids2)])).astype(int)
+                                    newest_id = np.max([newest_id,last_id(volume_id()),np.max(ids2)]).astype(int)
                                     strt = newest_id + 1
                                     exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
                                     stp = last_id(volume_id())
