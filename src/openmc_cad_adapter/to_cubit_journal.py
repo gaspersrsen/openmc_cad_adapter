@@ -186,13 +186,13 @@ def to_cubit_journal(geometry : openmc.Geometry,
         out_ids = np.array([])
         for id in ids:
             inter_ids = np.append(np.array(id), np.array(s_ids))
-            s1 = last_id(volume_id())
+            s1 = volume_id()
             exec_cubit( f"intersect volume {to_cubit_list(inter_ids)} keep" )
             s_inter = volume_id()
             print(s_inter)
             if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
                 exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-                s2 = range(s1+1,volume_id()+1,1)
+                s2 = range(last_id(s1)+1,volume_id()+1,1)
                 if len(s2) > 2:
                     print(s1)
                     print(s_inter)
@@ -466,7 +466,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             
     # Initialize commands
     exec_cubit("set echo off\n")
-    exec_cubit("set info off\n")
+    # exec_cubit("set info off\n")
     # exec_cubit("set warning off\n")
     exec_cubit("graphics pause\n")
     exec_cubit("undo off\n")
