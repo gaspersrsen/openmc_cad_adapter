@@ -202,6 +202,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 raise NotImplementedError("TEST")
             else:
                 s2 = volume_id() # Resulting intersection ids
+                if ids > 30:
+                    print(s1,s_inter,s2)
+                    raise NotImplementedError("TEST")
             #print(s2)
 
             if s1 != s2: # Link materials to new volumes
