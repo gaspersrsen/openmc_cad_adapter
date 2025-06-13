@@ -274,6 +274,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                             continue
                         elif strt_in != last_id(volume_id()): # If multiple volumes are created they are saves as a multivolume body
                             exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
+                            raise ValueError("Here")
                         stp = last_id(volume_id())
                         next_ids = np.array(range(strt,stp+1,1))
                     inter_id = np.array(next_ids).astype(int)
