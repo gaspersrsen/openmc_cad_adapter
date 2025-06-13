@@ -196,6 +196,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 print(s1)
                 print(s_inter)
                 print(s2)
+                raise NotImplementedError("TEST")
             else:
                 s2 = volume_id() # Resulting intersection ids
             #print(s2)
