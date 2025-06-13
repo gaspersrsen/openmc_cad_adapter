@@ -413,7 +413,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     if cell not in no_trim:
                                         ids3 = trim_cell_like(ids3, base_rect)
                                     ids_lat_map = np.append(ids_lat_map, ids3)
-                                    
+                                print(f"{node.id}_{u.id}",ids_lat_map)
                                 latt_map_trim[f"{node.id}_{u.id}"] = ids_lat_map
                             ids3 = latt_map_trim[f"{node.id}_{u.id}"]
                             #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
