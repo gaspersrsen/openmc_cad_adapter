@@ -419,7 +419,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                             exec_cubit( f"volume {to_cubit_list(ids4)} move {x+x0} {y+y0} 0" )
                             for a in range(len(ids4)):
                                 try:
-                                    cell_mat[ids4[a]] = cell_mat[ids3[a]]
+                                    cell_mat[ids4[a]] = cell_mat[int(ids3[a])]
                                 except:
                                     print(ids3)
                                     raise ValueError("TEST")
