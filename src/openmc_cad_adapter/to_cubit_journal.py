@@ -200,20 +200,21 @@ def to_cubit_journal(geometry : openmc.Geometry,
             #print(s2)
 
             if s1 != s2: # Link materials to new volumes
+                rnge = range(s1+1,s2+1,1)
                 if not added: # Not all intersections return a volume, catch the id of first created one to return
                     added = True
                     strt = np.min(first_id(s2))#,first_id(s_inter)]) #TODO WIERD
-                try:
-                    for a in range(len(s2)):
-                        try:
-                            cell_mat[s2[a]] = cell_mat[id]
-                        except:
-                            raise ValueError(f"INNER Volume {id} has no material")
-                except:
+                #try:
+                for a in rnge:
                     try:
-                        cell_mat[s2] = cell_mat[id]
+                        cell_mat[a] = cell_mat[id]
                     except:
-                        raise ValueError(f"OUTER Volume {id} has no material")
+                        raise ValueError(f"Volume {id} has no material")
+                # except:
+                #     try:
+                #         cell_mat[s2] = cell_mat[id]
+                #     except:
+                #         raise ValueError(f"OUTER Volume {id} has no material")
                 out_ids = np.append(out_ids, range(s1+1,s2+1,1)).astype(int)
         return out_ids
         # stp = last_id(s2)
@@ -274,7 +275,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                             continue
                         elif strt_in != last_id(volume_id()): # If multiple volumes are created they are saves as a multivolume body
                             exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-                            raise ValueError("Here")
                         stp = last_id(volume_id())
                         next_ids = np.array(range(strt,stp+1,1))
                     inter_id = np.array(next_ids).astype(int)
