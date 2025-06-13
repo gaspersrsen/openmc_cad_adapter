@@ -299,12 +299,12 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     ids = np.append(ids,np.array(process_node( c, w, midp(node.bounding_box)-center_world))).astype(int)
                 uni_map[node.id] = ids
             ids = uni_map[node.id]
-            # exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
-            # strt = volume_id() + 1
+            exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
+            strt = volume_id() + 1
             print("\n"*5,ids,"\n"*5)
             exec_cubit( f" volume { to_cubit_list(ids) } copy" )
-            #stp = last_id(volume_id())
-            ids3 = np.array(volume_id()).flatten()#range(strt,stp+1,1)
+            stp = last_id(volume_id())
+            ids3 = range(strt,stp+1,1)#np.array(volume_id()).flatten()
             for a in range(len(ids3)):
                 try:
                     cell_mat[ids3[a]] = cell_mat[ids[a]]
