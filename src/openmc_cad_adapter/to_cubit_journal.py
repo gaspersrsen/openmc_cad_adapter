@@ -386,9 +386,10 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         for u in row:
                             for cell in u._cells.values():
                                 #TODO check if proper order i,j or j,i
-                                #TODO chceck proper movement, is it center or lower left
+                                #TODO check proper movement, is it center or lower left
                                 x = j * dx
                                 y = i * dy
+                                s1=last_id(volume_id()) + 1
                                 if f"{node.id}_{cell.id}" not in latt_map_trim:
                                     ids2 = process_node( cell, w, bb )#midp(node.bounding_box) )
                                     if ids2.size == 0:
@@ -397,7 +398,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     strt = last_id(volume_id()) + 1
                                     exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
                                     stp = last_id(volume_id())
-                                    ids3 = range(strt,stp+1,1)#np.array([volume_id()]).flatten()
+                                    ids32 = range(strt,stp+1,1)
+                                    ids3 = np.array([volume_id()]).flatten()
+                                    print(ids32,ids3)
                                     for a in range(len(ids3)):
                                         cell_mat[ids3[a]] = cell_mat[ids2[a]]
                                     if cell not in no_trim:
