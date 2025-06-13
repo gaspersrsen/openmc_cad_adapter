@@ -432,6 +432,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 s_inter = volume_id()
                 if last_id(wid) + 1 != last_id(s_inter) and s_inter != wid: # If multiple volumes are created they are saves as a multivolume body
                     exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
+                    raise NotImplementedError("TEST2")
                 stp = last_id(volume_id())
                 ids5 = range(strt,stp+1,1)
                 for a in range(len(ids5)): #TODO fix outer, which can be other than material
