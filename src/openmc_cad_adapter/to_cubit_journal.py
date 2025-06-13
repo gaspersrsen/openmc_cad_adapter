@@ -418,7 +418,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
                             ids4 = range(strt,stp+1,1)
                             exec_cubit( f"volume {to_cubit_list(ids4)} move {x+x0} {y+y0} 0" )
                             for a in range(len(ids4)):
-                                        cell_mat[ids4[a]] = cell_mat[ids3[a]]
+                                try:
+                                    cell_mat[ids4[a]] = cell_mat[ids3[a]]
+                                except:
+                                    print(ids3)
+                                    raise ValueError("TEST")
                             ids = np.append(ids, np.array(ids4)).astype(int)
                             print("\n"*5,"end of line",ids)
                             j = j + 1
