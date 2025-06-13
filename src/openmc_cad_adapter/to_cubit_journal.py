@@ -204,7 +204,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 s2 = volume_id() # Resulting intersection ids
                 if len(ids) > 30:
                     print(s1,s_inter,s2)
-                    print(np.append(out_ids, np.array(s2).flatten()))
+                    print(np.append(out_ids, range(s1+1,s2,1)))
                     raise NotImplementedError("TEST")
             #print(s2)
 
@@ -223,7 +223,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         cell_mat[s2] = cell_mat[id]
                     except:
                         raise ValueError(f"OUTER Volume {id} has no material")
-                out_ids = np.append(out_ids, np.array(s2).flatten())
+                out_ids = np.append(out_ids, range(s1+1,s2,1))
         return out_ids
         # stp = last_id(s2)
         # try:
