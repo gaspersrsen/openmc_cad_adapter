@@ -290,7 +290,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
         global surf_coms, cell_ids, center_world
         
         # Universes contain cells and move internal cells to proper location
-        if isinstance( node, Universe ): 
+        if isinstance( node, Universe ):
+            if len(node.bounding_box) != 3:
+                raise ValueError(f"{node} does not have proper bbox {node.bounding_box}")
             if node.id not in uni_map:
                 ids = np.array([])
                 for c in node._cells.values():
