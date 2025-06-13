@@ -423,6 +423,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 except:
                                     print(type(ids4[a]),type(ids3[a]))
                                     print(ids3)
+                                    print(cell_mat)
                                     raise ValueError("TEST")
                             ids = np.append(ids, np.array(ids4)).astype(int)
                             print("\n"*5,"end of line",ids)
