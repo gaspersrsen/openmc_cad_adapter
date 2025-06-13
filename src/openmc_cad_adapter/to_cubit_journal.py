@@ -218,6 +218,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         if len(ids) > 36:
             print(out_ids)
             print(len(out_ids))
+            print(node)
             raise NotImplementedError("TEST")
         return out_ids
         # stp = last_id(s2)
