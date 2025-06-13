@@ -405,7 +405,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     latt_map_trim[f"{node.id}_{cell.id}"] = ids3
                                 
                                 ids3 = latt_map_trim[f"{node.id}_{cell.id}"]
-                                exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
+                                #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
                                 strt = last_id(volume_id()) + 1
                                 exec_cubit( f" volume {to_cubit_list(ids3)} copy" )
                                 stp = last_id(volume_id())
