@@ -44,7 +44,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                      cells: Iterable[int, openmc.Cell] = None,
                      filename: str = "openmc.jou",
                      to_cubit: bool = True,
-                     no_clip: bool = False):
+                     no_trim: Iterable[int, openmc.Cell] = []):
     """Convert an OpenMC geometry to a Cubit journal.
 
     Parameters
@@ -94,6 +94,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
     cell_map = {}
     uni_map = {}
     latt_map = {}
+    latt_map_trim = {}
     inter_map = {}
     mat_map = {}
     cell_mat = {}
@@ -189,7 +190,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
                     exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
             s2 = volume_id() # Resulting intersection ids
-            print(s2)
+            #print(s2)
 
             if s1 != s2: # Link materials to new volumes
                 if not added: # Not all intersections return a volume, catch the id of first created one to return
@@ -306,7 +307,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     print(f"Material of cell {ids[a]} is empty")
                     pass
             move_vec = center_world-midp(node.bounding_box)
-            if any(move_vec != 0):
+            if any(move_vec != 0.0):
                 exec_cubit( f"volume {to_cubit_list(ids3)} move {to_cubit_list(move_vec)}" )
             return ids3
             # ids_out = trim_uni(node, ids3, bb)
@@ -332,14 +333,14 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     ids = []
                     for uni in node.fill:
                         ids = np.append(ids, np.array(process_node( uni, w, bb ))).astype(int)
-                    if not no_clip:
+                    if node.id not in no_trim:
                         ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
                     
                 else:
                     ids = np.array(process_node( node.fill, w, bb )).astype(int)
                     if ids.size != 0:
                         s_ids = surface_to_cubit_journal(node.region, w, bb)
-                        if not no_clip:
+                        if node.id not in no_trim:
                             ids = np.append(ids,np.array(trim_cell_like(ids, s_ids))).astype(int)
 
                 # if isinstance( node.fill, Material ) or node.fill is None:
@@ -373,20 +374,25 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 #TODO chceck proper movement, is it center or lower left
                                 x = j * dx
                                 y = i * dy
-                                ids2 = process_node( cell, w, bb )#midp(node.bounding_box) )
-                                if ids2.size == 0:
-                                    continue
-                                
-                                strt = last_id(volume_id()) + 1
-                                exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
-                                stp = last_id(volume_id())
-                                ids3 = list(range(strt,stp+1,1))
-                                for a in range(len(ids3)):
-                                    cell_mat[ids3[a]] = cell_mat[ids2[a]]
-                                if not no_clip:
-                                    ids3 = trim_cell_like(ids3, base_rect)
+                                if f"{node.id}_{cell.id}" not in latt_map_trim:
+                                    ids2 = process_node( cell, w, bb )#midp(node.bounding_box) )
+                                    if ids2.size == 0:
+                                        continue
+                                    
+                                    #strt = last_id(volume_id()) + 1
+                                    exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
+                                    #stp = last_id(volume_id())
+                                    ids3 = volume_id()
+                                    for a in range(len(ids3)):
+                                        cell_mat[ids3[a]] = cell_mat[ids2[a]]
+                                    if cell.id not in no_trim:
+                                        ids3 = trim_cell_like(ids3, base_rect)
+                                    latt_map_trim[f"{node.id}_{cell.id}"] = ids3
+                                ids3 = latt_map_trim[f"{node.id}_{cell.id}"]
+                                exec_cubit( f" volume {to_cubit_list(ids3)} copy" )
+                                ids4 = volume_id() 
                                 exec_cubit( f"volume {to_cubit_list(ids4)} move {x+x0} {y+y0} 0" )
-                                ids = np.append(ids, np.array(ids3)).astype(int)
+                                ids = np.append(ids, np.array(ids4)).astype(int)
                             j = j + 1
                         i = i + 1
                 else:
@@ -426,7 +432,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit( f'Block {b_id} material "{mat}"' )
             
     # Initialize commands
-    # exec_cubit("set echo off\n")
+    exec_cubit("set echo off\n")
     # exec_cubit("set info off\n")
     # exec_cubit("set warning off\n")
     exec_cubit("graphics pause\n")
@@ -472,7 +478,7 @@ def openmc_to_cad():
     parser.add_argument('-c', '--cells', help='List of cell IDs to convert', nargs='+', type=int)
     parser.add_argument('--to-cubit', help='Run  Cubit', default=False, action='store_true')
     parser.add_argument('--cubit-path', help='Path to Cubit bin directory', default=None, type=str)
-    parser.add_argument('--no-clip', help='Does not cut any volumes, geometry needs to be prepared clean', default=False, type='store_true')
+    parser.add_argument('--no-trim', help='List of cell IDs where to skip trimming', nargs='+', type=int)
     args = parser.parse_args()
 
     model_path = Path(args.input)
