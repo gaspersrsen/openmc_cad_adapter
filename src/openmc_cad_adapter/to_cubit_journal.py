@@ -387,14 +387,14 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     ids3 = np.array([volume_id()]).flatten()
                                     for a in range(len(ids3)):
                                         cell_mat[ids3[a]] = cell_mat[ids2[a]]
-                                    print(cell, cell.id, no_trim)
-                                    print(cell not in no_trim)
                                     if cell not in no_trim:
                                         ids3 = trim_cell_like(ids3, base_rect)
                                     latt_map_trim[f"{node.id}_{cell.id}"] = ids3
                                 ids3 = latt_map_trim[f"{node.id}_{cell.id}"]
                                 exec_cubit( f" volume {to_cubit_list(ids3)} copy" )
-                                ids4 = volume_id() 
+                                ids4 = np.array([volume_id()]).flatten() 
+                                for a in range(len(ids4)):
+                                        cell_mat[ids4[a]] = cell_mat[ids3[a]]
                                 exec_cubit( f"volume {to_cubit_list(ids4)} move {x+x0} {y+y0} 0" )
                                 ids = np.append(ids, np.array(ids4)).astype(int)
                             j = j + 1
