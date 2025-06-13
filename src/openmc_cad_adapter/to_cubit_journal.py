@@ -218,7 +218,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         cell_mat[s2] = cell_mat[id]
                     except:
                         raise ValueError(f"OUTER Volume {id} has no material")
-            out_ids = np.append(out_ids, np.array(s2).flatten())
+                out_ids = np.append(out_ids, np.array(s2).flatten())
         return out_ids
         # stp = last_id(s2)
         # try:
@@ -432,7 +432,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 s_inter = volume_id()
                 if last_id(wid) + 1 != last_id(s_inter) and s_inter != wid: # If multiple volumes are created they are saves as a multivolume body
                     exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-                    raise NotImplementedError("TEST2")
+                    raise NotImplementedError("TEST2") #TODO TEST
                 stp = last_id(volume_id())
                 ids5 = range(strt,stp+1,1)
                 for a in range(len(ids5)): #TODO fix outer, which can be other than material
