@@ -215,7 +215,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         cell_mat[s2] = cell_mat[id]
                     except:
                         raise ValueError(f"OUTER Volume {id} has no material")
-            out_ids = np.append(out_ids, np.array(s2).flatten)
+            out_ids = np.append(out_ids, np.array(s2).flatten())
         return out_ids
         # stp = last_id(s2)
         # try:
