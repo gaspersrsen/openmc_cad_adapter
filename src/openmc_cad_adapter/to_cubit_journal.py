@@ -299,7 +299,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
     def process_node( node, w, bb ):
         # TODO propagate names, check if bb is centred in 0,0,0 or moved
         global surf_coms, cell_ids, center_world
-        
+        exit()
         # Universes contain cells and move internal cells to proper location
         if isinstance( node, Universe ):
             if len(node.bounding_box.lower_left) != 3 or len(node.bounding_box.upper_right) != 3:
