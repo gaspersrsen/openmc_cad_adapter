@@ -182,8 +182,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
     def trim_cell_like(ids, s_ids): #TODO this is too time consuming
         if len(ids) == 0:
             raise ValueError(f"Ids {ids} is empty") 
-        s = volume_id()
         added = False
+        out_ids = np.array([])
         for id in ids:
             inter_ids = np.append(np.array(id), np.array(s_ids))
             s1 = last_id(volume_id())
@@ -203,7 +203,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if s1 != s2: # Link materials to new volumes
                 if not added: # Not all intersections return a volume, catch the id of first created one to return
                     added = True
-                    strt = np.min([first_id(s2),first_id(s_inter)]) #TODO WIERD
+                    strt = np.min(first_id(s2))#,first_id(s_inter)]) #TODO WIERD
                 try:
                     for a in range(len(s2)):
                         try:
@@ -214,14 +214,16 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     try:
                         cell_mat[s2] = cell_mat[id]
                     except:
-                        raise ValueError(f"OUTER Volume {id} has no material")           
-        stp = last_id(s2)
-        try:
-            trim_ids = range(strt, stp + 1, 1)
-            return trim_ids
-        except:
-            warnings.warn(f"All cells have been trimmed:\n cells {ids} \n surfaces {s_ids}")
-            return np.array([])
+                        raise ValueError(f"OUTER Volume {id} has no material")
+            out_ids = np.append(out_ids, np.array(s2).flatten)
+        return out_ids
+        # stp = last_id(s2)
+        # try:
+        #     trim_ids = range(strt, stp + 1, 1)
+        #     return trim_ids
+        # except:
+        #     warnings.warn(f"All cells have been trimmed:\n cells {ids} \n surfaces {s_ids}")
+        #     return np.array([])
         
     def surface_to_cubit_journal(node, w, bb, hex = False):
         global surf_coms, cell_ids, center_world
