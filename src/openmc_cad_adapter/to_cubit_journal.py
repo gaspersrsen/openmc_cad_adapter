@@ -400,7 +400,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                         continue
                                     #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
                                     #TODO what if the last id is trimmed???
-                                    newest_id = np.max([newest_id,last_id(volume_id()),np.max(ids2)])
+                                    newest_id = int(np.max([newest_id,last_id(volume_id()),np.max(ids2)]))
                                     strt = newest_id + 1
                                     exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
                                     stp = last_id(volume_id())
@@ -415,7 +415,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 latt_map_trim[f"{node.id}_{u.id}"] = ids3
                             ids3 = latt_map_trim[f"{node.id}_{u.id}"]
                             #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
-                            newest_id = np.max([newest_id,last_id(volume_id()),np.max(ids3)])
+                            newest_id = int(np.max([newest_id,last_id(volume_id()),np.max(ids3)]))
                             strt = newest_id + 1
                             exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
                             stp = last_id(volume_id())
