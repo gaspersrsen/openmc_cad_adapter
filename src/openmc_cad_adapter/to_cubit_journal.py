@@ -439,6 +439,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 #     cell_mat[ids5[a]] = outer_cell_mat[0]
                 # ids = np.append(ids, np.array(ids5)).astype(int)
                 latt_map[node.id] = ids
+                print(latt_map[node.id])
+                exit()
             return np.array(latt_map[node.id])
     
     def propagate_mat(id):
