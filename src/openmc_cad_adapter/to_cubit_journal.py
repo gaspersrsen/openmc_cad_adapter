@@ -190,6 +190,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             exec_cubit( f"intersect volume {to_cubit_list(inter_ids)} keep" )
             s_inter = volume_id()
             print(s_inter)
+            #TODO implement cubit.is_merged("volume", id)
             if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
                 exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
                 s2 = range(last_id(s1)+1,volume_id()+1,1)
@@ -380,6 +381,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     
                     exec_cubit(f"brick x {dx} y {dy} z {w[2]}")
                     base_rect = volume_id()
+                    newest_id = volume_id()
                     i = 0
                     for row in node.universes:
                         j = 0
@@ -397,12 +399,14 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     if ids2.size == 0:
                                         continue
                                     #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
-                                    strt = last_id(volume_id()) + 1
+                                    #TODO what if the last id is trimmed???
+                                    newest_id = np.max([newest_id,last_id(volume_id()),np.max(ids2)])
+                                    strt = newest_id + 1
                                     exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
                                     stp = last_id(volume_id())
-                                    ids32 = range(strt,stp+1,1)
-                                    ids3 = np.array([volume_id()]).flatten()
-                                    print(ids32,ids3)
+                                    ids3 = range(strt,stp+1,1)
+                                    #ids3 = np.array([volume_id()]).flatten()
+                                    #print(ids32,ids3)
                                     for a in range(len(ids3)):
                                         cell_mat[ids3[a]] = cell_mat[ids2[a]]
                                     if cell not in no_trim:
@@ -410,8 +414,12 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     
                                 latt_map_trim[f"{node.id}_{u.id}"] = ids3
                             ids3 = latt_map_trim[f"{node.id}_{u.id}"]
+                            #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
+                            newest_id = np.max([newest_id,last_id(volume_id()),np.max(ids3)])
+                            strt = newest_id + 1
                             exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
-                            ids4 = np.array([volume_id()]).flatten()
+                            stp = last_id(volume_id())
+                            ids4 = range(strt,stp+1,1)
                             exec_cubit( f"volume {to_cubit_list(ids4)} move {x+x0} {y+y0} 0" )
                             ids = np.append(ids, np.array(ids4)).astype(int)
                             print("\n"*5,"end of line",ids)
