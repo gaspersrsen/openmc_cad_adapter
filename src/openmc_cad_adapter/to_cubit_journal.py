@@ -393,7 +393,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     ids2 = process_node( cell, w, bb )#midp(node.bounding_box) )
                                     if ids2.size == 0:
                                         continue
-                                    exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
+                                    #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
                                     strt = last_id(volume_id()) + 1
                                     exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
                                     stp = last_id(volume_id())
@@ -439,8 +439,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 #     cell_mat[ids5[a]] = outer_cell_mat[0]
                 # ids = np.append(ids, np.array(ids5)).astype(int)
                 latt_map[node.id] = ids
-            print(np.array(latt_map[node.id]))
-            exit()
             return np.array(latt_map[node.id])
     
     def propagate_mat(id):
