@@ -404,7 +404,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     for a in range(len(ids3)):
                                         cell_mat[ids3[a]] = cell_mat[ids2[a]]
                                     if cell not in no_trim:
-                                        print("\n"*5,"trimming",ids32)
+                                        print("\n"*3,"trimming",ids32)
                                         ids3 = trim_cell_like(ids3, base_rect)
                                         print(ids3)
                                     latt_map_trim[f"{node.id}_{cell.id}"] = ids3
@@ -424,6 +424,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                             raise ValueError("err")
                                 exec_cubit( f"volume {to_cubit_list(ids4)} move {x+x0} {y+y0} 0" )
                                 ids = np.append(ids, np.array(ids4)).astype(int)
+                                print("\n"*5,"end of line",ids)
                             j = j + 1
                         i = i + 1
                 else:
