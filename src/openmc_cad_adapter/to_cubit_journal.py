@@ -428,8 +428,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 exec_cubit( f"brick x {w[0]} y {w[1]} z {w[2]}" )
                 wid = volume_id()
                 strt = wid+1
-                exec_cubit( f"subtract volume {to_cubit_list(ids)} from volume {wid} keep_tool" )
-                if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
+                exec_cubit( f"subtract volume {to_cubit_list(ids)} from volume {wid} keep_tool")
+                s_inter = volume_id()
+                if last_id(wid) + 1 != last_id(s_inter) and s_inter != wid: # If multiple volumes are created they are saves as a multivolume body
                     exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
                 stp = last_id(volume_id())
                 ids5 = range(strt,stp+1,1)
