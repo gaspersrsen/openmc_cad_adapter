@@ -204,6 +204,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 s2 = volume_id() # Resulting intersection ids
                 if len(ids) > 30:
                     print(s1,s_inter,s2)
+                    print(np.append(out_ids, np.array(s2).flatten()))
                     raise NotImplementedError("TEST")
             #print(s2)
 
