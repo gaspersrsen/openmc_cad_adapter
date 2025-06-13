@@ -193,8 +193,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
             #TODO implement cubit.is_merged("volume", id)
             if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
                 exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
-                s2 = range(last_id(s1)+1,volume_id()+1,1)
-                raise NotImplementedError("Multivolume split in trim")
+                s2 = volume_id()#range(last_id(s1)+1,volume_id()+1,1)
+                #raise NotImplementedError("Multivolume split in trim")
             else:
                 s2 = volume_id() # Resulting intersection ids
             #print(s2)
