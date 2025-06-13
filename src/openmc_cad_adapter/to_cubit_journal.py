@@ -385,6 +385,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     ids3 = np.array([volume_id()]).flatten()
                                     for a in range(len(ids3)):
                                         cell_mat[ids3[a]] = cell_mat[ids2[a]]
+                                    print(cell)
                                     if cell not in no_trim:
                                         ids3 = trim_cell_like(ids3, base_rect)
                                     latt_map_trim[f"{node.id}_{cell.id}"] = ids3
