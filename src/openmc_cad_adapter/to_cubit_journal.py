@@ -389,6 +389,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                             x = j * dx
                             y = i * dy
                             if f"{node.id}_{u.id}" not in latt_map_trim:
+                                ids_lat_map = np.array([])
                                 for cell in u._cells.values():
                                     #TODO check if proper order i,j or j,i
                                     #TODO check proper movement, is it center or lower left
@@ -411,8 +412,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                         cell_mat[ids3[a]] = cell_mat[ids2[a]]
                                     if cell not in no_trim:
                                         ids3 = trim_cell_like(ids3, base_rect)
+                                    ids_lat_map = np.append(ids_lat_map, ids3)
                                     
-                                latt_map_trim[f"{node.id}_{u.id}"] = ids3
+                                latt_map_trim[f"{node.id}_{u.id}"] = ids_lat_map
                             ids3 = latt_map_trim[f"{node.id}_{u.id}"]
                             #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
                             newest_id = int(np.max([newest_id,last_id(volume_id()),np.max(ids3)]))
