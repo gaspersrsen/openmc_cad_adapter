@@ -9,7 +9,7 @@ cubit.init(['cubit','-nographics'])#,'-nojournal','-noecho'])#,'-nogui'])
 #cubit.reset()
 
 def exec_cubit(command): # Pass the command to cubit
-    print(command)
+    #print(command)
     return cubit.cmd(command)
 
 def volume_id(): # Returns volume id of last selected or created volumes, single or multiple
