@@ -493,7 +493,7 @@ def openmc_to_cad():
     if args.cubit_path is not None:
         sys.path.append(args.cubit_path)
 
-    to_cubit_journal(model.geometry, model.materials, world=args.world_size, filename=args.output, cells=args.cells, to_cubit=args.to_cubit, no_clip=args.no_clip)
+    to_cubit_journal(model.geometry, model.materials, world=args.world_size, filename=args.output, cells=args.cells, to_cubit=args.to_cubit, no_trim=args.no_trim)
 
 
 __all__ = ['CADPlane', 'CADXPlane', 'CADYPlane', 'CADZPlane',
