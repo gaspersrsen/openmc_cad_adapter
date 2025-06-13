@@ -194,17 +194,12 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
                 exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
                 s2 = range(last_id(s1)+1,volume_id()+1,1)
-                #if len(s2) > 2:
-                print(s1)
-                print(s_inter)
-                print(s2)
-                print(np.append(out_ids, np.array(s2).flatten()))
-                raise NotImplementedError("TEST")
+                raise NotImplementedError("Multivolume split in trim")
             else:
                 s2 = volume_id() # Resulting intersection ids
                 if len(ids) > 30:
                     print(s1,s_inter,s2)
-                    print(np.append(out_ids, range(s1+1,s2,1)))
+                    print(np.append(out_ids, range(s1+1,s2+1,1)))
                     raise NotImplementedError("TEST")
             #print(s2)
 
@@ -223,7 +218,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         cell_mat[s2] = cell_mat[id]
                     except:
                         raise ValueError(f"OUTER Volume {id} has no material")
-                out_ids = np.append(out_ids, range(s1+1,s2,1))
+                out_ids = np.append(out_ids, range(s1+1,s2+1,1))
         return out_ids
         # stp = last_id(s2)
         # try:
@@ -319,7 +314,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             print("\n"*5,ids,"\n"*5)
             exec_cubit( f" volume { to_cubit_list(ids) } copy" )
             stp = last_id(volume_id())
-            ids3 = range(strt,stp+1,1)#np.array(volume_id()).flatten()
+            ids3 = range(strt,stp+1,1)
             for a in range(len(ids3)):
                 try:
                     cell_mat[ids3[a]] = cell_mat[ids[a]]
@@ -410,8 +405,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
                                     stp = last_id(volume_id())
                                     ids3 = range(strt,stp+1,1)
-                                    #ids3 = np.array([volume_id()]).flatten()
-                                    #print(ids32,ids3)
                                     for a in range(len(ids3)):
                                         cell_mat[ids3[a]] = cell_mat[ids2[a]]
                                     if cell not in no_trim:
