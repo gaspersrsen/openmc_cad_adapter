@@ -349,11 +349,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     ids = []
                     for uni in node.fill:
                         ids = np.append(ids, np.array(process_node( uni, w, bb ))).astype(int)
-                    if node.id not in no_trim:
+                    if node.id not in no_trim:#TODO propagate mat
                         # if node.id == 6:
                         #     print(ids)
                         #ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
-                        ids = np.array(trim_cell_like(ids2, s_ids)).astype(int)
+                        ids = np.array(trim_cell_like(ids, s_ids)).astype(int)
                     
                 else:
                     ids = np.array(process_node( node.fill, w, bb )).astype(int)
@@ -361,7 +361,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         s_ids = surface_to_cubit_journal(node.region, w, bb)
                         if node.id not in no_trim:
                             #ids = np.append(ids,np.array(trim_cell_like(ids, s_ids))).astype(int)
-                            ids = np.array(trim_cell_like(ids2, s_ids)).astype(int)
+                            ids = np.array(trim_cell_like(ids, s_ids)).astype(int)
 
                 # if isinstance( node.fill, Material ) or node.fill is None:
                 #     if node.name is None:
