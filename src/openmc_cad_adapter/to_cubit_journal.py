@@ -349,7 +349,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     ids = []
                     for uni in node.fill:
                         ids = np.append(ids, np.array(process_node( uni, w, bb ))).astype(int)
-                    if node.id not in no_trim:#TODO propagate mat
+                    if node.id not in no_trim:
                         # if node.id == 6:
                         #     print(ids)
                         #ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
@@ -398,12 +398,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     #TODO check if proper order i,j or j,i
                                     #TODO check proper movement, is it center or lower left
                                     
-                                    # s1=last_id(volume_id()) + 1
-                                    # if f"{node.id}_{cell.id}" not in latt_map_trim:
                                     ids2 = process_node( cell, w, bb )#midp(node.bounding_box) )
                                     if ids2.size == 0:
                                         continue
-                                    #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
                                     #TODO what if the last id is trimmed???
                                     newest_id = int(np.max([newest_id,last_id(volume_id()),np.max(ids2)]))
                                     strt = newest_id + 1
@@ -449,10 +446,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 #     cell_mat[ids5[a]] = outer_cell_mat[0]
                 # ids = np.append(ids, np.array(ids5)).astype(int)
                 latt_map[node.id] = ids
-                if node.id == 5:
-                    print(latt_map[node.id])
-                    print(len(latt_map[node.id]))
-                    exit()
             return np.array(latt_map[node.id])
     
     def propagate_mat(id):
