@@ -44,7 +44,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                      cells: Iterable[int, openmc.Cell] = None,
                      filename: str = "openmc.jou",
                      to_cubit: bool = True,
-                     no_trim: Iterable[int, openmc.Cell] = [0]):
+                     no_trim: Iterable[int, openmc.Cell] = None):
     """Convert an OpenMC geometry to a Cubit journal.
 
     Parameters
@@ -88,6 +88,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
     if world is None:
         raise RuntimeError("Model extents could not be determined automatically and must be provided manually")
 
+    if no_trim == None:
+        no_trim = []
     w = world
     bbox_world = geometry.bounding_box
     center_world = [0,0,0] # Init, changed later
