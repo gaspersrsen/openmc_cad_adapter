@@ -186,16 +186,19 @@ def to_cubit_journal(geometry : openmc.Geometry,
         added = False
         for id in ids:
             inter_ids = np.append(np.array(id), np.array(s_ids))
-            s1 = volume_id()
+            s1 = last_id(volume_id())
             exec_cubit( f"intersect volume {to_cubit_list(inter_ids)} keep" )
             s_inter = volume_id()
             print(s_inter)
             if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
                 exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
                 s2 = range(s1+1,volume_id()+1,1)
+                print(s1)
+                print(s_inter)
+                print(s2)
             else:
                 s2 = volume_id() # Resulting intersection ids
-            print(s2)
+            #print(s2)
 
             if s1 != s2: # Link materials to new volumes
                 if not added: # Not all intersections return a volume, catch the id of first created one to return
