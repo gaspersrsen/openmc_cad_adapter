@@ -406,7 +406,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                         cell_mat[ids3[a]] = cell_mat[ids2[a]]
                                     if cell not in no_trim:
                                         ids3 = trim_cell_like(ids3, base_rect)
-                                    ids_lat_map = np.append(ids_lat_map, ids3)
+                                    ids_lat_map = np.append(ids_lat_map, ids3).astype(int)
                                 print(f"{node.id}_{u.id}",ids_lat_map)
                                 latt_map_trim[f"{node.id}_{u.id}"] = ids_lat_map
                             ids3 = latt_map_trim[f"{node.id}_{u.id}"]
