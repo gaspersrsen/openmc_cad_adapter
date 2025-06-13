@@ -423,7 +423,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         else:
             cell_mat[id] = propagate_mat(cell_mat[id])
             return cell_mat[id]
-    block_
+    #block_
     def process_materials(ids):
         vals = cell_mat.values()
         u_vals = []
