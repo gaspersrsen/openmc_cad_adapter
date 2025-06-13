@@ -219,7 +219,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         
     def surface_to_cubit_journal(node, w, bb, hex = False):
         global surf_coms, cell_ids, center_world
-        print(node)
+        #print(node)
         if isinstance(node, Halfspace):
             try:
                 surface = node.surface
@@ -423,7 +423,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
         else:
             cell_mat[id] = propagate_mat(cell_mat[id])
             return cell_mat[id]
-    #block_
+    
     def process_materials(ids):
         vals = cell_mat.values()
         u_vals = []
