@@ -43,7 +43,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                      world : Iterable[Real] = None,
                      cells: Iterable[int, openmc.Cell] = None,
                      filename: str = "openmc.jou",
-                     to_cubit: bool = True):
+                     to_cubit: bool = True,
+                     no_clip: bool = False):
     """Convert an OpenMC geometry to a Cubit journal.
 
     Parameters
@@ -328,16 +329,18 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 
                 elif isinstance( node.fill, Iterable ):
                     s_ids = surface_to_cubit_journal(node.region, w, bb)
-                    ids2 = []
+                    ids = []
                     for uni in node.fill:
-                        ids2 = np.append(ids2, np.array(process_node( uni, w, bb ))).astype(int)
-                    ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
+                        ids = np.append(ids, np.array(process_node( uni, w, bb ))).astype(int)
+                    if not no_clip:
+                        ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
                     
                 else:
-                    ids2 = np.array(process_node( node.fill, w, bb )).astype(int)
-                    if ids2.size != 0:
+                    ids = np.array(process_node( node.fill, w, bb )).astype(int)
+                    if ids.size != 0:
                         s_ids = surface_to_cubit_journal(node.region, w, bb)
-                        ids = np.append(ids,np.array(trim_cell_like(ids2, s_ids))).astype(int)
+                        if not no_clip:
+                            ids = np.append(ids,np.array(trim_cell_like(ids, s_ids))).astype(int)
 
                 # if isinstance( node.fill, Material ) or node.fill is None:
                 #     if node.name is None:
@@ -380,9 +383,10 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 ids3 = list(range(strt,stp+1,1))
                                 for a in range(len(ids3)):
                                     cell_mat[ids3[a]] = cell_mat[ids2[a]]
-                                ids4 = trim_cell_like(ids3, base_rect)
+                                if not no_clip:
+                                    ids3 = trim_cell_like(ids3, base_rect)
                                 exec_cubit( f"volume {to_cubit_list(ids4)} move {x+x0} {y+y0} 0" )
-                                ids = np.append(ids, np.array(ids4)).astype(int)
+                                ids = np.append(ids, np.array(ids3)).astype(int)
                             j = j + 1
                         i = i + 1
                 else:
@@ -468,6 +472,7 @@ def openmc_to_cad():
     parser.add_argument('-c', '--cells', help='List of cell IDs to convert', nargs='+', type=int)
     parser.add_argument('--to-cubit', help='Run  Cubit', default=False, action='store_true')
     parser.add_argument('--cubit-path', help='Path to Cubit bin directory', default=None, type=str)
+    parser.add_argument('--no-clip', help='Does not cut any volumes, geometry needs to be prepared clean', default=False, type='store_true')
     args = parser.parse_args()
 
     model_path = Path(args.input)
@@ -482,7 +487,7 @@ def openmc_to_cad():
     if args.cubit_path is not None:
         sys.path.append(args.cubit_path)
 
-    to_cubit_journal(model.geometry, model.materials, world=args.world_size, filename=args.output, cells=args.cells, to_cubit=args.to_cubit)
+    to_cubit_journal(model.geometry, model.materials, world=args.world_size, filename=args.output, cells=args.cells, to_cubit=args.to_cubit, no_clip=args.no_clip)
 
 
 __all__ = ['CADPlane', 'CADXPlane', 'CADYPlane', 'CADZPlane',
