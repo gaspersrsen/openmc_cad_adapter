@@ -421,6 +421,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 try:
                                     cell_mat[ids4[a]] = cell_mat[int(ids3[a])]
                                 except:
+                                    print(type(ids4[a]),type(ids3[a]))
                                     print(ids3)
                                     raise ValueError("TEST")
                             ids = np.append(ids, np.array(ids4)).astype(int)
