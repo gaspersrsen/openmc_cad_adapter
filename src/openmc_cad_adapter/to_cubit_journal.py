@@ -469,10 +469,10 @@ def to_cubit_journal(geometry : openmc.Geometry,
     print(final_ids)
     
     # Process materials
-    for id in final_ids:
-        propagate_mat(id)
-        #process_mat(mat_n, id)
-    process_materials(final_ids)
+    # for id in final_ids:
+    #     propagate_mat(id)
+    #     #process_mat(mat_n, id)
+    # process_materials(final_ids)
     
     # Cleanup
     del_ids = np.array([])
