@@ -327,7 +327,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 exec_cubit( f"volume {to_cubit_list(ids3)} move {to_cubit_list(move_vec)}" )
             print(ids3)
             exit()
-            return ids3
+            #return ids3
             # ids_out = trim_uni(node, ids3, bb)
             # return ids_out
         
