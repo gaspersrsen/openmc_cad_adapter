@@ -425,7 +425,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                             raise ValueError("err")
                                 exec_cubit( f"volume {to_cubit_list(ids4)} move {x+x0} {y+y0} 0" )
                                 ids = np.append(ids, np.array(ids4)).astype(int)
-                                print("\n"*5,"end of line",ids)
+                            print("\n"*5,"end of line",ids)
                             j = j + 1
                         i = i + 1
                 else:
