@@ -44,7 +44,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                      cells: Iterable[int, openmc.Cell] = None,
                      filename: str = "openmc.jou",
                      to_cubit: bool = True,
-                     no_trim: Iterable[int, openmc.Cell] = []):
+                     no_trim: Iterable[int, openmc.Cell] = [0]):
     """Convert an OpenMC geometry to a Cubit journal.
 
     Parameters
