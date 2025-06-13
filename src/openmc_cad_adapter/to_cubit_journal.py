@@ -216,8 +216,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         raise ValueError(f"OUTER Volume {id} has no material")
                 out_ids = np.append(out_ids, range(s1+1,s2+1,1)).astype(int)
         if len(ids) > 30:
-            print(s1,s_inter,s2)
-            print(np.append(out_ids, range(s1+1,s2+1,1)))
+            print(out_ids)
+            print(len(out_ids))
             raise NotImplementedError("TEST")
         return out_ids
         # stp = last_id(s2)
