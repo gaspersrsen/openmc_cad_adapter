@@ -383,8 +383,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     exec_cubit( f" volume {to_cubit_list(ids2)} copy" )
                                     #stp = last_id(volume_id())
                                     ids3 = volume_id()
-                                    for a in range(len(ids3)):
-                                        cell_mat[ids3[a]] = cell_mat[ids2[a]]
+                                    if type(ids3) != int:
+                                        for a in range(len(ids3)):
+                                            cell_mat[ids3[a]] = cell_mat[ids2[a]]
+                                    else:
+                                        cell_mat[ids3] = cell_mat[ids2]
                                     if cell.id not in no_trim:
                                         ids3 = trim_cell_like(ids3, base_rect)
                                     latt_map_trim[f"{node.id}_{cell.id}"] = ids3
