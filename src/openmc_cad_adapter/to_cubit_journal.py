@@ -474,7 +474,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
     exec_cubit(f"brick x {2*world[0]} y {2*world[1]} z {2*world[2]}\n")
     
     # Process geometry
-    center_world = midp(geom.root_universe.bounding_box)
+    #center_world = midp(geom.root_universe.bounding_box)
+    center_world = midp(geom.bounding_box)
     print(center_world)
     final_ids = process_node(geom.root_universe, w, center_world)
     #print(final_ids)
