@@ -128,6 +128,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
     def midp(bb): # Returns the midpoint of a bounding box
         global center_world
         mid_dist = np.array(bb.upper_right)/2 + np.array(bb.lower_left)/2
+        print(mid_dist)
         if all(np.isfinite(mid_dist)):
             return mid_dist
         else:
@@ -298,7 +299,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             if node.id not in uni_map:
                 ids = np.array([])
                 for c in node._cells.values():
-                    ids = np.append(ids,np.array(process_node( c, w, np.array(midp(node.bounding_box))-np.array(center_world)))).astype(int)
+                    ids = np.append(ids,np.array(process_node( c, w, midp(node.bounding_box)-center_world))).astype(int)
                 uni_map[node.id] = ids
             ids = uni_map[node.id]
             exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
