@@ -406,7 +406,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 latt_map_trim[f"{node.id}_{u.id}"] = ids_lat_map
                             ids3 = latt_map_trim[f"{node.id}_{u.id}"]
                             #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
-                            newest_id = np.max([newest_id,last_id(volume_id()),np.max(ids3)]).astype(int)
+                            maxx=np.max(ids3)
+                            newest_id = np.max([newest_id,last_id(volume_id()), maxx if maxx else 0]).astype(int)
                             strt = newest_id + 1
                             exec_cubit( f" volume {to_cubit_list(ids3)} copy" )
                             stp = last_id(volume_id())
@@ -474,9 +475,8 @@ def to_cubit_journal(geometry : openmc.Geometry,
     exec_cubit(f"brick x {2*world[0]} y {2*world[1]} z {2*world[2]}\n")
     
     # Process geometry
-    #center_world = midp(geom.root_universe.bounding_box)
-    center_world = midp(geom.bounding_box)
-    print(center_world)
+    center_world = midp(geom.root_universe.bounding_box)
+    #center_world = midp(geom.bounding_box)
     final_ids = process_node(geom.root_universe, w, center_world)
     #print(final_ids)
     
