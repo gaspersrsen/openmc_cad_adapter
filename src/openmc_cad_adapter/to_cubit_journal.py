@@ -189,7 +189,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             s1 = volume_id()
             exec_cubit( f"intersect volume {to_cubit_list(inter_ids)} keep" )
             s_inter = volume_id()
-            print(s_inter)
+            #print(s_inter)
             #TODO implement cubit.is_merged("volume", id)
             if last_id(s1) + 1 != last_id(s_inter) and s_inter != s1: # If multiple volumes are created they are saves as a multivolume body
                 exec_cubit( f"split body {to_cubit_list(mul_body_id())}" ) # Split the multivolume body
@@ -308,7 +308,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
             ids = uni_map[node.id]
             exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
             strt = volume_id() + 1
-            print("\n"*5,ids,"\n"*5)
             exec_cubit( f" volume { to_cubit_list(ids) } copy" )
             stp = last_id(volume_id())
             ids3 = range(strt,stp+1,1)
@@ -408,7 +407,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     if cell not in no_trim:
                                         ids3 = trim_cell_like(ids3, base_rect)
                                     ids_lat_map = np.append(ids_lat_map, ids3).astype(int)
-                                print(f"{node.id}_{u.id}",ids_lat_map)
                                 latt_map_trim[f"{node.id}_{u.id}"] = ids_lat_map
                             ids3 = latt_map_trim[f"{node.id}_{u.id}"]
                             #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
@@ -427,7 +425,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                     print(cell_mat)
                                     raise ValueError("TEST")
                             ids = np.append(ids, np.array(ids4)).astype(int)
-                            print("\n"*5,"end of line",ids)
                             j = j + 1
                         i = i + 1
                 else:
@@ -483,7 +480,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
     # Process geometry
     center_world = midp(geom.root_universe.bounding_box)
     final_ids = process_node(geom.root_universe, w, center_world)
-    print(final_ids)
+    #print(final_ids)
     
     # Process materials
     for id in final_ids:
