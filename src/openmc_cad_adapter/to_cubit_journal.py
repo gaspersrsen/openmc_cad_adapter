@@ -406,8 +406,11 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 latt_map_trim[f"{node.id}_{u.id}"] = ids_lat_map
                             ids3 = latt_map_trim[f"{node.id}_{u.id}"]
                             #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
-                            maxx=np.max(ids3)
-                            newest_id = np.max([newest_id,last_id(volume_id()), maxx if maxx else 0]).astype(int)
+                            if ids3:
+                                maxx=np.max(ids3)
+                            else:
+                                maxx=0
+                            newest_id = np.max([newest_id,last_id(volume_id()), maxx]).astype(int)
                             strt = newest_id + 1
                             exec_cubit( f" volume {to_cubit_list(ids3)} copy" )
                             stp = last_id(volume_id())
