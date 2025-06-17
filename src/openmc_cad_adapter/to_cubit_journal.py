@@ -81,7 +81,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
 
     if world is None:
         bbox = geometry.bounding_box
-        world = np.abs(bbox.upper_right-bbox.lower_left)
+        world = np.abs(np.array(bbox.upper_right)-np.array(bbox.lower_left))
         if not all(np.isfinite(world)):
             raise RuntimeError('Model bounds were not provided and the bounding box determined by OpenMC is not finite.'
                                ' Please provide a world size argument to proceed')
