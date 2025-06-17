@@ -406,7 +406,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                                 latt_map_trim[f"{node.id}_{u.id}"] = ids_lat_map
                             ids3 = latt_map_trim[f"{node.id}_{u.id}"]
                             #exec_cubit(f"brick x {world[0]} y {world[1]} z {world[2]}\n")
-                            if ids3:
+                            if any(ids3):
                                 maxx=np.max(ids3)
                             else:
                                 maxx=0
