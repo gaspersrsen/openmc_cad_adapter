@@ -162,15 +162,10 @@ def to_cubit_journal(geometry : openmc.Geometry,
                     added = True
                     strt = s_inter + 1
             if s1 != s2: # Link materials to new volumes
-                try:
-                    for a in range(len(s2)):
-                        try:
-                            cell_mat[s2[a]] = cell_mat[id]
-                        except:
-                            raise ValueError(f"Volume {id} has no material")
-                except:
+                s22=np.array([s2]).flatten()
+                for a in range(len(s22)):
                     try:
-                        cell_mat[s2] = cell_mat[id]
+                        cell_mat[s22[a]] = cell_mat[id]
                     except:
                         raise ValueError(f"Volume {id} has no material")
         if strt ==-1:
