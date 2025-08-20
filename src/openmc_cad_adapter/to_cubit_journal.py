@@ -383,7 +383,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         for u in row:
                             x = j * dx
                             y = i * dy
-                            print()
+                            print(f"{node.id}_{u.id}")
                             if f"{node.id}_{u.id}" not in latt_map_trim: #Single unit of the whole lattice
                                 ids_lat_map = np.array([])
                                 for cell in u._cells.values():
@@ -470,7 +470,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             
     # Initialize commands
     # exec_cubit("set echo off\n")
-    exec_cubit("set info off\n")
+    # exec_cubit("set info off\n")
     # exec_cubit("set warning off\n")
     exec_cubit("graphics pause\n")
     exec_cubit("undo off\n")
