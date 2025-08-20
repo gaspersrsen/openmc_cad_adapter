@@ -363,6 +363,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
             return cell_map[node.id]
                 
         elif isinstance( node, RectLattice ):
+            global latt_map, latt_map_trim
             if node.id not in latt_map: #General lattice that has to be copied and moved
                 ids = np.array([])
                 if node.ndim == 2:
@@ -383,7 +384,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                         for u in row:
                             x = j * dx
                             y = i * dy
-                            if f"{node.id}_{u.id}" not in latt_map_trim:
+                            if f"{node.id}_{u.id}" not in latt_map_trim: #Single unit of the whole lattice
                                 ids_lat_map = np.array([])
                                 for cell in u._cells.values():
                                     #TODO check if proper order i,j or j,i
