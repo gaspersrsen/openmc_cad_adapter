@@ -360,6 +360,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 #     else:
                 #         exec_cubit( f'Volume {to_cubit_list(ids)}  rename "cell_{node.name}"' )
                 cell_map[node.id] = ids
+            print(cell_map[node.id])
             return cell_map[node.id]
                 
         elif isinstance( node, RectLattice ):
