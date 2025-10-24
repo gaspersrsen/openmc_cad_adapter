@@ -316,7 +316,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
             move_vec = center_world-midp(node.bounding_box)
             if any(move_vec != 0.0):
                 exec_cubit( f"volume {to_cubit_list(ids3)} move {to_cubit_list(move_vec)}" )
-            print("uni",ids3)
             return ids3
             # ids_out = trim_uni(node, ids3, bb)
             # return ids_out
@@ -361,7 +360,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 #     else:
                 #         exec_cubit( f'Volume {to_cubit_list(ids)}  rename "cell_{node.name}"' )
                 cell_map[node.id] = ids
-            print("cell",cell_map[node.id])
             return cell_map[node.id]
                 
         elif isinstance( node, RectLattice ):
@@ -448,7 +446,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 #     cell_mat[ids5[a]] = outer_cell_mat[0]
                 # ids = np.append(ids, np.array(ids5)).astype(int)
                 latt_map[node.id] = ids
-            print("lattice",np.array(latt_map[node.id]))
             return np.array(latt_map[node.id])
     
     def propagate_mat(id):
