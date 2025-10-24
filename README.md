@@ -10,7 +10,7 @@ This project converts OpenMC models from XML files to a Cubit journal file for i
 To install this tool run:
 
 ```shell
-python -m pip install git+https://github.com/openmc-dev/openmc_cad_adapter.git
+python -m pip install git+https://github.com/gaspersrsen/openmc_cad_adapter.git
 ```
 
 This will make the `openmc_to_cad` script available for use. To convert an OpenMC model, run:
