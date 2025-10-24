@@ -467,6 +467,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
             b_id = block_next()
             exec_cubit( f'Block {b_id} add volume {to_cubit_list(mat_ids)}' )
             exec_cubit( f'Block {b_id} material "{mat}"' )
+            for mc_mat in materials:
+                if mc_mat.name == mat:
+                    exec_cubit( f'Group "mat:{mc_mat.id}" add volume {to_cubit_list(mat_ids)}' )
             
     # Initialize commands
     # exec_cubit("set echo off\n")
