@@ -496,7 +496,9 @@ def to_cubit_journal(geometry : openmc.Geometry,
         if i not in final_ids:
             del_ids = np.append(del_ids, i)
     exec_cubit( f"delete volume  {to_cubit_list(del_ids.astype(int))} " )
-    exec_cubit( f"merge volume all" )              
+    exec_cubit( f"merge volume all" )
+    exec_cubit( f"volume all scheme tetmesh" )
+    exec_cubit( f"mesh volume all" )
     
     #Finalize
     exec_cubit("graphics flush\n")
