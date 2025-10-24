@@ -360,7 +360,6 @@ def to_cubit_journal(geometry : openmc.Geometry,
                 #     else:
                 #         exec_cubit( f'Volume {to_cubit_list(ids)}  rename "cell_{node.name}"' )
                 cell_map[node.id] = ids
-            print(cell_map[node.id])
             return cell_map[node.id]
                 
         elif isinstance( node, RectLattice ):
@@ -483,7 +482,7 @@ def to_cubit_journal(geometry : openmc.Geometry,
     center_world = midp(geom.root_universe.bounding_box)
     #center_world = midp(geom.bounding_box)
     final_ids = process_node(geom.root_universe, w, center_world)
-    #print(final_ids)
+    print(final_ids)
     
     # Process materials
     for id in final_ids:
